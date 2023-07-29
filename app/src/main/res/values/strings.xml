@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Copyright (C) 2023  Andrew Gunnerson
+
+    This file is part of Custota.
+
+    Custota is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License version 3
+    as published by the Free Software Foundation.
+
+    Custota is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Custota.  If not, see <http://www.gnu.org/licenses/>.
+-->
+<resources>
+    <!-- Preference headers -->
+    <string name="pref_header_general">General</string>
+    <string name="pref_header_behavior">Behavior</string>
+    <string name="pref_header_os">OS</string>
+    <string name="pref_header_certificates">Certificates</string>
+    <string name="pref_header_about">About</string>
+    <string name="pref_header_debug">Debug</string>
+
+    <!-- General preferences -->
+    <string name="pref_check_for_updates_name">Check for updates</string>
+    <string name="pref_check_for_updates_desc">Schedule a check for new OTA updates.</string>
+    <string name="pref_ota_server_url_name">OTA server URL</string>
+    <string name="pref_ota_server_url_desc_none">(No URL set.)</string>
+    <string name="pref_certificate_name">Certificate %1$s</string>
+    <string name="pref_certificate_desc_subject">Subject: %1$s</string>
+    <string name="pref_certificate_desc_serial">Serial: %1$s</string>
+    <string name="pref_certificate_desc_type">Type: %1$s</string>
+
+    <!-- Behavior preferences -->
+    <string name="pref_automatic_install_name">Automatically install updates</string>
+    <string name="pref_automatic_install_desc">Automatically install new updates in the background.</string>
+    <string name="pref_unmetered_only_name">Require unmetered network</string>
+    <string name="pref_unmetered_only_desc">Only allow updates to be downloaded over unmetered network connections (eg. Wi-Fi).</string>
+    <string name="pref_battery_not_low_name">Require sufficient battery level</string>
+    <string name="pref_battery_not_low_desc">Only allow updates to be installed if the battery level is not critical.</string>
+    <string name="pref_skip_postinstall_name">Skip optional post-install scripts</string>
+    <string name="pref_skip_postinstall_desc">Skip running post-install operations that are marked as optional in the OTA. This usually skips the dexopt operation, which precompiles app bytecode for faster loading.</string>
+
+    <!-- OS version preferences -->
+    <string name="pref_android_version_name">Android version</string>
+    <string name="pref_fingerprint_name">Fingerprint</string>
+    <string name="pref_boot_slot_name">Boot slot</string>
+
+    <!-- Certificate preferences -->
+    <string name="pref_no_certificates_name">No certificates found</string>
+    <string name="pref_no_certificates_desc">No valid certificates were found in %1$s.</string>
+
+    <!-- About "preference" -->
+    <string name="pref_version_name">Version</string>
+
+    <!-- Debug preferences -->
+    <string name="pref_open_log_dir_name">Open log directory</string>
+    <string name="pref_open_log_dir_desc">Open the log directory in the system file manager (DocumentsUI).</string>
+    <string name="pref_allow_reinstall_name">Allow reinstall</string>
+    <string name="pref_allow_reinstall_desc">If the latest OTA matches the current OS fingerprint, treat it as an update. This may cause continuous reinstalls if automatic updates are enabled.</string>
+    <string name="pref_revert_completed_name">Revert completed update</string>
+    <string name="pref_revert_completed_desc">This is only possible after an update completes, but before rebooting. This is meant for debugging purposes only.</string>
+
+    <!-- Dialogs -->
+    <string name="dialog_ota_server_url_title">@string/pref_ota_server_url_name</string>
+    <string name="dialog_ota_server_url_message">Enter the base URL for fetching OTA update metadata (excluding the filename).</string>
+    <string name="dialog_ota_server_url_error_bad_protocol">Only http:// and https:// URLs are supported.</string>
+    <string name="dialog_ota_server_url_error_malformed">Not a valid URL.</string>
+    <string name="dialog_action_ok">OK</string>
+    <string name="dialog_action_cancel">Cancel</string>
+
+    <!-- Notifications -->
+    <string name="notification_channel_persistent_name">background services</string>
+    <string name="notification_channel_persistent_desc">persistent notification for update progress</string>
+    <string name="notification_channel_check_name">update check alerts</string>
+    <string name="notification_channel_check_desc">alerts about updates being available</string>
+    <string name="notification_channel_failure_name">failure alerts</string>
+    <string name="notification_channel_failure_desc">alerts for errors during update</string>
+    <string name="notification_channel_success_name">success alerts</string>
+    <string name="notification_channel_success_desc">alerts for successful update</string>
+    <string name="notification_state_init">Initializing OTA updater</string>
+    <string name="notification_state_check">Checking for OTA updates</string>
+    <string name="notification_state_install">Installing OTA update</string>
+    <string name="notification_state_verify">Verifying OTA update</string>
+    <string name="notification_state_finalize">Finalizing OTA update</string>
+    <string name="notification_update_available">OTA update is available</string>
+    <string name="notification_update_unnecessary">OS is already up to date</string>
+    <string name="notification_update_succeeded">Successfully installed OTA update</string>
+    <string name="notification_update_cancelled">OTA update process was cancelled</string>
+    <string name="notification_update_reverted">Successfully reverted OTA update</string>
+    <string name="notification_update_failed">Failed to install OTA update</string>
+    <string name="notification_action_install">Install</string>
+    <string name="notification_action_pause">Pause</string>
+    <string name="notification_action_resume">Resume</string>
+    <string name="notification_action_cancel">Cancel</string>
+    <string name="notification_action_reboot">Reboot</string>
+    <string name="notification_action_retry">Retry</string>
+</resources>

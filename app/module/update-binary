@@ -1,0 +1,46 @@
+#!/sbin/sh
+
+# Copyright (C) 2022-2023  Andrew Gunnerson
+#
+# This file is part of Custota, based on BCR code.
+#
+# Custota is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License version 3
+# as published by the Free Software Foundation.
+#
+# Custota is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with Custota.  If not, see <http://www.gnu.org/licenses/>.
+
+OUTFD=${2}
+ZIPFILE=${3}
+
+umask 022
+
+ui_print() {
+    printf "ui_print %s\nui_print\n" "${*}" > /proc/self/fd/"${OUTFD}"
+}
+
+if [ -f /sbin/recovery ] || [ -f /system/bin/recovery ]; then
+    # Installing via recovery.
+
+    ui_print 'Installing from recovery is not supported'
+    exit 1
+else
+    # Installing via Magisk Manager.
+
+    api_ver=$(getprop ro.build.version.sdk)
+    if [ "${api_ver}" -lt 33 ]; then
+        ui_print 'The Android version on this device is too old'
+        ui_print 'Required: SDK >=33 (Android >=13)'
+        ui_print "Current: SDK ${api_ver}"
+        exit 1
+    fi
+
+    . /data/adb/magisk/util_functions.sh
+    install_module
+fi

@@ -1,0 +1,29 @@
+[versions]
+androidx-activity = "1.7.2"
+androidx-appcompat = "1.6.1"
+androidx-core = "1.10.1"
+androidx-fragment = "1.6.1"
+androidx-preference = "1.2.0"
+androidGradlePlugin = "8.1.0"
+jgit = "6.6.0.202305301015-r"
+json = "20230618"
+kotlin = "1.9.0"
+material = "1.9.0"
+
+[libraries]
+androidx-activity = { group = "androidx.activity", name = "activity-ktx", version.ref = "androidx-activity" }
+androidx-appcompat = { group = "androidx.appcompat", name = "appcompat", version.ref = "androidx-appcompat" }
+androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "androidx-core" }
+androidx-fragment-ktx = { group = "androidx.fragment", name = "fragment-ktx", version.ref = "androidx-fragment" }
+androidx-preference-ktx = { group = "androidx.preference", name = "preference-ktx", version.ref = "androidx-preference" }
+material = { group = "com.google.android.material", name = "material", version.ref = "material" }
+
+# Build script
+jgit = { group = "org.eclipse.jgit", name = "org.eclipse.jgit", version.ref = "jgit" }
+jgit-archive = { group = "org.eclipse.jgit", name = "org.eclipse.jgit.archive", version.ref = "jgit" }
+json = { group = "org.json", name = "json", version.ref = "json" }
+
+[plugins]
+android-application = { id = "com.android.application", version.ref = "androidGradlePlugin" }
+kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
+kotlin-parcelize = { id = "org.jetbrains.kotlin.plugin.parcelize", version.ref = "kotlin" }

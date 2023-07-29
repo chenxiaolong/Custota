@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg"
+    width="24"
+    height="24"
+    viewBox="0 -960 960 960">
+
+    <circle fill="#43A047" cx="50%" cy="-50%" r="50%" />
+
+    <!--
+        Make this map the Android icon exactly. Android adaptive icons take the inner (centered)
+        2/3rds of the foreground's viewport and crop out the rest [1]. Our foreground drawable is
+        scaled to 50% of its 960px viewport. So in this SVG viewport, it'll take up 50% of 150%.
+
+        [1] https://cs.android.com/android/platform/superproject/+/android-13.0.0_r31:frameworks/base/graphics/java/android/graphics/drawable/AdaptiveIconDrawable.java;l=106
+    -->
+
+    <g transform-origin="50% -50%" transform="scale(0.75 0.75)">
+        <path
+            fill="#ffffff"
+            d="M260-40q-24 0-42-18t-18-42v-760q0-24 18-42t42-18h440q24 0 42 18t18 42v760q0 24-18 42t-42 18H260Zm0-90v30h440v-30H260Zm0-60h440v-580H260v580Zm220-128L325-473l43-43 82 82v-194h60v194l82-82 43 43-155 155ZM260-830h440v-30H260v30Zm0 0v-30 30Zm0 700v30-30Z" />
+    </g>
+</svg>

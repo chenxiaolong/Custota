@@ -1,0 +1,142 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Copyright (C) 2023  Andrew Gunnerson
+
+    This file is part of Custota.
+
+    Custota is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License version 3
+    as published by the Free Software Foundation.
+
+    Custota is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Custota.  If not, see <http://www.gnu.org/licenses/>.
+-->
+<PreferenceScreen xmlns:app="http://schemas.android.com/apk/res-auto">
+    <PreferenceCategory
+        app:title="@string/pref_header_general"
+        app:iconSpaceReserved="false">
+
+        <Preference
+            app:key="check_for_updates"
+            app:persistent="false"
+            app:title="@string/pref_check_for_updates_name"
+            app:summary="@string/pref_check_for_updates_desc"
+            app:iconSpaceReserved="false" />
+
+        <Preference
+            app:key="ota_server_url"
+            app:persistent="false"
+            app:title="@string/pref_ota_server_url_name"
+            app:iconSpaceReserved="false" />
+    </PreferenceCategory>
+
+    <PreferenceCategory
+        app:title="@string/pref_header_behavior"
+        app:iconSpaceReserved="false">
+
+        <SwitchPreferenceCompat
+            app:key="automatic_install"
+            app:defaultValue="false"
+            app:title="@string/pref_automatic_install_name"
+            app:summary="@string/pref_automatic_install_desc"
+            app:iconSpaceReserved="false" />
+
+        <SwitchPreferenceCompat
+            app:key="unmetered_only"
+            app:defaultValue="true"
+            app:title="@string/pref_unmetered_only_name"
+            app:summary="@string/pref_unmetered_only_desc"
+            app:iconSpaceReserved="false" />
+
+        <SwitchPreferenceCompat
+            app:key="battery_not_low"
+            app:defaultValue="true"
+            app:title="@string/pref_battery_not_low_name"
+            app:summary="@string/pref_battery_not_low_desc"
+            app:iconSpaceReserved="false" />
+
+        <SwitchPreferenceCompat
+            app:key="skip_postinstall"
+            app:title="@string/pref_skip_postinstall_name"
+            app:summary="@string/pref_skip_postinstall_desc"
+            app:iconSpaceReserved="false" />
+    </PreferenceCategory>
+
+    <PreferenceCategory
+        app:title="@string/pref_header_os"
+        app:iconSpaceReserved="false">
+
+        <Preference
+            app:key="android_version"
+            app:persistent="false"
+            app:title="@string/pref_android_version_name"
+            app:iconSpaceReserved="false" />
+
+        <Preference
+            app:key="fingerprint"
+            app:persistent="false"
+            app:title="@string/pref_fingerprint_name"
+            app:iconSpaceReserved="false" />
+
+        <Preference
+            app:key="boot_slot"
+            app:persistent="false"
+            app:title="@string/pref_boot_slot_name"
+            app:iconSpaceReserved="false" />
+    </PreferenceCategory>
+
+    <PreferenceCategory
+        app:key="certificates"
+        app:title="@string/pref_header_certificates"
+        app:iconSpaceReserved="false">
+
+        <Preference
+            app:key="no_certificates"
+            app:persistent="false"
+            app:title="@string/pref_no_certificates_name"
+            app:iconSpaceReserved="false"
+            app:enabled="false" />
+    </PreferenceCategory>
+
+    <PreferenceCategory
+        app:title="@string/pref_header_about"
+        app:iconSpaceReserved="false">
+
+        <com.chiller3.custota.view.LongClickablePreference
+            app:key="version"
+            app:persistent="false"
+            app:title="@string/pref_version_name"
+            app:iconSpaceReserved="false" />
+    </PreferenceCategory>
+
+    <PreferenceCategory
+        app:key="debug"
+        app:title="@string/pref_header_debug"
+        app:iconSpaceReserved="false">
+
+        <Preference
+            app:key="open_log_dir"
+            app:persistent="false"
+            app:title="@string/pref_open_log_dir_name"
+            app:summary="@string/pref_open_log_dir_desc"
+            app:iconSpaceReserved="false" />
+
+        <SwitchPreferenceCompat
+            app:key="allow_reinstall"
+            app:title="@string/pref_allow_reinstall_name"
+            app:summary="@string/pref_allow_reinstall_desc"
+            app:iconSpaceReserved="false" />
+
+        <Preference
+            app:key="revert_completed"
+            app:persistent="false"
+            app:title="@string/pref_revert_completed_name"
+            app:summary="@string/pref_revert_completed_desc"
+            app:iconSpaceReserved="false" />
+    </PreferenceCategory>
+</PreferenceScreen>
