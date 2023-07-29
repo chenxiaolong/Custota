@@ -7,7 +7,7 @@
 
 Custota is an app for installing Android A/B OTA updates from a custom OTA server. When paired with [avbroot](https://github.com/chenxiaolong/avbroot), it can be used to seamlessly install OTAs signed by a custom key.
 
-Custota is installed via a Magisk/KernelSU module so that it can run as a system app. Root access is only used for a boot script that sandboxes Custota into an SELinux domain with minimal privileges.
+Custota is installed via a Magisk/KernelSU module so that it can run as a system app.
 
 <img src="app/images/light.png" alt="light mode screenshot" width="200" /> <img src="app/images/dark.png" alt="dark mode screenshot" width="200" />
 
@@ -81,7 +81,17 @@ The `location` field is set to the OTA zip path provided on the command line. If
 
 ### HTTPS
 
-Custota respects Android's user trust store. Self-signed certificates can be used once they are imported into the trust store from Android's Settings app.
+Custota respects Android's user trust store, but `update_engine` does not. In fact, it doesn't even use the normal system trust store and instead, has its own at `/system/etc/security/cacerts_google`. This limited trust store only contains a few CA certificates, notably excluding Let's Encrypt.
+
+Custota's module will automatically override `update_engine`'s trust store to match the normal system trust store _and_ user trust store.
+
+To use a self-signed certificate or a custom CA certificate:
+
+1. Import the certificate into the user trust store in Android's Settings app.
+
+2. Flash (or reflash) Custota.
+
+If the CA certificate ever needs to be updated again, just repeat these steps.
 
 ## Custom verification key
 
@@ -129,6 +139,8 @@ To access the Custota's logs, enable debug mode and press `Open log directory` t
 
 When reporting bugs, please include the log files as it is extremely helpful for identifying what might be going wrong. The logs should contain no sensitive information besides the OTA URLs.
 
+(To monitor `update_engine`'s own logs, run `adb logcat '*:S' update_engine`.)
+
 ### Reinstallation
 
 For testing, Custota can allow the current OS version (i.e. matching build fingerprint) to be reinstalled. To do so, enable debug mode and then enable the `Allow reinstall` toggle. Make sure to not enable `Automatically install updates` at the same time or else the current OS version will be reinstalled after every reboot because it's always seen as a valid update.
@@ -150,6 +162,16 @@ There are two parts to the SELinux changes:
 2. An `seapp_contexts` rule is added to `/dev/selinux/apex_seapp_contexts`, which actually sets up the association between Custota (app package ID: `com.chiller3.custota`) and the new SELinux domain (`custota_app`).
 
 These changes help limit Custota's privileges to exactly what is needed and avoids potentially increasing the attack surface via other apps.
+
+### HTTPS
+
+One caveat about `update_engine` is that it uses its own trust store for CA certificates at `/system/etc/security/cacerts_google`. To work around this, Custota's module will [override this directory](./app/module/customize.sh) to match the system and user 0 (primary user) trust store. It does so by copying all certificates from:
+
+* `/apex/com.android.conscrypt/cacerts` (updatable system trust store on Android 14+)
+* `/system/etc/security/cacerts` (system trust store on Android 13)
+* `/data/misc/user/0/cacerts-added` (primary user trust store)
+
+Then, any certificate with a matching name in `/data/misc/user/0/cacerts-removed` is removed, in case the user revoked its trust. These operations are done at module installation time. Custota needs to be reflashed for changes to CA certificates to take effect.
 
 ## Verifying digital signatures
 
