@@ -18,6 +18,7 @@ import android.os.Parcelable
 import android.os.PowerManager
 import android.util.Log
 import androidx.annotation.UiThread
+import androidx.core.content.IntentCompat
 import com.chiller3.custota.Notifications
 import com.chiller3.custota.Preferences
 import com.chiller3.custota.R
@@ -67,8 +68,8 @@ class UpdaterService : Service(), UpdaterThread.UpdaterThreadListener {
                     getSystemService(PowerManager::class.java).reboot(null)
                 }
                 ACTION_SCHEDULE -> {
-                    UpdaterJob.scheduleImmediate(this, intent.getParcelableExtra(
-                        EXTRA_ACTION, UpdaterThread.Action::class.java)!!)
+                    UpdaterJob.scheduleImmediate(this, IntentCompat.getParcelableExtra(
+                        intent, EXTRA_ACTION, UpdaterThread.Action::class.java)!!)
                 }
             }
         } catch (e: Exception) {
@@ -84,8 +85,12 @@ class UpdaterService : Service(), UpdaterThread.UpdaterThreadListener {
         if (updaterThread == null) {
             Log.d(TAG, "Creating new updater thread")
 
-            val network = intent.getParcelableExtra(EXTRA_NETWORK, Network::class.java)!!
-            val action = intent.getParcelableExtra(EXTRA_ACTION, UpdaterThread.Action::class.java)!!
+            // IntentCompat is required due to an Android 13 bug that's only fixed in 14+
+            // https://issuetracker.google.com/issues/274185314
+            val network = IntentCompat.getParcelableExtra(
+                intent, EXTRA_NETWORK, Network::class.java)!!
+            val action = IntentCompat.getParcelableExtra(
+                intent, EXTRA_ACTION, UpdaterThread.Action::class.java)!!
             val silent = intent.getBooleanExtra(EXTRA_SILENT, false)
 
             // Clear all stale alert notifications when initiated by the user. For the periodic job,

@@ -23,3 +23,11 @@
 # Disable obfuscation completely. As an open source project, shrinking is the
 # only goal of minification.
 -dontobfuscate
+
+# Keep classes generated from AIDL
+-keep class android.os.IUpdateEngine* {
+    *;
+}
+-keep class android.os.IUpdateEngineCallback* {
+    *;
+}
