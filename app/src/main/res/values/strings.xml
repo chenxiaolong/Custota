@@ -17,7 +17,7 @@
     <string name="pref_check_for_updates_name">Check for updates</string>
     <string name="pref_check_for_updates_desc">Schedule a check for new OTA updates.</string>
     <string name="pref_ota_server_url_name">OTA server URL</string>
-    <string name="pref_ota_server_url_desc_none">(No URL set.)</string>
+    <string name="pref_ota_server_url_desc_none">No URL set.</string>
     <string name="pref_certificate_name">Certificate %1$s</string>
     <string name="pref_certificate_desc_subject">Subject: %1$s</string>
     <string name="pref_certificate_desc_serial">Serial: %1$s</string>
