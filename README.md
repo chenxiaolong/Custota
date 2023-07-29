@@ -17,6 +17,7 @@ Custota is installed via a Magisk/KernelSU module so that it can run as a system
 * Supports pausing, resuming, and cancelling updates
 * Supports skipping optional post-install scripts to speed up updates
 * Never communicates with any server besides the configured OTA server
+* OTA updates safely continue running even if the app crashes or is uninstalled during the operation
 
 ## Limitations
 
