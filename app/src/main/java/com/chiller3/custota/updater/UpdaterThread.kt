@@ -504,7 +504,7 @@ class UpdaterThread(
 
         val engineProperties = HashMap(payloadProperties).apply {
             put("NETWORK_ID", network!!.networkHandle.toString())
-            put("USER_AGENT", USER_AGENT)
+            put("USER_AGENT", USER_AGENT_UPDATE_ENGINE)
 
             if (updateInfo.authorization != null) {
                 Log.i(TAG, "Passing authorization header to update_engine")
@@ -744,6 +744,7 @@ class UpdaterThread(
         private val TAG = UpdaterThread::class.java.simpleName
 
         private const val USER_AGENT = "${BuildConfig.APPLICATION_ID}/${BuildConfig.VERSION_NAME}"
+        private val USER_AGENT_UPDATE_ENGINE = "$USER_AGENT update_engine/${Build.VERSION.SDK_INT}"
 
         private const val TIMEOUT_MS = 30_000
 
