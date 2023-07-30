@@ -228,6 +228,9 @@ class SettingsFragment : PreferenceFragmentCompat(), Preference.OnPreferenceClic
                 refreshCheckForUpdates()
                 refreshOtaServerUrl()
             }
+            Preferences.PREF_UNMETERED_ONLY, Preferences.PREF_BATTERY_NOT_LOW -> {
+                UpdaterJob.schedulePeriodic(requireContext(), true)
+            }
         }
     }
 

@@ -18,14 +18,18 @@ import com.chiller3.custota.Preferences
 
 class UpdaterJob: JobService() {
     override fun onStartJob(params: JobParameters): Boolean {
-        val prefs = Preferences(this)
-
         val actionIndex = params.extras.getInt(EXTRA_ACTION, -1)
         val isPeriodic = actionIndex == -1
 
+        if (isPeriodic && skipNextRun) {
+            Log.i(TAG, "Skipped this run of the periodic job")
+            skipNextRun = false
+            return false
+        }
+
         val action = if (!isPeriodic) {
             UpdaterThread.Action.values()[actionIndex]
-        } else if (prefs.automaticInstall) {
+        } else if (Preferences(this).automaticInstall) {
             UpdaterThread.Action.INSTALL
         } else {
             UpdaterThread.Action.CHECK
@@ -49,6 +53,11 @@ class UpdaterJob: JobService() {
         private const val EXTRA_ACTION = "action"
 
         private const val PERIODIC_INTERVAL_MS = 6L * 60 * 60 * 1000
+
+        // Scheduling a periodic job usually makes the first iteration run immediately. We'll
+        // sometimes skip this to avoid unexpected operations while the user is configuring
+        // settings in the UI.
+        private var skipNextRun = false
 
         private fun createJobBuilder(
             context: Context,
@@ -110,11 +119,13 @@ class UpdaterJob: JobService() {
             scheduleIfUnchanged(context, jobInfo)
         }
 
-        fun schedulePeriodic(context: Context) {
+        fun schedulePeriodic(context: Context, skipFirstRun: Boolean) {
             val jobInfo = createJobBuilder(context, ID_PERIODIC, null)
                 .setPersisted(true)
                 .setPeriodic(PERIODIC_INTERVAL_MS)
                 .build()
+
+            skipNextRun = skipFirstRun
 
             scheduleIfUnchanged(context, jobInfo)
         }

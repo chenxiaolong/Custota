@@ -40,7 +40,7 @@ class MainApplication : Application() {
 
         Notifications(this).updateChannels()
 
-        UpdaterJob.schedulePeriodic(this)
+        UpdaterJob.schedulePeriodic(this, false)
     }
 
     companion object {
