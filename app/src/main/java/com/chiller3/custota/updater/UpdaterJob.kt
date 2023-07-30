@@ -18,18 +18,25 @@ import com.chiller3.custota.Preferences
 
 class UpdaterJob: JobService() {
     override fun onStartJob(params: JobParameters): Boolean {
+        val prefs = Preferences(this)
+
         val actionIndex = params.extras.getInt(EXTRA_ACTION, -1)
         val isPeriodic = actionIndex == -1
 
-        if (isPeriodic && skipNextRun) {
-            Log.i(TAG, "Skipped this run of the periodic job")
-            skipNextRun = false
-            return false
+        if (isPeriodic) {
+            if (!prefs.automaticCheck) {
+                Log.i(TAG, "Automatic update checks are disabled")
+                return false
+            } else if (skipNextRun) {
+                Log.i(TAG, "Skipped this run of the periodic job")
+                skipNextRun = false
+                return false
+            }
         }
 
         val action = if (!isPeriodic) {
             UpdaterThread.Action.values()[actionIndex]
-        } else if (Preferences(this).automaticInstall) {
+        } else if (prefs.automaticInstall) {
             UpdaterThread.Action.INSTALL
         } else {
             UpdaterThread.Action.CHECK

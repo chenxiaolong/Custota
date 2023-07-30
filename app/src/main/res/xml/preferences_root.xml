@@ -28,7 +28,15 @@
         app:iconSpaceReserved="false">
 
         <SwitchPreferenceCompat
+            app:key="automatic_check"
+            app:defaultValue="true"
+            app:title="@string/pref_automatic_check_name"
+            app:summary="@string/pref_automatic_check_desc"
+            app:iconSpaceReserved="false" />
+
+        <SwitchPreferenceCompat
             app:key="automatic_install"
+            app:dependency="automatic_check"
             app:defaultValue="false"
             app:title="@string/pref_automatic_install_name"
             app:summary="@string/pref_automatic_install_desc"

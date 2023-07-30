@@ -24,6 +24,8 @@
     <string name="pref_certificate_desc_type">Type: %1$s</string>
 
     <!-- Behavior preferences -->
+    <string name="pref_automatic_check_name">Automatically check for updates</string>
+    <string name="pref_automatic_check_desc">Automatically check for new updates in the background.</string>
     <string name="pref_automatic_install_name">Automatically install updates</string>
     <string name="pref_automatic_install_desc">Automatically install new updates in the background.</string>
     <string name="pref_unmetered_only_name">Require unmetered network</string>

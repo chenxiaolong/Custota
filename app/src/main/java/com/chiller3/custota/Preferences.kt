@@ -18,6 +18,7 @@ class Preferences(context: Context) {
 
         const val PREF_CHECK_FOR_UPDATES = "check_for_updates"
         const val PREF_OTA_SERVER_URL = "ota_server_url"
+        const val PREF_AUTOMATIC_CHECK = "automatic_check"
         const val PREF_AUTOMATIC_INSTALL = "automatic_install"
         const val PREF_UNMETERED_ONLY = "unmetered_only"
         const val PREF_BATTERY_NOT_LOW = "battery_not_low"
@@ -51,6 +52,11 @@ class Preferences(context: Context) {
                 putString(PREF_OTA_SERVER_URL, url.toString())
             }
         }
+
+    /** Whether to check for updates periodically. */
+    var automaticCheck: Boolean
+        get() = prefs.getBoolean(PREF_AUTOMATIC_CHECK, true)
+        set(enabled) = prefs.edit { putBoolean(PREF_AUTOMATIC_CHECK, enabled) }
 
     /** Whether to install updates in the periodic job or just check for them. */
     var automaticInstall: Boolean
