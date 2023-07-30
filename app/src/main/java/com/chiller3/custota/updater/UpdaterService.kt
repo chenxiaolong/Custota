@@ -143,11 +143,11 @@ class UpdaterService : Service(), UpdaterThread.UpdaterThreadListener {
         Log.d(TAG, "Updating foreground notification for state: $state")
 
         val titleResId = when (state?.type) {
+            UpdaterThread.ProgressType.INIT, null -> R.string.notification_state_init
             UpdaterThread.ProgressType.CHECK -> R.string.notification_state_check
             UpdaterThread.ProgressType.UPDATE -> R.string.notification_state_install
             UpdaterThread.ProgressType.VERIFY -> R.string.notification_state_verify
             UpdaterThread.ProgressType.FINALIZE -> R.string.notification_state_finalize
-            null -> R.string.notification_state_init
         }
         val actionResIds = mutableListOf<Int>()
         val actionIntents = mutableListOf<Intent>()

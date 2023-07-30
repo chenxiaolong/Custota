@@ -565,6 +565,8 @@ class UpdaterThread(
         try {
             wakeLock.acquire()
 
+            listener.onUpdateProgress(this, ProgressType.INIT, 0, 0)
+
             Log.d(TAG, "Waiting for initial engine status")
             val status = waitForStatus { it != -1 }
             val statusStr = UpdateEngineStatus.toString(status)
@@ -592,10 +594,10 @@ class UpdaterThread(
                 // further operations besides reverting.
                 listener.onUpdateResult(this, UpdateNeedReboot)
             } else {
-                listener.onUpdateProgress(this, ProgressType.CHECK, 0, 0)
-
                 if (status == UpdateEngineStatus.IDLE) {
                     Log.d(TAG, "Starting new update because engine is idle")
+
+                    listener.onUpdateProgress(this, ProgressType.CHECK, 0, 0)
 
                     val checkUpdateResult = checkForUpdates()
 
@@ -728,6 +730,7 @@ class UpdaterThread(
     }
 
     enum class ProgressType {
+        INIT,
         CHECK,
         UPDATE,
         VERIFY,
