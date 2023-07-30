@@ -279,9 +279,8 @@ class UpdaterService : Service(), UpdaterThread.UpdaterThreadListener {
     }
 
     override fun onUpdateResult(thread: UpdaterThread, result: UpdaterThread.Result) {
-        require(thread === updaterThread) { "Bad thread ($thread != $updaterThread)" }
-
         handler.post {
+            require(thread === updaterThread) { "Bad thread ($thread != $updaterThread)" }
             notifyAlert(result)
             threadExited()
         }
@@ -293,9 +292,8 @@ class UpdaterService : Service(), UpdaterThread.UpdaterThreadListener {
         current: Int,
         max: Int
     ) {
-        require(thread === updaterThread) { "Bad thread ($thread != $updaterThread)" }
-
         handler.post {
+            require(thread === updaterThread) { "Bad thread ($thread != $updaterThread)" }
             progressState = ProgressState(type, current, max)
             updateForegroundNotification()
         }
