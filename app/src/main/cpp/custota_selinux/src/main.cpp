@@ -837,6 +837,9 @@ static bool apply_patches(
     // allow custota_app update_engine_service:service_manager find;
     ff(add_rule(pdb, target_type, "update_engine_service", "service_manager", "find", errors));
 
+    // allow custota_app oem_lock_service:service_manager find;
+    ff(add_rule(pdb, target_type, "oem_lock_service", "service_manager", "find", errors));
+
     if (strip_no_audit) {
         ff(raw_strip_no_audit(pdb) != SELinuxResult::Error);
     }

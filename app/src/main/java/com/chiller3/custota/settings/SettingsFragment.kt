@@ -56,6 +56,7 @@ class SettingsFragment : PreferenceFragmentCompat(), Preference.OnPreferenceClic
     private lateinit var prefAndroidVersion: Preference
     private lateinit var prefFingerprint: Preference
     private lateinit var prefBootSlot: Preference
+    private lateinit var prefBootloaderStatus: Preference
     private lateinit var prefNoCertificates: Preference
     private lateinit var prefVersion: LongClickablePreference
     private lateinit var prefOpenLogDir: Preference
@@ -98,6 +99,8 @@ class SettingsFragment : PreferenceFragmentCompat(), Preference.OnPreferenceClic
         prefBootSlot.summary = SystemPropertiesProxy.get("ro.boot.slot_suffix")
             .removePrefix("_").uppercase()
 
+        prefBootloaderStatus = findPreference(Preferences.PREF_BOOTLOADER_STATUS)!!
+
         prefNoCertificates = findPreference(Preferences.PREF_NO_CERTIFICATES)!!
         prefNoCertificates.summary = getString(
             R.string.pref_no_certificates_desc, OtaPaths.OTACERTS_ZIP)
@@ -124,12 +127,25 @@ class SettingsFragment : PreferenceFragmentCompat(), Preference.OnPreferenceClic
                 }
             }
         }
+
+        lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                viewModel.bootloaderStatus.collect {
+                    if (it != null) {
+                        updateBootloaderStatus(it)
+                    }
+                }
+            }
+        }
     }
 
     override fun onStart() {
         super.onStart()
 
         preferenceScreen.sharedPreferences!!.registerOnSharedPreferenceChangeListener(this)
+
+        // Make sure we refresh this every time the user switches back to the app
+        viewModel.refreshBootloaderStatus()
     }
 
     override fun onStop() {
@@ -158,6 +174,37 @@ class SettingsFragment : PreferenceFragmentCompat(), Preference.OnPreferenceClic
 
     private fun refreshDebugPrefs() {
         categoryDebug.isVisible = prefs.isDebugMode
+    }
+
+    private fun updateBootloaderStatus(status: SettingsViewModel.BootloaderStatus) {
+        prefBootloaderStatus.summary = buildString {
+            when (status) {
+                is SettingsViewModel.BootloaderStatus.Success -> {
+                    if (status.unlocked) {
+                        append(getString(R.string.pref_bootloader_status_unlocked))
+                    } else {
+                        append(getString(R.string.pref_bootloader_status_locked))
+                    }
+                    append('\n')
+                    if (status.allowedByCarrier) {
+                        append(getString(R.string.pref_bootloader_status_oemlock_carrier_allowed))
+                    } else {
+                        append(getString(R.string.pref_bootloader_status_oemlock_carrier_blocked))
+                    }
+                    append('\n')
+                    if (status.allowedByUser) {
+                        append(getString(R.string.pref_bootloader_status_oemlock_user_allowed))
+                    } else {
+                        append(getString(R.string.pref_bootloader_status_oemlock_user_blocked))
+                    }
+                }
+                is SettingsViewModel.BootloaderStatus.Failure -> {
+                    append(getString(R.string.pref_bootloader_status_unknown))
+                    append('\n')
+                    append(status.errorMsg)
+                }
+            }
+        }
     }
 
     private fun performAction() {

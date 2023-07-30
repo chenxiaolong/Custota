@@ -35,10 +35,18 @@
     <string name="pref_skip_postinstall_name">Skip optional post-install scripts</string>
     <string name="pref_skip_postinstall_desc">Skip running post-install operations that are marked as optional in the OTA. This usually skips the dexopt operation, which precompiles app bytecode for faster loading.</string>
 
-    <!-- OS version preferences -->
+    <!-- OS information preferences -->
     <string name="pref_android_version_name">Android version</string>
     <string name="pref_fingerprint_name">Fingerprint</string>
     <string name="pref_boot_slot_name">Boot slot</string>
+    <string name="pref_bootloader_status_name">Bootloader status</string>
+    <string name="pref_bootloader_status_unknown">Unknown</string>
+    <string name="pref_bootloader_status_unlocked">Unlocked</string>
+    <string name="pref_bootloader_status_locked">Locked</string>
+    <string name="pref_bootloader_status_oemlock_carrier_allowed">OEM unlock allowed by carrier</string>
+    <string name="pref_bootloader_status_oemlock_carrier_blocked">OEM unlock blocked by carrier</string>
+    <string name="pref_bootloader_status_oemlock_user_allowed">OEM unlock allowed by user</string>
+    <string name="pref_bootloader_status_oemlock_user_blocked">OEM unlock blocked by user</string>
 
     <!-- Certificate preferences -->
     <string name="pref_no_certificates_name">No certificates found</string>

@@ -267,6 +267,9 @@ android.applicationVariants.all {
                 <permissions>
                     <privapp-permissions package="${variant.applicationId}">
                         <permission name="android.permission.ACCESS_CACHE_FILESYSTEM" />
+                        <permission name="android.permission.MANAGE_CARRIER_OEM_UNLOCK_STATE" />
+                        <permission name="android.permission.MANAGE_USER_OEM_UNLOCK_STATE" />
+                        <permission name="android.permission.READ_OEM_UNLOCK_STATE" />
                         <permission name="android.permission.REBOOT" />
                     </privapp-permissions>
                 </permissions>
