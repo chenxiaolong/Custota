@@ -9,8 +9,11 @@
 
 ### Unreleased
 
+* Add section for bootloader unlock status ([PR #1 @chenxiaolong])
+
 ### Version 1.0
 
 * Initial release
 
 <!-- Do not manually edit the lines below. Use `./gradlew changelogUpdateLinks` to regenerate. -->
+[PR #1 @chenxiaolong]: https://github.com/chenxiaolong/Custota/pull/1
