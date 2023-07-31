@@ -84,6 +84,12 @@
             app:persistent="false"
             app:title="@string/pref_boot_slot_name"
             app:iconSpaceReserved="false" />
+
+        <Preference
+            app:key="bootloader_status"
+            app:persistent="false"
+            app:title="@string/pref_bootloader_status_name"
+            app:iconSpaceReserved="false" />
     </PreferenceCategory>
 
     <PreferenceCategory

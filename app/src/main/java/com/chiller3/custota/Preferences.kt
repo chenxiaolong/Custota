@@ -26,6 +26,7 @@ class Preferences(context: Context) {
         const val PREF_ANDROID_VERSION = "android_version"
         const val PREF_FINGERPRINT = "fingerprint"
         const val PREF_BOOT_SLOT = "boot_slot"
+        const val PREF_BOOTLOADER_STATUS = "bootloader_status"
         const val PREF_NO_CERTIFICATES = "no_certificates"
         const val PREF_VERSION = "version"
         const val PREF_OPEN_LOG_DIR = "open_log_dir"

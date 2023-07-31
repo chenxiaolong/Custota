@@ -114,6 +114,8 @@ This creates a Magisk/KernelSU module that overrides `otacerts.zip`. After flash
   * Needed to run the OTA update service in the background.
 * `INTERNET` (**automatically granted at install time**)
   * Needed to communicate with the OTA server. Custota **does not and will never** communicate with any server outside of the configured OTA server. There are no ads, analytics, or any sort of tracking.
+* `MANAGE_CARRIER_OEM_UNLOCK_STATE`, `MANAGE_USER_OEM_UNLOCK_STATE`, `READ_OEM_UNLOCK_STATE` (**automatically granted by system app permissions**)
+  * Needed to show the bootloader unlock status.
 * `POST_NOTIFICATIONS` (**must be granted by the user**)
   * Android requires a notification to be shown in order for the updater service to reliably run in the background.
 * `REBOOT` (**automatically granted by system app permissions**)

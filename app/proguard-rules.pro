@@ -31,3 +31,6 @@
 -keep class android.os.IUpdateEngineCallback* {
     *;
 }
+-keep class android.service.oemlock.IOemLockService* {
+    *;
+}
