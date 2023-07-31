@@ -7,7 +7,7 @@
     to update the actual links at the bottom of the file.
 -->
 
-### Unreleased
+### Version 1.1
 
 * Add section for bootloader unlock status ([PR #1 @chenxiaolong])
 
