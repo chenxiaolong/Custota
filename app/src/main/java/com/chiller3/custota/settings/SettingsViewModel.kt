@@ -19,9 +19,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import java.security.cert.CertificateFactory
 import java.security.cert.X509Certificate
-import java.util.zip.ZipFile
 
 class SettingsViewModel : ViewModel() {
     private val _certs = MutableStateFlow<List<X509Certificate>>(emptyList())
@@ -37,28 +35,14 @@ class SettingsViewModel : ViewModel() {
     private fun loadCertificates() {
         viewModelScope.launch {
             withContext(Dispatchers.IO) {
-                val result = mutableListOf<X509Certificate>()
-
-                try {
-                    val factory = CertificateFactory.getInstance("X.509")
-
-                    ZipFile(OtaPaths.OTACERTS_ZIP).use { zip ->
-                        for (entry in zip.entries()) {
-                            if (!entry.name.endsWith(".x509.pem")) {
-                                Log.d(TAG, "Skipping ${entry.name}")
-                                continue
-                            }
-
-                            zip.getInputStream(entry).use { stream ->
-                                result.add(factory.generateCertificate(stream) as X509Certificate)
-                            }
-                        }
-                    }
+                val certs = try {
+                    OtaPaths.otaCerts
                 } catch (e: Exception) {
                     Log.w(TAG, "Failed to load certificates")
+                    emptyList()
                 }
 
-                _certs.update { result }
+                _certs.update { certs }
             }
         }
     }

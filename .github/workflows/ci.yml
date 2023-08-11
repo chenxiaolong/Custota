@@ -5,8 +5,8 @@ on:
       - master
   pull_request:
 jobs:
-  build:
-    name: Build project
+  build-app:
+    name: Build app
     runs-on: ubuntu-latest
     steps:
       - name: Check out repository
@@ -27,3 +27,17 @@ jobs:
       - name: Build and test
         # Debug build only since release builds require a signing key
         run: ./gradlew --no-daemon build zipDebug -x assembleRelease
+
+  build-tool:
+    name: Build custota-tool
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v3
+
+      - name: Build
+        run: |
+          cd custota-tool
+          cargo clippy
+          cargo fmt -- --check
+          cargo build --verbose

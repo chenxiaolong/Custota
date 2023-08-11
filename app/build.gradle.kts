@@ -5,6 +5,7 @@
  * Based on BCR code.
  */
 
+import com.google.protobuf.gradle.proto
 import org.eclipse.jgit.api.ArchiveCommand
 import org.eclipse.jgit.api.Git
 import org.eclipse.jgit.archive.TarFormat
@@ -16,6 +17,8 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.parcelize)
+    alias(libs.plugins.kotlin.serialization)
+    alias(libs.plugins.protobuf)
 }
 
 java {
@@ -140,6 +143,9 @@ android {
             assets {
                 srcDir(archiveDir)
             }
+            proto {
+                srcDir(File(rootDir, "protobuf"))
+            }
         }
     }
     signingConfigs {
@@ -184,13 +190,33 @@ android {
     }
 }
 
+protobuf {
+    protoc {
+        artifact = libs.protoc.get().toString()
+    }
+
+    generateProtoTasks {
+        all().configureEach {
+            builtins {
+                create("java") {
+                    option("lite")
+                }
+            }
+        }
+    }
+}
+
 dependencies {
     implementation(libs.androidx.activity)
     implementation(libs.androidx.appcompat)
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.fragment.ktx)
     implementation(libs.androidx.preference.ktx)
+    implementation(libs.bouncycastle.pkix)
+    implementation(libs.bouncycastle.prov)
+    implementation(libs.kotlinx.serialization.json)
     implementation(libs.material)
+    implementation(libs.protobuf.javalite)
 }
 
 val archive = tasks.register("archive") {

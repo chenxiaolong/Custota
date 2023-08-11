@@ -34,3 +34,8 @@
 -keep class android.service.oemlock.IOemLockService* {
     *;
 }
+
+# Keep classes generated from protobuf
+-keep class android.ota.OtaPackageMetadata* {
+    *;
+}
