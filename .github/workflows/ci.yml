@@ -30,14 +30,61 @@ jobs:
 
   build-tool:
     name: Build custota-tool
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
+    env:
+      CARGO_TERM_COLOR: always
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, ubuntu-latest, macos-latest]
     steps:
       - name: Check out repository
         uses: actions/checkout@v3
+        with:
+          # For git describe
+          fetch-depth: 0
 
-      - name: Build
+      - name: Get version
+        id: get_version
+        shell: bash
+        run: |
+          echo -n 'version=' >> "${GITHUB_OUTPUT}"
+          git describe --always \
+              | sed -E "s/^v//g;s/([^-]*-g)/r\1/;s/-/./g" \
+              >> "${GITHUB_OUTPUT}"
+
+      - name: Get Rust LLVM target triple
+        id: get_target
+        shell: bash
+        env:
+          RUSTC_BOOTSTRAP: '1'
+        run: |
+          echo -n 'name=' >> "${GITHUB_OUTPUT}"
+          rustc -Z unstable-options --print target-spec-json \
+              | jq -r '."llvm-target"' \
+              >> "${GITHUB_OUTPUT}"
+
+      - name: Clippy
         run: |
           cd custota-tool
           cargo clippy
+
+      - name: Formatting
+        run: |
+          cd custota-tool
           cargo fmt -- --check
-          cargo build --verbose
+
+      - name: Build
+        env:
+          RUSTFLAGS: -C strip=symbols
+        run: |
+          cd custota-tool
+          cargo build --release
+
+      - name: Archive artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: custota-tool-${{ steps.get_version.outputs.version }}-${{ steps.get_target.outputs.name }}
+          path: |
+            custota-tool/target/release/custota-tool
+            custota-tool/target/release/custota-tool.exe
