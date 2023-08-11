@@ -4,6 +4,8 @@
  * SPDX-License-Identifier: GPL-3.0-only
  */
 
+@file:OptIn(ExperimentalStdlibApi::class, ExperimentalSerializationApi::class)
+
 package com.chiller3.custota.updater
 
 import android.annotation.SuppressLint
@@ -14,13 +16,20 @@ import android.os.IUpdateEngine
 import android.os.IUpdateEngineCallback
 import android.os.Parcelable
 import android.os.PowerManager
+import android.ota.OtaPackageMetadata.OtaMetadata
 import android.util.Log
 import com.chiller3.custota.BuildConfig
 import com.chiller3.custota.Preferences
 import com.chiller3.custota.extension.toSingleLineString
 import com.chiller3.custota.wrapper.ServiceManagerProxy
 import kotlinx.parcelize.Parcelize
-import org.json.JSONObject
+import kotlinx.serialization.ExperimentalSerializationApi
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.decodeFromStream
+import org.bouncycastle.cms.CMSSignedData
+import org.bouncycastle.cms.jcajce.JcaSimpleSignerInfoVerifierBuilder
 import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.IOException
@@ -28,6 +37,7 @@ import java.io.OutputStream
 import java.net.HttpURLConnection
 import java.net.URI
 import java.net.URL
+import java.security.MessageDigest
 import java.util.concurrent.locks.ReentrantLock
 import kotlin.concurrent.withLock
 import kotlin.math.roundToInt
@@ -42,6 +52,8 @@ class UpdaterThread(
         ServiceManagerProxy.getServiceOrThrow("android.os.UpdateEngineService"))
 
     private val prefs = Preferences(context)
+    // NOTE: This is not implemented.
+    private val authorization: String? = null
 
     private lateinit var logcatProcess: Process
 
@@ -148,7 +160,7 @@ class UpdaterThread(
         updateEngine.cancel()
     }
 
-    private fun openUrl(url: URL, authorization: String?): HttpURLConnection {
+    private fun openUrl(url: URL): HttpURLConnection {
         val c = network!!.openConnection(url) as HttpURLConnection
         c.connectTimeout = TIMEOUT_MS
         c.readTimeout = TIMEOUT_MS
@@ -161,28 +173,27 @@ class UpdaterThread(
 
     /** Download and parse update info JSON file. */
     private fun downloadUpdateInfo(url: URL): UpdateInfo {
-        val data = openUrl(url, null).inputStream.bufferedReader().use {
-            JSONObject(it.readText())
+        val updateInfo: UpdateInfo = openUrl(url).inputStream.use {
+            Json.decodeFromStream(it)
+        }
+        Log.d(TAG, "Update info: $updateInfo")
+
+        if (updateInfo.version != 2) {
+            throw BadFormatException("Only UpdateInfo version 2 is supported")
         }
 
-        return UpdateInfo.fromJson(data)
+        return updateInfo
     }
 
     /**
-     * Download a chunk of the file at the given [offset] and [size]. The server must support byte
-     * ranges. If the server returns too few or too many bytes, then the download will fail.
+     * Download a property file entry from the OTA zip. The server must support byte ranges. If the
+     * server returns too few or too many bytes, then the download will fail.
      *
      * @param output Not closed by this function
      */
-    private fun downloadRangeToStream(
-        url: URL,
-        authorization: String?,
-        offset: Long,
-        size: Long,
-        output: OutputStream,
-    ) {
-        val connection = openUrl(url, authorization)
-        connection.setRequestProperty("Range", "bytes=$offset-${offset + size - 1}")
+    private fun downloadPropertyFile(url: URL, pf: PropertyFile, output: OutputStream) {
+        val connection = openUrl(url)
+        connection.setRequestProperty("Range", "bytes=${pf.offset}-${pf.offset + pf.size - 1}")
         connection.connect()
 
         if (connection.responseCode / 100 != 2) {
@@ -193,30 +204,39 @@ class UpdaterThread(
             throw IOException("Server does not support byte ranges")
         }
 
-        if (connection.contentLengthLong != size) {
-            throw IOException("Expected $size bytes, but Content-Length is ${connection.contentLengthLong}")
+        if (connection.contentLengthLong != pf.size) {
+            throw IOException("Expected ${pf.size} bytes, but Content-Length is ${connection.contentLengthLong}")
         }
+
+        val md = MessageDigest.getInstance("SHA-256")
 
         connection.inputStream.use { input ->
             val buf = ByteArray(16384)
             var downloaded = 0L
 
-            while (downloaded < size) {
-                val toRead = java.lang.Long.min(buf.size.toLong(), size - downloaded).toInt()
+            while (downloaded < pf.size) {
+                val toRead = java.lang.Long.min(buf.size.toLong(), pf.size - downloaded).toInt()
                 val n = input.read(buf, 0, toRead)
                 if (n <= 0) {
                     break
                 }
 
+                md.update(buf, 0, n)
                 output.write(buf, 0, n)
                 downloaded += n.toLong()
             }
 
-            if (downloaded != size) {
-                throw IOException("Unexpected EOF after downloading $downloaded bytes (expected $size bytes)")
+            if (downloaded != pf.size) {
+                throw IOException("Unexpected EOF after downloading $downloaded bytes (expected ${pf.size} bytes)")
             } else if (input.read() != -1) {
-                throw IOException("Server returned more data than expected (expected $size bytes)")
+                throw IOException("Server returned more data than expected (expected ${pf.size} bytes)")
             }
+        }
+
+        val sha256 = md.digest().toHexString()
+
+        if (!pf.digest.equals(sha256, true)) {
+            throw IOException("Expected sha256 ${pf.digest}, but have $sha256")
         }
     }
 
@@ -236,9 +256,9 @@ class UpdaterThread(
 
             val pieces = line.split("=", limit = 2)
             if (pieces.size != 2) {
-                throw IOException("Invalid property file line: $line")
+                throw BadFormatException("Invalid property file line: $line")
             } else if (pieces[0] in result) {
-                throw IOException("Duplicate property file key: ${pieces[0]}")
+                throw BadFormatException("Duplicate property file key: ${pieces[0]}")
             }
 
             result[pieces[0]] = pieces[1]
@@ -255,102 +275,111 @@ class UpdaterThread(
             // Trimmed because the last item will have padding
             val pieces = segment.trimEnd().split(':')
             if (pieces.size != 3) {
-                throw IOException("Invalid property files segment: $segment")
+                throw BadFormatException("Invalid property files segment: $segment")
             }
 
             val name = pieces[0]
             val offset = pieces[1].toLongOrNull()
-                ?: throw IOException("Invalid property files entry offset: ${pieces[1]}")
+                ?: throw BadFormatException("Invalid property files entry offset: ${pieces[1]}")
             val size = pieces[2].toLongOrNull()
-                ?: throw IOException("Invalid property files entry size: ${pieces[2]}")
+                ?: throw BadFormatException("Invalid property files entry size: ${pieces[2]}")
 
-            result.add(PropertyFile(name, offset, size))
+            result.add(PropertyFile(name, offset, size, null))
         }
 
         return result
     }
 
     /** Download and parse key/value pairs file. */
-    private fun downloadKeyValueFile(
-        url: URL,
-        authorization: String?,
-        offset: Long,
-        size: Long,
-    ): Map<String, String> {
+    private fun downloadKeyValueFile(url: URL, pf: PropertyFile): Map<String, String> {
         val outputStream = ByteArrayOutputStream()
-        downloadRangeToStream(url, authorization, offset, size, outputStream)
+        downloadPropertyFile(url, pf, outputStream)
 
         return parseKeyValuePairs(outputStream.toString(Charsets.UTF_8))
     }
 
-    /**
-     * Download the OTA metadata and validate that the update is valid for the current system.
-     *
-     * Returns the metadata and the list of property file entries parsed from it.
-     */
-    private fun downloadAndCheckMetadata(
-        url: URL,
-        authorization: String?,
-        offset: Long,
-        size: Long,
-    ): Pair<Map<String, String>, List<PropertyFile>> {
-        val metadata = downloadKeyValueFile(url, authorization, offset, size)
+    /** Download and verify signature of the csig file. */
+    private fun downloadAndCheckCsig(csigUrl: URL): CsigInfo {
+        val csigRaw = openUrl(csigUrl).inputStream.use { it.readBytes() }
+        val csigCms = CMSSignedData(csigRaw)
 
-        val get = { k: String ->
-            metadata[k] ?: throw IOException("Missing key in OTA metadata: $k")
+        // Verify the signature against the same OTA certs as what's used for the payload.
+        val csigValid = OtaPaths.otaCerts.any { cert ->
+            csigCms.signerInfos.any { signerInfo ->
+                signerInfo.verify(JcaSimpleSignerInfoVerifierBuilder().build(cert))
+            }
+        }
+        if (!csigValid) {
+            throw ValidationException("csig is not signed by a trusted key")
+        }
+        Log.d(TAG, "csig signature is valid")
+
+        val csigInfoRaw = String(csigCms.signedContent.content as ByteArray)
+        val csigInfo: CsigInfo = Json.decodeFromString(csigInfoRaw)
+        Log.d(TAG, "csig info: $csigInfo")
+
+        if (csigInfo.version != 1) {
+            throw BadFormatException("Only CsigInfo version 1 is supported")
         }
 
-        // Required
-        val otaType = get("ota-type")
-        val preDevice = get("pre-device")
-        val postSecurityPatchLevel = get("post-security-patch-level")
-        val postTimestamp = get("post-timestamp").toLong() * 1000
+        return csigInfo
+    }
 
-        if (otaType != "AB") {
-            throw IllegalStateException("Not an A/B OTA package")
-        } else if (preDevice != Build.DEVICE) {
-            throw IllegalStateException("Mismatched device ID: " +
-                    "current=${Build.DEVICE}, ota=$preDevice")
+    /** Download the OTA metadata and validate that the update is valid for the current system. */
+    private fun downloadAndCheckMetadata(
+        url: URL,
+        pf: PropertyFile,
+        csigInfo: CsigInfo,
+    ): OtaMetadata {
+        val outputStream = ByteArrayOutputStream()
+        downloadPropertyFile(url, pf, outputStream)
+
+        val metadata = OtaMetadata.newBuilder().mergeFrom(outputStream.toByteArray()).build()
+        Log.d(TAG, "OTA metadata: $metadata")
+
+        // Required
+        val preDevices = metadata.precondition.deviceList
+        val postSecurityPatchLevel = metadata.postcondition.securityPatchLevel
+        val postTimestamp = metadata.postcondition.timestamp * 1000
+
+        if (metadata.type != OtaMetadata.OtaType.AB) {
+            throw ValidationException("Not an A/B OTA package")
+        } else if (!preDevices.contains(Build.DEVICE)) {
+            throw ValidationException("Mismatched device ID: " +
+                    "current=${Build.DEVICE}, ota=$preDevices")
         } else if (postSecurityPatchLevel < Build.VERSION.SECURITY_PATCH) {
-            throw IllegalStateException("Downgrading to older security patch is not allowed: " +
+            throw ValidationException("Downgrading to older security patch is not allowed: " +
                     "current=${Build.VERSION.SECURITY_PATCH}, ota=$postSecurityPatchLevel")
         } else if (postTimestamp < Build.TIME) {
-            throw IllegalStateException("Downgrading to older timestamp is not allowed: " +
+            throw ValidationException("Downgrading to older timestamp is not allowed: " +
                     "current=${Build.TIME}, ota=$postTimestamp")
         }
 
         // Optional
-        val preBuildIncremental = metadata["pre-build-incremental"]
-        val preBuild = metadata["pre-build"]
-        val serialNo = metadata["serialno"]
+        val preBuildIncremental = metadata.precondition.buildIncremental
+        val preBuilds = metadata.precondition.buildList
 
-        if (preBuildIncremental != null && preBuildIncremental != Build.VERSION.INCREMENTAL) {
-            throw IllegalStateException("Mismatched incremental version: " +
+        if (preBuildIncremental.isNotEmpty() && preBuildIncremental != Build.VERSION.INCREMENTAL) {
+            throw ValidationException("Mismatched incremental version: " +
                     "current=${Build.VERSION.INCREMENTAL}, ota=$preBuildIncremental")
-        } else if (preBuild != null && preBuild != Build.FINGERPRINT) {
-            throw IllegalStateException("Mismatched fingerprint: " +
-                    "current=${Build.FINGERPRINT}, ota=$preBuild")
-        } else if (serialNo != null) {
-            throw IllegalStateException("OTAs for specific serial numbers are not supported")
+        } else if (preBuilds.isNotEmpty() && !preBuilds.contains(Build.FINGERPRINT)) {
+            throw ValidationException("Mismatched fingerprint: " +
+                    "current=${Build.FINGERPRINT}, ota=$preBuilds")
         }
 
         // Property files
-        val propertyFilesRaw = get("ota-property-files")
+        val propertyFilesRaw = metadata.getPropertyFilesOrThrow("ota-property-files")
         val propertyFiles = parsePropertyFiles(propertyFilesRaw)
 
-        // Sanity check to make sure the properties we just read are actually what will be used by
-        // update_engine
-        val metadataPropertyFile = propertyFiles.find { it.name == OtaPaths.METADATA_NAME }
-            ?: throw IllegalStateException("Missing property file entry: ${OtaPaths.METADATA_NAME}")
-        if (metadataPropertyFile.offset != offset) {
-            throw IllegalStateException("Mismatched metadata offset: " +
-                    "update_json=$offset, ota=${metadataPropertyFile.offset}")
-        } else if (metadataPropertyFile.size != size) {
-            throw IllegalStateException("Mismatched metadata size: " +
-                    "update_json=$size, ota=${metadataPropertyFile.size}")
+        val invalidPropertyFiles = csigInfo.files.zip(propertyFiles)
+            .filter { !it.first.equalsWithoutDigest(it.second) }
+
+        if (invalidPropertyFiles.isNotEmpty()) {
+            throw ValidationException(
+                "csig files do not match metadata property files: $invalidPropertyFiles")
         }
 
-        return Pair(metadata, propertyFiles)
+        return metadata
     }
 
     /**
@@ -360,17 +389,12 @@ class UpdaterThread(
      * At a minimum, update_engine checks that the list of partitions in the OTA match the device.
      */
     @SuppressLint("SetWorldReadable")
-    private fun downloadAndCheckPayloadMetadata(
-        url: URL,
-        authorization: String?,
-        offset: Long,
-        size: Long,
-    ) {
+    private fun downloadAndCheckPayloadMetadata(url: URL, pf: PropertyFile) {
         val file = File(OtaPaths.OTA_PACKAGE_DIR, OtaPaths.PAYLOAD_METADATA_NAME)
 
         try {
-            file.outputStream().use {
-                downloadRangeToStream(url, authorization, offset, size, it)
+            file.outputStream().use { out ->
+                downloadPropertyFile(url, pf, out)
             }
             file.setReadable(true, false)
 
@@ -386,17 +410,12 @@ class UpdaterThread(
      * Returns the path to the written file.
      */
     @SuppressLint("SetWorldReadable")
-    private fun downloadCareMap(
-        url: URL,
-        authorization: String?,
-        offset: Long,
-        size: Long,
-    ): File {
+    private fun downloadCareMap(url: URL, pf: PropertyFile): File {
         val file = File(OtaPaths.OTA_PACKAGE_DIR, OtaPaths.CARE_MAP_NAME)
 
         try {
-            file.outputStream().use {
-                downloadRangeToStream(url, authorization, offset, size, it)
+            file.outputStream().use { out ->
+                downloadPropertyFile(url, pf, out)
             }
             file.setReadable(true, false)
         } catch (e: Exception) {
@@ -419,20 +438,20 @@ class UpdaterThread(
             throw IOException("Failed to download update info", e)
         }
 
-        val otaPackageUrl = resolveUrl(updateInfoUrl, updateInfo.location, false)
-        Log.d(TAG, "OTA package URL: $otaPackageUrl")
+        val otaUrl = resolveUrl(updateInfoUrl, updateInfo.full.locationOta, false)
+        Log.d(TAG, "OTA URL: $otaUrl")
+        val csigUrl = resolveUrl(updateInfoUrl, updateInfo.full.locationCsig, false)
+        Log.d(TAG, "csig URL: $csigUrl")
 
-        val (metadata, propertyFiles) = downloadAndCheckMetadata(
-            otaPackageUrl,
-            updateInfo.authorization,
-            updateInfo.metadataOffset,
-            updateInfo.metadataSize,
-        )
+        val csigInfo = downloadAndCheckCsig(csigUrl)
 
-        Log.d(TAG, "OTA metadata: $metadata")
-        Log.d(TAG, "Property files: $propertyFiles")
+        val pfMetadata = csigInfo.getOrThrow(OtaPaths.METADATA_NAME)
+        val metadata = downloadAndCheckMetadata(otaUrl, pfMetadata, csigInfo)
 
-        val fingerprint = metadata["post-build"]
+        if (metadata.postcondition.buildCount != 1) {
+            throw ValidationException("Metadata postcondition lists multiple fingerprints")
+        }
+        val fingerprint = metadata.postcondition.getBuild(0)
         var updateAvailable = fingerprint != Build.FINGERPRINT
 
         if (!updateAvailable) {
@@ -447,58 +466,33 @@ class UpdaterThread(
         return CheckUpdateResult(
             updateAvailable,
             fingerprint,
-            otaPackageUrl,
-            updateInfo,
-            propertyFiles,
+            otaUrl,
+            csigInfo,
         )
     }
 
     /** Asynchronously trigger the update_engine payload application. */
-    private fun startInstallation(
-        otaPackageUrl: URL,
-        updateInfo: UpdateInfo,
-        propertyFiles: List<PropertyFile>,
-    ) {
-        val getPf = { name: String ->
-            propertyFiles.find { it.name == name }
-                ?: throw IllegalStateException("Missing property files entry: $name")
-        }
-
-        val pfPayload = getPf(OtaPaths.PAYLOAD_NAME)
-        val pfPayloadMetadata = getPf(OtaPaths.PAYLOAD_METADATA_NAME)
-        val pfPayloadProperties = getPf(OtaPaths.PAYLOAD_PROPERTIES_NAME)
-        val pfCareMap = propertyFiles.find { it.name == OtaPaths.CARE_MAP_NAME }
+    private fun startInstallation(otaUrl: URL, csigInfo: CsigInfo) {
+        val pfPayload = csigInfo.getOrThrow(OtaPaths.PAYLOAD_NAME)
+        val pfPayloadMetadata = csigInfo.getOrThrow(OtaPaths.PAYLOAD_METADATA_NAME)
+        val pfPayloadProperties = csigInfo.getOrThrow(OtaPaths.PAYLOAD_PROPERTIES_NAME)
+        val pfCareMap = csigInfo.get(OtaPaths.CARE_MAP_NAME)
 
         Log.i(TAG, "Downloading payload metadata and checking compatibility")
 
-        downloadAndCheckPayloadMetadata(
-            otaPackageUrl,
-            updateInfo.authorization,
-            pfPayloadMetadata.offset,
-            pfPayloadMetadata.size,
-        )
-
-        Log.i(TAG, "Downloading payload properties file")
-
-        val payloadProperties = downloadKeyValueFile(
-            otaPackageUrl,
-            updateInfo.authorization,
-            pfPayloadProperties.offset,
-            pfPayloadProperties.size,
-        )
+        downloadAndCheckPayloadMetadata(otaUrl, pfPayloadMetadata)
 
         Log.i(TAG, "Downloading dm-verity care map file")
 
         if (pfCareMap != null) {
-            downloadCareMap(
-                otaPackageUrl,
-                updateInfo.authorization,
-                pfCareMap.offset,
-                pfCareMap.size,
-            )
+            downloadCareMap(otaUrl, pfCareMap)
         } else {
             Log.w(TAG, "OTA package does not have a dm-verity care map")
         }
+
+        Log.i(TAG, "Downloading payload properties file")
+
+        val payloadProperties = downloadKeyValueFile(otaUrl, pfPayloadProperties)
 
         Log.i(TAG, "Passing payload information to update_engine")
 
@@ -506,9 +500,9 @@ class UpdaterThread(
             put("NETWORK_ID", network!!.networkHandle.toString())
             put("USER_AGENT", USER_AGENT_UPDATE_ENGINE)
 
-            if (updateInfo.authorization != null) {
+            if (authorization != null) {
                 Log.i(TAG, "Passing authorization header to update_engine")
-                put("AUTHORIZATION", updateInfo.authorization)
+                put("AUTHORIZATION", authorization)
             }
 
             if (prefs.skipPostInstall) {
@@ -517,7 +511,7 @@ class UpdaterThread(
         }
 
         updateEngine.applyPayload(
-            otaPackageUrl.toString(),
+            otaUrl.toString(),
             pfPayload.offset,
             pfPayload.size,
             engineProperties.map { "${it.key}=${it.value}" }.toTypedArray(),
@@ -613,9 +607,8 @@ class UpdaterThread(
                     }
 
                     startInstallation(
-                        checkUpdateResult.otaPackageUrl,
-                        checkUpdateResult.updateInfo,
-                        checkUpdateResult.propertyFiles,
+                        checkUpdateResult.otaUrl,
+                        checkUpdateResult.csigInfo,
                     )
                 } else {
                     Log.w(TAG, "Monitoring existing update because engine is not idle")
@@ -650,44 +643,55 @@ class UpdaterThread(
         }
     }
 
+    class BadFormatException(msg: String, cause: Throwable? = null)
+        : Exception(msg, cause)
+
+    class ValidationException(msg: String, cause: Throwable? = null)
+        : Exception(msg, cause)
+
     private data class CheckUpdateResult(
         val updateAvailable: Boolean,
-        val fingerprint: String?,
-        val otaPackageUrl: URL,
-        val updateInfo: UpdateInfo,
-        val propertyFiles: List<PropertyFile>,
+        val fingerprint: String,
+        val otaUrl: URL,
+        val csigInfo: CsigInfo,
     )
 
+    @Serializable
     private data class PropertyFile(
         val name: String,
         val offset: Long,
         val size: Long,
+        val digest: String?,
+    ) {
+        fun equalsWithoutDigest(other: PropertyFile) =
+            name == other.name && offset == other.offset && size == other.size
+    }
+
+    @Serializable
+    private data class CsigInfo(
+        val version: Int,
+        val files: List<PropertyFile>,
+    ) {
+        fun get(name: String) = files.find { it.name == name }
+
+        fun getOrThrow(name: String) = get(name)
+            ?: throw ValidationException("Missing property files entry: $name")
+    }
+
+    @Serializable
+    private data class LocationInfo(
+        @SerialName("location_ota")
+        val locationOta: String,
+        @SerialName("location_csig")
+        val locationCsig: String,
     )
 
+    @Serializable
     private data class UpdateInfo(
-        val location: String,
-        val authorization: String?,
-        val metadataOffset: Long,
-        val metadataSize: Long,
-    ) {
-        companion object {
-            fun fromJson(json: JSONObject): UpdateInfo {
-                // We only support full OTAs right now
-                val full = json.getJSONObject("full")
-
-                val location = full.getString("location")
-                val authorization = if (full.isNull("authorization")) {
-                    null
-                } else {
-                    full.getString("authorization")
-                }
-                val metadataOffset = full.getLong("metadata_offset")
-                val metadataSize = full.getLong("metadata_size")
-
-                return UpdateInfo(location, authorization, metadataOffset, metadataSize)
-            }
-        }
-    }
+        val version: Int,
+        val full: LocationInfo,
+        val incremental: Map<String, LocationInfo> = emptyMap(),
+    )
 
     @Parcelize
     enum class Action : Parcelable {
@@ -700,7 +704,7 @@ class UpdaterThread(
         val isError : Boolean
     }
 
-    data class UpdateAvailable(val fingerprint: String?) : Result {
+    data class UpdateAvailable(val fingerprint: String) : Result {
         override val isError = false
     }
 

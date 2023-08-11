@@ -54,31 +54,60 @@ Custota only requires a basic webserver capable of serving static files and supp
 caddy file-server -access-log -listen :8080
 ```
 
-Custota looks for update metadata at `<url>/<device codename>.json`. The metadata JSON file looks like this:
+The following static files need to be hosted:
 
-```jsonc
-{
-    "full": {
-        // The location can be a relative path or a full URL.
-        "location": "path/to/ota.zip",
+* OTA zip
+    * The filename can be anything.
+* Csig ("Custota signature") file
+    * This is a file that contains a digital signature of the metadata sections of the OTA. This allows Custota to securely read the OTA's metadata without downloading the entire zip.
+    * The filename can be anything, but is commonly `<ota filename>.csig`.
+* Update info JSON
+    * This contains the path or URL to the `.zip` and `.csig` files.
+    * The filename _**must**_ be `<device codename>.json`.
 
-        // The values of the `metadata` entry from `ota-property-files`
-        // inside the OTA's META-INF/com/android/metadata file.
-        "metadata_offset": 2343312763,
-        "metadata_size": 646
-    }
-}
-```
+To generate the csig and update info files:
 
-To generate the metadata JSON file, run the following command from the directory containing the OTA zip:
+1. Make sure the [Rust toolchain](https://www.rust-lang.org/) is installed. `custota-tool` is written in Rust and uses low-level cryptography libraries from the Rust-Crypto project to perform the necessary signing and verification operations.
 
-```bash
-python3 generate_metadata.py path/to/ota.zip
-```
+2. Switch to the `custota-tool` directory from this repo.
 
-By default, the script will create `<device codename>.json` in the current directory. `-o <path>` can be used to specify a different path. The script will warn if the filename does not match the device codename.
+    ```bash
+    cd custota-tool
+    ```
 
-The `location` field is set to the OTA zip path provided on the command line. If the path on the server is different, use `-l <path>` to set `location` appropriately. `-l <URL>` can also be used if the zip files will be hosted on a different domain.
+3. Generate the csig file from the OTA zip. The keypair that was used to sign the OTA can also be used to create the csig.
+
+    ```bash
+    cargo run --release -- \
+        gen-csig \
+        --input path/to/ota.zip \
+        --key path/to/ota.key \
+        --cert path/to/ota.crt
+    ```
+
+    If the OTA was signed with a different keypair, use `--cert-verify` to specify the certificate for verifying the OTA. This is not needed if the OTA and csig are signed with the same keypair.
+
+    The csig will be saved to `<input>.csig`. `-o`/`--output` can be used to specify a different output path.
+
+    If the private key is encrypted, an interactive prompt for the passphrase will be shown. For automation, see `--help` for information on providing the passphrase via an environment variable or a file.
+
+4. Create the update info JSON file.
+
+    ```bash
+    cargo run --release -- \
+        gen-update-info \
+        --file <device codename>.json \
+        --location <ota filename>.zip
+    ```
+
+    The location can be set to:
+
+    * A relative path (computed starting from the directory containing the update info file). This is the easy option if the update info, OTA, and csig files are all stored in the same directory tree. Subdirectories are supported.
+    * A full URL. This is useful if the OTA and csig files are stored on different servers (eg. cloud object storage).
+
+    By default, the csig location is set to `<location>.csig`. This can be changed with the `-c`/`--csig-location` option.
+
+    If needed, this file can be easily edited by hand.
 
 ### HTTPS
 
@@ -166,7 +195,7 @@ There are two parts to the SELinux changes:
 
 These changes help limit Custota's privileges to exactly what is needed and avoids potentially increasing the attack surface via other apps.
 
-### HTTPS
+### TLS trust store
 
 One caveat about `update_engine` is that it uses its own trust store for CA certificates at `/system/etc/security/cacerts_google`. To work around this, Custota's module will [override this directory](./app/module/customize.sh) to match the system and user 0 (primary user) trust store. It does so by copying all certificates from:
 
@@ -175,6 +204,85 @@ One caveat about `update_engine` is that it uses its own trust store for CA cert
 * `/data/misc/user/0/cacerts-added` (primary user trust store)
 
 Then, any certificate with a matching name in `/data/misc/user/0/cacerts-removed` is removed, in case the user revoked its trust. These operations are done at module installation time. Custota needs to be reflashed for changes to CA certificates to take effect.
+
+### File formats
+
+#### OTA zip
+
+Custota uses Android's standard A/B OTA zip format with no additional changes.
+
+#### csig (Custota signature)
+
+The csig file contains a signed JSON message of the form:
+
+```jsonc
+{
+    "version": 1,
+    "files": [
+        {
+            "name": "payload_metadata.bin",
+            "offset": 3954,
+            "size": 148569,
+            "digest": "d13b75ba16ab6bcd992b3e8d0f1964b3f4f65c9c39022afe684dd48312079eb7"
+        },
+        {
+            "name": "payload.bin",
+            "offset": 3954,
+            "size": 2344888291,
+            "digest": "62b73ad358b06eebd186fa7c9895ef40bfdaf97060ae572984783dfa91397fb3"
+        },
+        // ...
+    ]
+}
+```
+
+This is a copy of the `ota-property-files` data in `META-INF/com/android/metadata.pb`, except with an additional field for the SHA256 digest of each file entry's data. The file intentionally includes no other data because it's only meant to allow secure parsing of OTA metadata without downloading the entire file and verifying the whole-file signature.
+
+Although it's never possible for a `payload.bin` signed by an untrusted key to be installed, csig prevents a new OTA's metadata from being attached to an old OTA's validly-signed payload for downgrade protection. This is because the csig info includes the digest for `payload_properties.txt`, which contains payload's own digests. This forms a strong tie between the csig and the payload.
+
+The actual csig file is a DER-encoded CMS signature containing the JSON structure above in its encapsulated data. To display the encapsulated data, run:
+
+```bash
+openssl cms -verify -in <csig file> -inform DER -binary -noverify
+```
+
+To verify the csig's signature against a specific certificate, run:
+
+```bash
+openssl cms -verify -in <csig file> -inform DER -binary -CAfile <cert file>
+```
+
+#### Update info
+
+The update info file is a JSON file of the form:
+
+```jsonc
+{
+    "version": 2,
+    "full": {
+        "location_ota": "ota.zip",
+        "location_csig": "ota.zip.csig"
+    }
+}
+```
+
+The file contains no metadata besides the location of the OTA and csig files. Each location field can be either a relative path (computed starting from the update info file's parent directory/URL) or a full URL.
+
+### Update process
+
+When Custota checks for updates, it will:
+
+1. Download the update info file.
+2. Download the csig file listed in the `location_csig` field.
+3. Verify the signature of the csig. All further downloads of file entries in the csig are verified against the listed digests.
+4. Download the `metadata.pb` entry and validate the fields to determine if the OTA is suitable for installation on the device.
+5. Show the update prompt if the OTA fingerprint does not match the running system and the security patch level is newer than the running system.
+
+When the user chooses to install an update, Custota will repeat all but the last step above and then:
+
+1. Download the `payload_metadata.bin` entry (`payload.bin`'s header), write it to `/data/ota_package/payload_metadata.bin`, and ask `update_engine` to verify that the listed partition operations are suitable to be performed on the current device.
+2. Download `care_map.pb` and write it to `/data/ota_package/care_map.pb`. This is unused for devices with virtual A/B partitioning (ie. snapuserd).
+3. Download `payload_properties.txt`, parse the payload digests, and ask `update_engine` to download and install `payload.bin`.
 
 ## Verifying digital signatures
 
