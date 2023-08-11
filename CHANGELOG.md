@@ -7,6 +7,8 @@
     to update the actual links at the bottom of the file.
 -->
 
+### Unreleased
+
 ### Version 2.0
 
 * Add support for signed OTA metadata ([PR #2 @chenxiaolong])
