@@ -1,3 +1,8 @@
+/*
+ * SPDX-FileCopyrightText: 2023 Andrew Gunnerson
+ * SPDX-License-Identifier: GPL-3.0-only
+ */
+
 use std::{env, ffi::OsStr, fs, io, path::Path};
 
 use pb_rs::{types::FileDescriptor, ConfigBuilder};

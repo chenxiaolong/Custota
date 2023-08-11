@@ -1,5 +1,4 @@
-# Copyright (C) 2023  Andrew Gunnerson
-#
+# SPDX-FileCopyrightText: 2023 Andrew Gunnerson
 # SPDX-License-Identifier: GPL-3.0-only
 
 # The Android gradle plugin doesn't have a way to build native executables and

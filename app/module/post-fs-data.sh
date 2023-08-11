@@ -1,5 +1,4 @@
-# Copyright (C) 2023  Andrew Gunnerson
-#
+# SPDX-FileCopyrightText: 2023 Andrew Gunnerson
 # SPDX-License-Identifier: GPL-3.0-only
 
 # We don't want to give any arbitrary system app permissions to update_engine.

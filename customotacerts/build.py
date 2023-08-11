@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 
-# Copyright (C) 2022-2023  Andrew Gunnerson
-#
+# SPDX-FileCopyrightText: 2022-2023 Andrew Gunnerson
 # SPDX-License-Identifier: GPL-3.0-only
 # Based on avbroot code.
 

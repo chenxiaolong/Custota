@@ -1,5 +1,4 @@
-# Copyright (C) 2016-2023  Andrew Gunnerson <andrewgunnerson@gmail.com>
-#
+# SPDX-FileCopyrightText: 2016-2023 Andrew Gunnerson
 # SPDX-License-Identifier: GPL-3.0-or-later
 # Based on DualBootPatcher code.
 
