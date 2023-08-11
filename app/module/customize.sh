@@ -53,7 +53,9 @@ run() {
     if [[ -d "${user_ca_removed}" ]]; then
         echo '- Removing disabled CA certs'
         for f in "${user_ca_removed}"/*; do
-            rm "${ca_dir}/${f##*/}" || return 1
+            # -f because Android doesn't clean up the user cacerts-removed
+            # directory when a root CA is removed in a system update.
+            rm -f "${ca_dir}/${f##*/}" || return 1
         done
     fi
 
