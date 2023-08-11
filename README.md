@@ -67,18 +67,12 @@ The following static files need to be hosted:
 
 To generate the csig and update info files:
 
-1. Make sure the [Rust toolchain](https://www.rust-lang.org/) is installed. `custota-tool` is written in Rust and uses low-level cryptography libraries from the Rust-Crypto project to perform the necessary signing and verification operations.
+1. Download `custota-tool` from the [release page](https://github.com/chenxiaolong/Custota/releases). Binaries are provided for Linux, Windows, and Mac. To compile from source instead, follow the [instructions here](#building-custota-tool).
 
-2. Switch to the `custota-tool` directory from this repo.
-
-    ```bash
-    cd custota-tool
-    ```
-
-3. Generate the csig file from the OTA zip. The keypair that was used to sign the OTA can also be used to create the csig.
+2. Generate the csig file from the OTA zip. The keypair that was used to sign the OTA can also be used to create the csig.
 
     ```bash
-    cargo run --release -- \
+    ./custota-tool \
         gen-csig \
         --input path/to/ota.zip \
         --key path/to/ota.key \
@@ -91,10 +85,10 @@ To generate the csig and update info files:
 
     If the private key is encrypted, an interactive prompt for the passphrase will be shown. For automation, see `--help` for information on providing the passphrase via an environment variable or a file.
 
-4. Create the update info JSON file.
+3. Create the update info JSON file.
 
     ```bash
-    cargo run --release -- \
+    ./custota-tool \
         gen-update-info \
         --file <device codename>.json \
         --location <ota filename>.zip
@@ -324,6 +318,8 @@ Then, check that the SHA-256 digest of the APK signing certificate is:
 
 ## Building from source
 
+### Building app and module
+
 Custota can be built like most other Android apps using Android Studio or the gradle command line.
 
 To build the APK:
@@ -357,6 +353,19 @@ and then build the release zip:
 ```bash
 ./gradlew zipRelease
 ```
+
+### Building custota-tool
+
+Make sure the [Rust toolchain](https://www.rust-lang.org/) is installed. Then run:
+
+```bash
+cd custota-tool
+cargo build --release
+```
+
+The output binary is written to `target/release/custota-tool`.
+
+Debug builds work too, but they will run significantly slower (in the sha256 computations) due to compiler optimizations being turned off.
 
 ## Contributing
 
