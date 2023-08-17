@@ -51,7 +51,7 @@ Custota is installed via a Magisk/KernelSU module so that it can run as a system
 Custota only requires a basic webserver capable of serving static files and supporting the HTTP `Range` header. Any standard webserver, like Apache, Nginx, or Caddy, will do the trick. For testing, Caddy is very useful because it can serve files from a directory without setting up any config files:
 
 ```bash
-caddy file-server -access-log -listen :8080
+caddy file-server --access-log --listen :8080
 ```
 
 The following static files need to be hosted:
