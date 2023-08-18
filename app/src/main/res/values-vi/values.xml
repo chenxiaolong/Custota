@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    SPDX-FileCopyrightText: 2023 Squiddy Kitty
+    SPDX-License-Identifier: GPL-3.0-only
+-->
+<resources>
+    <!-- Preference headers -->
+    <string name="pref_header_general">Cài đặt chung</string>
+    <string name="pref_header_behavior">Hành vi</string>
+    <string name="pref_header_os">Hệ điều hành</string>
+    <string name="pref_header_certificates">Chứng chỉ</string>
+    <string name="pref_header_about">Về ứng dụng này</string>
+    <string name="pref_header_debug">Gỡ lỗi</string>
+
+    <!-- General preferences -->
+    <string name="pref_check_for_updates_name">Kiểm tra cập nhật OTA</string>
+    <string name="pref_check_for_updates_desc">Đặt lịch kiểm tra cập nhật OTA.</string>
+    <string name="pref_ota_server_url_name">Đường dẫn OTA server</string>
+    <string name="pref_ota_server_url_desc_none">Đường dẫn chưa được thiết lập.</string>
+    <string name="pref_certificate_name">Chứng chỉ %1$s</string>
+    <string name="pref_certificate_desc_subject">Chủ đề: %1$s</string>
+    <string name="pref_certificate_desc_serial">Số sê-ri: %1$s</string>
+    <string name="pref_certificate_desc_type">Loại: %1$s</string>
+
+    <!-- Behavior preferences -->
+    <string name="pref_automatic_check_name">Tự động kiểm tra cập nhật mới</string>
+    <string name="pref_automatic_check_desc">Tự động kiểm tra cập nhật dưới nền.</string>
+    <string name="pref_automatic_install_name">Tự động cài đặt cập nhật</string>
+    <string name="pref_automatic_install_desc">Tự động cài đặt cập nhật mới dưới nền.</string>
+    <string name="pref_unmetered_only_name">Yêu cầu mạng</string>
+    <string name="pref_unmetered_only_desc">Chỉ cho phép tải xuống cập nhật qua kết nối không hạn chế(vd. Wi-Fi).</string>
+    <string name="pref_battery_not_low_name">Yêu cầu mực pin nhất định</string>
+    <string name="pref_battery_not_low_desc">Chỉ cho phép cài đặt cập nhật nếu mức pin không quá thấp.</string>
+    <string name="pref_skip_postinstall_name">Bỏ qua chạy các script sau cài đặt</string>
+    <string name="pref_skip_postinstall_desc">Bỏ qua chạy các script được xem là không bắt buộc khi cài đặt cập nhật. Việc này thường bỏ qua tiến trình dexopt mà giúp các bytecode được biên dịch sẵn của ứng dụng tải nhanh hơn.</string>
+
+    <!-- OS information preferences -->
+    <string name="pref_android_version_name">Phiên bản Android</string>
+    <string name="pref_fingerprint_name">Fingerprint</string>
+    <string name="pref_boot_slot_name">Boot slot</string>
+    <string name="pref_bootloader_status_name">Trạng thái Bootloader</string>
+    <string name="pref_bootloader_status_unknown">Không rõ</string>
+    <string name="pref_bootloader_status_unlocked">Đã mở khóa</string>
+    <string name="pref_bootloader_status_locked">Chưa mở khóa</string>
+    <string name="pref_bootloader_status_oemlock_carrier_allowed">Mở khóa OEM được cho phép bởi nhà mạng</string>
+    <string name="pref_bootloader_status_oemlock_carrier_blocked">Mở khóa OEM không được cho phép bởi nhà mạng</string>
+    <string name="pref_bootloader_status_oemlock_user_allowed">Mở khóa OEM được cho phép bởi người dùng</string>
+    <string name="pref_bootloader_status_oemlock_user_blocked">Mở khóa OEM không được cho phép bởi người dùng</string>
+
+    <!-- Certificate preferences -->
+    <string name="pref_no_certificates_name">Không tìm thấy chứng chỉ</string>
+    <string name="pref_no_certificates_desc">Không tìm thấy chứng chỉ hợp lệ tại %1$s.</string>
+
+    <!-- About "preference" -->
+    <string name="pref_version_name">Phiên bản</string>
+
+    <!-- Debug preferences -->
+    <string name="pref_open_log_dir_name">Mở thư mục nhật ký</string>
+    <string name="pref_open_log_dir_desc">Mở thư mục nhật ký qua ứng dụng File của hệ thống(DocumentsUI).</string>
+    <string name="pref_allow_reinstall_name">Cho phép cài đặt lại</string>
+    <string name="pref_allow_reinstall_desc">Nếu bản cập nhật OTA mới nhất trùng với fingerprint của hệ thống hiện tại, xem đó là một bản mới. Điều này có thể gây tình trạng cài lại nhiều bản cập nhật xảy ra cùng lúc khi tự động cập nhật được bật.</string>
+    <string name="pref_revert_completed_name">Khôi phục trạng thái trước cập nhật</string>
+    <string name="pref_revert_completed_desc">Lựa chọn này chỉ có thể xảy ra sau khi cài đặt cập nhật hoàn thành, nhưng trước khi khởi động lại máy. Chỉ nên sử dụng cho mục đích gỡ lỗi.</string>
+
+    <!-- Dialogs -->
+    <string name="dialog_ota_server_url_title">@string/pref_ota_server_url_name</string>
+    <string name="dialog_ota_server_url_message">Thêm đường dẫn gốc để tải về metadata cho nhật OTA(ngoại trừ tên file).</string>
+    <string name="dialog_ota_server_url_error_bad_protocol">Chỉ đường dẫn http:// và https:// được hỗ trợ.</string>
+    <string name="dialog_ota_server_url_error_malformed">Đương dẫn không hợp lệ.</string>
+    <string name="dialog_action_ok">OK</string>
+    <string name="dialog_action_cancel">Hủy</string>
+
+    <!-- Notifications -->
+    <string name="notification_channel_persistent_name">dịch vụ ngầm</string>
+    <string name="notification_channel_persistent_desc">thông báo hiển thị liên tục trong quá trình cập nhật</string>
+    <string name="notification_channel_check_name">thông báo về kiểm tra cập nhật</string>
+    <string name="notification_channel_check_desc">thông báo có bản cập nhật mới</string>
+    <string name="notification_channel_failure_name">thông báo thất bại</string>
+    <string name="notification_channel_failure_desc">thông báo lỗi cập nhật</string>
+    <string name="notification_channel_success_name">thông báo thành công </string>
+    <string name="notification_channel_success_desc">thông báo cập nhật thành công</string>
+    <string name="notification_state_init">Đang khởi tạo cập nhật OTA</string>
+    <string name="notification_state_check">Đang kiểm tra cập nhật OTA</string>
+    <string name="notification_state_install">Đang cài đặt cập nhật OTA</string>
+    <string name="notification_state_verify">Đang xác minh cập nhật OTA</string>
+    <string name="notification_state_finalize">Đang hoàn tất cập nhật OTA</string>
+    <string name="notification_update_available">Đã có bản cập nhật mới</string>
+    <string name="notification_update_unnecessary">Không có bản cập nhật mới</string>
+    <string name="notification_update_succeeded">Cài đặt cập nhật OTA thành công</string>
+    <string name="notification_update_cancelled">Tiến trình cài đặt cập nhật OTA đã bị hủy </string>
+    <string name="notification_update_reverted">Khôi phục trạng thái trước cập nhật OTA thành công</string>
+    <string name="notification_update_failed">Cài đặt cập nhật OTA thất bại</string>
+    <string name="notification_action_install">Cài đặt</string>
+    <string name="notification_action_pause">Tạm ngưng</string>
+    <string name="notification_action_resume">Tiếp tục</string>
+    <string name="notification_action_cancel">Hủy</string>
+    <string name="notification_action_reboot">Khởi động lại</string>
+    <string name="notification_action_retry">Thử lại</string>
+</resources>

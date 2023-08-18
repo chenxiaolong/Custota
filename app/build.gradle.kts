@@ -130,6 +130,7 @@ android {
         versionName = gitVersionName
         resourceConfigurations.addAll(listOf(
             "en",
+            "vi",
         ))
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
