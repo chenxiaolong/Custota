@@ -9,6 +9,8 @@
 
 ### Unreleased
 
+* Add Vietnamese translations ([PR #6 @archandanime])
+
 ### Version 2.0
 
 * Add support for signed OTA metadata ([PR #2 @chenxiaolong])
@@ -25,3 +27,4 @@
 <!-- Do not manually edit the lines below. Use `./gradlew changelogUpdateLinks` to regenerate. -->
 [PR #1 @chenxiaolong]: https://github.com/chenxiaolong/Custota/pull/1
 [PR #2 @chenxiaolong]: https://github.com/chenxiaolong/Custota/pull/2
+[PR #6 @archandanime]: https://github.com/chenxiaolong/Custota/pull/6
