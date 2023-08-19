@@ -12,6 +12,7 @@
 * Add Vietnamese translations ([PR #6 @archandanime])
 * Fix crash on initial app launch after installation ([Issue #7], [PR #8 @chenxiaolong])
 * Add hint text for OTA server URL text box ([Issue #5], [PR #9 @chenxiaolong])
+* Document how periodic update checks work ([Issue #5], [PR #10 @chenxiaolong])
 
 ### Version 2.0
 
