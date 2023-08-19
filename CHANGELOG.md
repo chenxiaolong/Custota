@@ -10,6 +10,7 @@
 ### Unreleased
 
 * Add Vietnamese translations ([PR #6 @archandanime])
+* Fix crash on initial app launch after installation ([Issue #7], [PR #8 @chenxiaolong])
 
 ### Version 2.0
 
@@ -25,6 +26,8 @@
 * Initial release
 
 <!-- Do not manually edit the lines below. Use `./gradlew changelogUpdateLinks` to regenerate. -->
+[Issue #7]: https://github.com/chenxiaolong/Custota/issues/7
 [PR #1 @chenxiaolong]: https://github.com/chenxiaolong/Custota/pull/1
 [PR #2 @chenxiaolong]: https://github.com/chenxiaolong/Custota/pull/2
 [PR #6 @archandanime]: https://github.com/chenxiaolong/Custota/pull/6
+[PR #8 @chenxiaolong]: https://github.com/chenxiaolong/Custota/pull/8
