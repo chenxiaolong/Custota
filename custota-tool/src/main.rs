@@ -363,6 +363,10 @@ fn get_zip_otacert(reader: impl Read + Seek) -> Result<Certificate> {
 
 /// Verify an OTA zip against its embedded certificates. This function makes no assertion about
 /// whether the certificate is actually trusted. Returns the embedded certificate.
+///
+/// CMS signed attributes are intentionally not supported because AOSP recovery does not support
+/// them either. It expects the CMS SignedData structure to be used for nothing more than a
+/// raw signature transport mechanism.
 fn verify_ota(mut reader: impl Read + Seek) -> Result<Certificate> {
     let (sd, hashed_size) = parse_ota_sig(&mut reader)?;
 
