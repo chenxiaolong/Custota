@@ -7,7 +7,7 @@
     to update the actual links at the bottom of the file.
 -->
 
-### Unreleased
+### Version 2.1
 
 * Add Vietnamese translations ([PR #6 @archandanime])
 * Fix crash on initial app launch after installation ([Issue #7], [PR #8 @chenxiaolong])
@@ -35,3 +35,4 @@
 [PR #6 @archandanime]: https://github.com/chenxiaolong/Custota/pull/6
 [PR #8 @chenxiaolong]: https://github.com/chenxiaolong/Custota/pull/8
 [PR #9 @chenxiaolong]: https://github.com/chenxiaolong/Custota/pull/9
+[PR #10 @chenxiaolong]: https://github.com/chenxiaolong/Custota/pull/10
