@@ -43,6 +43,7 @@ class OtaServerUrlDialogFragment : DialogFragment() {
 
         binding.message.setText(R.string.dialog_ota_server_url_message)
 
+        binding.text.hint = getString(R.string.dialog_ota_server_url_hint)
         binding.text.inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_URI
         binding.text.addTextChangedListener {
             url = null
