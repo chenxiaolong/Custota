@@ -9,6 +9,7 @@ import android.app.NotificationManager
 import android.app.Service
 import android.content.Context
 import android.content.Intent
+import android.content.pm.ServiceInfo
 import android.net.Network
 import android.os.Handler
 import android.os.IBinder
@@ -50,6 +51,11 @@ class UpdaterService : Service(), UpdaterThread.UpdaterThreadListener {
         try {
             when (val action = intent?.action) {
                 ACTION_START -> {
+                    // We're launched by startForegroundService(). Android requires the foreground
+                    // notification to be shown, even if stopService() is called before this method
+                    // returns.
+                    updateForegroundNotification(false)
+
                     if (prefs.otaServerUrl != null) {
                         startUpdate(intent)
                     } else {
@@ -58,7 +64,7 @@ class UpdaterService : Service(), UpdaterThread.UpdaterThreadListener {
                 }
                 ACTION_PAUSE, ACTION_RESUME -> {
                     updaterThread?.isPaused = action == ACTION_PAUSE
-                    updateForegroundNotification()
+                    updateForegroundNotification(true)
                 }
                 ACTION_CANCEL -> {
                     updaterThread?.cancel()
@@ -99,7 +105,7 @@ class UpdaterService : Service(), UpdaterThread.UpdaterThreadListener {
                 notifications.dismissAlert()
             }
 
-            updateForegroundNotification()
+            updateForegroundNotification(true)
 
             updaterThread = UpdaterThread(this, network, action, this).apply {
                 start()
@@ -137,7 +143,7 @@ class UpdaterService : Service(), UpdaterThread.UpdaterThreadListener {
         }
 
     @UiThread
-    private fun updateForegroundNotification() {
+    private fun updateForegroundNotification(showImmediately: Boolean) {
         val state = progressState
         Log.d(TAG, "Updating foreground notification for state: $state")
 
@@ -170,6 +176,7 @@ class UpdaterService : Service(), UpdaterThread.UpdaterThreadListener {
             actionResIds.zip(actionIntents),
             state?.current,
             state?.max,
+            showImmediately,
         )
 
         startForeground(Notifications.ID_PERSISTENT, notification)
@@ -294,7 +301,7 @@ class UpdaterService : Service(), UpdaterThread.UpdaterThreadListener {
         handler.post {
             require(thread === updaterThread) { "Bad thread ($thread != $updaterThread)" }
             progressState = ProgressState(type, current, max)
-            updateForegroundNotification()
+            updateForegroundNotification(true)
         }
     }
 
