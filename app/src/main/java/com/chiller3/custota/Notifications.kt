@@ -88,6 +88,7 @@ class Notifications(
         actions: List<Pair<Int, Intent>>,
         progressCurrent: Int?,
         progressMax: Int?,
+        showImmediately: Boolean,
     ): Notification {
         require((progressCurrent == null) == (progressMax == null)) {
             "Must specify both current and max progress or neither"
@@ -135,7 +136,9 @@ class Notifications(
             }
 
             // Inhibit 10-second delay when showing persistent notification
-            setForegroundServiceBehavior(Notification.FOREGROUND_SERVICE_IMMEDIATE)
+            if (showImmediately) {
+                setForegroundServiceBehavior(Notification.FOREGROUND_SERVICE_IMMEDIATE)
+            }
 
             build()
         }
