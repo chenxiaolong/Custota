@@ -9,6 +9,8 @@
 
 ### Unreleased
 
+* Fix crash when showing error notification if the app cannot connect to `update_engine` ([Issue #11], [PR #12 @chenxiaolong])
+
 ### Version 2.1
 
 * Add Vietnamese translations ([PR #6 @archandanime])
@@ -32,9 +34,11 @@
 <!-- Do not manually edit the lines below. Use `./gradlew changelogUpdateLinks` to regenerate. -->
 [Issue #5]: https://github.com/chenxiaolong/Custota/issues/5
 [Issue #7]: https://github.com/chenxiaolong/Custota/issues/7
+[Issue #11]: https://github.com/chenxiaolong/Custota/issues/11
 [PR #1 @chenxiaolong]: https://github.com/chenxiaolong/Custota/pull/1
 [PR #2 @chenxiaolong]: https://github.com/chenxiaolong/Custota/pull/2
 [PR #6 @archandanime]: https://github.com/chenxiaolong/Custota/pull/6
 [PR #8 @chenxiaolong]: https://github.com/chenxiaolong/Custota/pull/8
 [PR #9 @chenxiaolong]: https://github.com/chenxiaolong/Custota/pull/9
 [PR #10 @chenxiaolong]: https://github.com/chenxiaolong/Custota/pull/10
+[PR #12 @chenxiaolong]: https://github.com/chenxiaolong/Custota/pull/12
