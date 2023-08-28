@@ -267,7 +267,9 @@ class UpdaterService : Service(), UpdaterThread.UpdaterThreadListener {
         if (showRetry) {
             actionResIds.add(R.string.notification_action_retry)
             // Go through job scheduler because we might need a new network
-            actionIntents.add(createScheduleIntent(this, updaterAction!!))
+            updaterAction?.let { action ->
+                actionIntents.add(createScheduleIntent(this, action))
+            }
         }
         if (showReboot) {
             actionResIds.add(R.string.notification_action_reboot)
