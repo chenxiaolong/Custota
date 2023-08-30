@@ -10,6 +10,7 @@
 ### Unreleased
 
 * Fix crash when showing error notification if the app cannot connect to `update_engine` ([Issue #11], [PR #12 @chenxiaolong])
+* Explicitly create `/dev/selinux` during boot to fix SELinux patches on Android 14 ([Issue #11], [PR #14 @chenxiaolong])
 
 ### Version 2.1
 
@@ -42,3 +43,4 @@
 [PR #9 @chenxiaolong]: https://github.com/chenxiaolong/Custota/pull/9
 [PR #10 @chenxiaolong]: https://github.com/chenxiaolong/Custota/pull/10
 [PR #12 @chenxiaolong]: https://github.com/chenxiaolong/Custota/pull/12
+[PR #14 @chenxiaolong]: https://github.com/chenxiaolong/Custota/pull/14
