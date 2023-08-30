@@ -18,6 +18,8 @@ header Creating custota_app domain
 
 header Updating seapp_contexts
 
+mkdir -p /dev/selinux
+
 cat >> /dev/selinux/apex_seapp_contexts << EOF
 user=_app isPrivApp=true name=${app_id} domain=custota_app type=app_data_file levelFrom=all
 EOF
