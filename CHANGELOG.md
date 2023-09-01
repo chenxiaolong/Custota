@@ -7,7 +7,7 @@
     to update the actual links at the bottom of the file.
 -->
 
-### Unreleased
+### Version 2.2
 
 * Fix crash when showing error notification if the app cannot connect to `update_engine` ([Issue #11], [PR #12 @chenxiaolong])
 * Explicitly create `/dev/selinux` during boot to fix SELinux patches on Android 14 ([Issue #11], [PR #14 @chenxiaolong])
