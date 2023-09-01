@@ -3,58 +3,42 @@
  * SPDX-License-Identifier: GPL-3.0-only
  */
 
-mod protobuf;
-
 use std::{
     borrow::Cow,
     collections::HashMap,
-    env,
     ffi::{OsStr, OsString},
-    fs,
-    fs::{File, OpenOptions},
-    io::{self, BufReader, BufWriter},
-    io::{Read, Seek, SeekFrom},
+    fs::{self, File, OpenOptions},
+    io::{self, BufReader, BufWriter, Read, Seek, SeekFrom},
     path::{Path, PathBuf},
     str::FromStr,
+    sync::{atomic::AtomicBool, Arc},
 };
 
 use anyhow::{anyhow, bail, Context, Result};
+use avbroot::{
+    crypto::{self, PassphraseSource},
+    format::ota,
+    protobuf::build::tools::releasetools::mod_OtaMetadata::OtaType,
+    stream::{self, HashingReader},
+};
 use clap::{Parser, Subcommand};
 use cms::{
     builder::{SignedDataBuilder, SignerInfoBuilder},
     cert::{CertificateChoices, IssuerAndSerialNumber},
     content_info::ContentInfo,
-    signed_data::{EncapsulatedContentInfo, SignedData, SignerIdentifier},
+    signed_data::{EncapsulatedContentInfo, SignerIdentifier},
 };
-use memchr::memmem;
-use quick_protobuf::{BytesReader, MessageRead};
-use rsa::{
-    pkcs1v15::SigningKey,
-    pkcs8::{
-        der::{referenced::OwnedToRef, DecodePem},
-        DecodePrivateKey,
-    },
-    Pkcs1v15Sign, RsaPrivateKey, RsaPublicKey,
-};
+use ring::digest::Digest;
+use rsa::{pkcs1v15::SigningKey, RsaPrivateKey};
 use serde::{Deserialize, Serialize};
-use sha2::{
-    digest::{generic_array::GenericArray, OutputSizeUser},
-    Digest, Sha256,
-};
+use sha2::Sha256;
 use x509_cert::{
-    der::{asn1::OctetStringRef, Any, Decode, Encode, Tag},
+    der::{asn1::OctetStringRef, Any, Encode, Tag},
     spki::AlgorithmIdentifierOwned,
     Certificate,
 };
-use zip::ZipArchive;
 
-use crate::protobuf::build::tools::releasetools::mod_OtaMetadata::OtaType;
-use crate::protobuf::build::tools::releasetools::OtaMetadata;
-
-static EOCD_MAGIC: &[u8; 4] = b"PK\x05\x06";
-static METADATA_PATH: &str = "META-INF/com/android/metadata.pb";
-static OTACERT_PATH: &str = "META-INF/com/android/otacert";
-static CSIG_EXT: &str = ".csig";
+const CSIG_EXT: &str = ".csig";
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
 struct PropertyFile {
@@ -181,309 +165,23 @@ struct Cli {
     command: Command,
 }
 
-enum PassphraseSource {
-    Prompt(String),
-    EnvVar(OsString),
-    File(PathBuf),
-}
-
-impl PassphraseSource {
-    fn acquire(&self) -> Result<String> {
-        let passphrase = match self {
-            Self::Prompt(p) => rpassword::prompt_password(p)?,
-            Self::EnvVar(v) => env::var(v)?,
-            Self::File(p) => fs::read_to_string(p)?
-                .trim_end_matches(&['\r', '\n'])
-                .to_owned(),
-        };
-
-        Ok(passphrase)
-    }
-}
-
-/// x509_cert/pem follow rfc7468 strictly instead of implementing a lenient parser. The PEM decoder
-/// rejects lines in the base64 section that are longer than 64 characters, excluding whitespace.
-/// We'll reformat the data to deal with this because there are certificates that do not follow the
-/// spec, like the signing cert for the Pixel 7 Pro official OTAs.
-fn reformat_pem(data: &[u8]) -> Result<Vec<u8>> {
-    let mut result = vec![];
-    let mut base64 = vec![];
-    let mut inside_base64 = false;
-
-    for mut line in data.split(|&c| c == b'\n') {
-        while !line.is_empty() && line[line.len() - 1].is_ascii_whitespace() {
-            line = &line[..line.len() - 1];
-        }
-
-        if line.is_empty() {
-            continue;
-        } else if line.starts_with(b"-----BEGIN CERTIFICATE-----") {
-            inside_base64 = true;
-        } else if line.starts_with(b"-----END CERTIFICATE-----") {
-            inside_base64 = false;
-
-            for chunk in base64.chunks(64) {
-                result.extend_from_slice(chunk);
-                result.push(b'\n');
-            }
-
-            base64.clear();
-        } else if inside_base64 {
-            base64.extend_from_slice(line);
-            continue;
-        }
-
-        result.extend_from_slice(line);
-        result.push(b'\n');
-    }
-
-    if inside_base64 {
-        bail!("PEM certificate has start tag, but no end tag");
-    }
-
-    Ok(result)
-}
-
-/// Read PEM-encoded certificate from a file.
-fn read_pem_cert(path: &Path) -> Result<Certificate> {
-    let data = fs::read(path)?;
-    let data = reformat_pem(&data)?;
-    let certificate = Certificate::from_pem(data)?;
-
-    Ok(certificate)
-}
-
-/// Read PEM-encoded PKCS8 private key from a file.
-fn read_pem_key(path: &Path, source: &PassphraseSource) -> Result<RsaPrivateKey> {
-    let data = fs::read_to_string(path)?;
-
-    let certificate = if data.contains("ENCRYPTED") {
-        let passphrase = source
-            .acquire()
-            .with_context(|| format!("Failed to acquire passphrase for {path:?}"))?;
-
-        RsaPrivateKey::from_pkcs8_encrypted_pem(&data, passphrase)
-            .with_context(|| format!("Failed to decrypt private key: {path:?}"))?
-    } else {
-        RsaPrivateKey::from_pkcs8_pem(&data)?
-    };
-
-    Ok(certificate)
-}
-
-/// Read entry from a zip file into memory.
-fn get_zip_entry_data(reader: impl Read + Seek, name: &str) -> Result<Vec<u8>> {
-    let mut zip = ZipArchive::new(reader)?;
-    let mut entry = zip.by_name(name)?;
-    let mut buf = vec![0u8; entry.size() as usize];
-
-    entry.read_exact(&mut buf)?;
-
-    Ok(buf)
-}
-
-/// Parse the CMS signature from the file. Returns the decoded CMS [`SignedData`] structure and the
-/// length of the file (from the beginning) that's covered by the signature.
-fn parse_ota_sig(mut reader: impl Read + Seek) -> Result<(SignedData, u64)> {
-    let file_size = reader.seek(SeekFrom::End(0))?;
-
-    reader.seek(SeekFrom::Current(-6))?;
-    let mut footer = [0u8; 6];
-    reader.read_exact(&mut footer)?;
-
-    let abs_eoc_offset = u16::from_le_bytes(footer[0..2].try_into().unwrap());
-    let sig_magic = u16::from_le_bytes(footer[2..4].try_into().unwrap());
-    let comment_size = u16::from_le_bytes(footer[4..6].try_into().unwrap());
-
-    if sig_magic != 0xffff {
-        bail!("Cannot find OTA signature footer magic");
-    }
-
-    // RecoverySystem.verifyPackage() always assumes a non-zip64 EOCD, so we'll do the same.
-    let eocd_size = u64::from(22 + comment_size);
-    if file_size < eocd_size {
-        bail!("Zip is too small to contain EOCD");
-    } else if u64::from(abs_eoc_offset) > eocd_size {
-        bail!("Signature offset exceeds archive comment size");
-    }
-
-    reader.seek(SeekFrom::Start(file_size - eocd_size))?;
-    let mut eocd = vec![0u8; eocd_size as usize];
-    reader.read_exact(&mut eocd)?;
-
-    let mut eocd_magic_iter = memmem::find_iter(&eocd, EOCD_MAGIC);
-    if eocd_magic_iter.next() != Some(0) {
-        bail!("Cannot find EOCD magic");
-    }
-    if eocd_magic_iter.next().is_some() {
-        bail!("EOCD magic found in archive comment");
-    }
-
-    let sig_offset = eocd_size as usize - usize::from(abs_eoc_offset);
-    let sd = parse_cms(&eocd[sig_offset..eocd_size as usize - 6])?;
-    // The signature covers everything aside from the archive comment and its length field.
-    let hashed_size = file_size - 2 - u64::from(comment_size);
-
-    Ok((sd, hashed_size))
-}
-
-/// Parse a CMS [`SignedData`] structure from raw DER-encoded data.
-fn parse_cms(data: &[u8]) -> Result<SignedData> {
-    let ci = ContentInfo::from_der(data)?;
-    let sd = ci.content.decode_as::<SignedData>()?;
-
-    Ok(sd)
-}
-
-/// Get a list of all standard X509 certificates contained within a [`SignedData`] structure.
-fn get_cms_certs(sd: &SignedData) -> Vec<Certificate> {
-    sd.certificates.as_ref().map_or_else(Vec::new, |certs| {
-        certs
-            .0
-            .iter()
-            .filter_map(|cc| {
-                if let CertificateChoices::Certificate(c) = cc {
-                    Some(c.clone())
-                } else {
-                    None
-                }
-            })
-            .collect()
-    })
-}
-
-/// Get and parse the PEM-encoded otacert entry from an OTA zip.
-fn get_zip_otacert(reader: impl Read + Seek) -> Result<Certificate> {
-    let data = get_zip_entry_data(reader, OTACERT_PATH)?;
-    let data = reformat_pem(&data)?;
-    let certificate = Certificate::from_pem(data)?;
-
-    Ok(certificate)
-}
-
-/// Verify an OTA zip against its embedded certificates. This function makes no assertion about
-/// whether the certificate is actually trusted. Returns the embedded certificate.
-///
-/// CMS signed attributes are intentionally not supported because AOSP recovery does not support
-/// them either. It expects the CMS SignedData structure to be used for nothing more than a
-/// raw signature transport mechanism.
-fn verify_ota(mut reader: impl Read + Seek) -> Result<Certificate> {
-    let (sd, hashed_size) = parse_ota_sig(&mut reader)?;
-
-    // Make sure the certificate in the CMS structure matches the otacert zip entry.
-    let certs = get_cms_certs(&sd);
-    if certs.len() != 1 {
-        bail!("Expected exactly one Certificate instance");
-    }
-
-    let cert = &certs[0];
-    let public_key =
-        RsaPublicKey::try_from(cert.tbs_certificate.subject_public_key_info.owned_to_ref())?;
-
-    let cert_ota = get_zip_otacert(&mut reader)?;
-    if cert != &cert_ota {
-        bail!("CMS embedded certificate does not match {OTACERT_PATH}");
-    }
-
-    // Make sure this is a signature scheme we can handle. There's currently no Rust library to
-    // verify arbitrary CMS signatures for large files without fully reading them into memory.
-    if sd.signer_infos.0.len() != 1 {
-        bail!("Expected exactly one SignerInfo instance");
-    }
-
-    use const_oid::db::rfc5912;
-
-    let signer = sd.signer_infos.0.get(0).unwrap();
-    if signer.digest_alg.oid != rfc5912::ID_SHA_256 {
-        bail!("Unsupported digest algorithm: {}", signer.digest_alg.oid);
-    } else if signer.signature_algorithm.oid != rfc5912::RSA_ENCRYPTION
-        && signer.signature_algorithm.oid != rfc5912::SHA_256_WITH_RSA_ENCRYPTION
-    {
-        bail!(
-            "Unsupported signature algorithm: {}",
-            signer.signature_algorithm.oid,
-        );
-    }
-
-    // Manually hash the parts of the file covered by the signature.
-    reader.seek(SeekFrom::Start(0))?;
-
-    let digest = {
-        let mut hasher = Sha256::new();
-        let n = io::copy(&mut reader.take(hashed_size), &mut hasher)?;
-        if n != hashed_size {
-            bail!("Unexpected EOF while hashing file");
-        }
-
-        hasher.finalize()
-    };
-
-    // Verify the signature against the public key.
-    let scheme = Pkcs1v15Sign::new::<Sha256>();
-    public_key.verify(scheme, &digest, signer.signature.as_bytes())?;
-
-    Ok(cert_ota)
-}
-
-/// Parse OTA metadata property file list (list of zip entry names, offsets, and sizes).
-fn parse_prop_files(data: &str) -> Result<Vec<PropertyFile>> {
-    let mut result = vec![];
-
-    for entry in data.trim_end().split(',') {
-        let mut pieces = entry.split(':');
-
-        let name = pieces
-            .next()
-            .ok_or_else(|| anyhow!("Missing property file name"))?
-            .to_owned();
-        let offset = pieces
-            .next()
-            .ok_or_else(|| anyhow!("Missing property file offset"))?
-            .parse::<u64>()?;
-        let size = pieces
-            .next()
-            .ok_or_else(|| anyhow!("Missing property file size"))?
-            .parse::<u64>()?;
-
-        if let Some(piece) = pieces.next() {
-            bail!("Unexpected property file entry piece: {piece:?}");
-        }
-
-        result.push(PropertyFile {
-            name,
-            offset,
-            size,
-            digest: None,
-        });
-    }
-
-    Ok(result)
-}
-
-/// Parse protobuf OTA metadata from zip.
-fn get_ota_metadata(reader: impl Read + Seek) -> Result<OtaMetadata> {
-    let data = get_zip_entry_data(reader, METADATA_PATH)?;
-    let metadata = OtaMetadata::from_reader(&mut BytesReader::from_bytes(&data), &data)?;
-
-    Ok(metadata)
-}
-
 /// Compute the SHA256 digest of a section of a file.
-fn hash_section(
-    mut reader: impl Read + Seek,
-    offset: u64,
-    size: u64,
-) -> Result<GenericArray<u8, <Sha256 as OutputSizeUser>::OutputSize>> {
-    let mut hasher = Sha256::new();
-
+fn hash_section(mut reader: impl Read + Seek, offset: u64, size: u64) -> Result<Digest> {
     reader.seek(SeekFrom::Start(offset))?;
 
-    let n = io::copy(&mut reader.take(size), &mut hasher)?;
-    if n != size {
-        bail!("Unexpected EOF while reading {size} bytes at offset {offset}");
-    }
+    let mut hashing_reader =
+        HashingReader::new(reader, ring::digest::Context::new(&ring::digest::SHA256));
 
-    Ok(hasher.finalize())
+    stream::copy_n(
+        &mut hashing_reader,
+        io::sink(),
+        size,
+        &Arc::new(AtomicBool::new(false)),
+    )?;
+
+    let (_, context) = hashing_reader.finish();
+
+    Ok(context.finish())
 }
 
 /// Create a CMS signature with the specified encapsulated content.
@@ -536,16 +234,12 @@ fn subcommand_gen_csig(args: &GenerateCsig) -> Result<()> {
         PassphraseSource::Prompt(format!("Enter passphrase for {:?}: ", args.key))
     };
 
-    let signing_private_key = read_pem_key(&args.key, &passphrase_source)?;
-    let signing_cert = read_pem_cert(&args.cert)?;
-    let signing_public_key = RsaPublicKey::try_from(
-        signing_cert
-            .tbs_certificate
-            .subject_public_key_info
-            .owned_to_ref(),
-    )?;
+    let signing_private_key = crypto::read_pem_key_file(&args.key, &passphrase_source)
+        .with_context(|| anyhow!("Failed to load key: {:?}", args.key))?;
+    let signing_cert = crypto::read_pem_cert_file(&args.cert)
+        .with_context(|| anyhow!("Failed to load certificate: {:?}", args.cert))?;
 
-    if signing_private_key.to_public_key() != signing_public_key {
+    if !crypto::cert_matches_key(&signing_cert, &signing_private_key)? {
         bail!(
             "Private key {:?} does not match certificate {:?}",
             args.key,
@@ -554,21 +248,38 @@ fn subcommand_gen_csig(args: &GenerateCsig) -> Result<()> {
     }
 
     let (verify_cert_path, verify_cert) = match &args.cert_verify {
-        Some(c) => (c, Cow::Owned(read_pem_cert(c)?)),
+        Some(c) => {
+            let cert = crypto::read_pem_cert_file(c)
+                .with_context(|| anyhow!("Failed to load certificate: {c:?}"))?;
+            (c, Cow::Owned(cert))
+        }
         None => (&args.cert, Cow::Borrowed(&signing_cert)),
     };
 
-    let file = File::open(&args.input)?;
+    let file = File::open(&args.input)
+        .with_context(|| anyhow!("Failed to open for reading: {:?}", args.input))?;
     let mut reader = BufReader::new(file);
 
     println!("Verifying OTA signature...");
-    let embedded_cert = verify_ota(&mut reader)?;
-    if embedded_cert != *verify_cert {
+    let embedded_cert = ota::verify_ota(
+        &mut reader,
+        // We don't use a signal handler.
+        &Arc::new(AtomicBool::new(false)),
+    )?;
+
+    let (metadata, ota_cert, header, _) = ota::parse_zip_ota_info(&mut reader)
+        .with_context(|| anyhow!("Failed to parse OTA info from zip"))?;
+    if embedded_cert != ota_cert {
+        bail!(
+            "CMS embedded certificate does not match {}",
+            ota::PATH_OTACERT,
+        );
+    } else if embedded_cert != *verify_cert {
         bail!("OTA has a valid signature, but was not signed with: {verify_cert_path:?}");
     }
 
-    println!("Reading OTA metadata...");
-    let metadata = get_ota_metadata(&mut reader)?;
+    ota::verify_metadata(&mut reader, &metadata, header.blob_offset)
+        .with_context(|| anyhow!("Failed to verify OTA metadata offsets"))?;
 
     if metadata.type_pb != OtaType::AB {
         bail!("Not an A/B OTA");
@@ -603,9 +314,10 @@ fn subcommand_gen_csig(args: &GenerateCsig) -> Result<()> {
 
     let pfs_raw = metadata
         .property_files
-        .get("ota-property-files")
-        .ok_or_else(|| anyhow!("Postconditions do not list property files"))?;
-    let pfs = parse_prop_files(pfs_raw)?;
+        .get(ota::PF_NAME)
+        .ok_or_else(|| anyhow!("Missing property files: {}", ota::PF_NAME))?;
+    let pfs = ota::parse_property_files(pfs_raw)
+        .with_context(|| anyhow!("Failed to parse property files: {}", ota::PF_NAME))?;
     let file_size = reader.seek(SeekFrom::End(0))?;
 
     let invalid_pfs = pfs
@@ -618,11 +330,13 @@ fn subcommand_gen_csig(args: &GenerateCsig) -> Result<()> {
     }
 
     let digested_pfs = pfs
-        .iter()
+        .into_iter()
         .map(|pf| {
             hash_section(&mut reader, pf.offset, pf.size).map(|d| PropertyFile {
-                digest: Some(format!("{d:x}")),
-                ..pf.clone()
+                name: pf.name,
+                offset: pf.offset,
+                size: pf.size,
+                digest: Some(hex::encode(d)),
             })
         })
         .collect::<Result<_>>()?;
