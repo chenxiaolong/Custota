@@ -33,6 +33,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     env:
       CARGO_TERM_COLOR: always
+      RUSTFLAGS: -C strip=symbols
     strategy:
       fail-fast: false
       matrix:
@@ -64,22 +65,22 @@ jobs:
               | jq -r '."llvm-target"' \
               >> "${GITHUB_OUTPUT}"
 
+      - name: Cache Rust dependencies
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: custota-tool
+
       - name: Clippy
-        run: |
-          cd custota-tool
-          cargo clippy
+        working-directory: custota-tool
+        run: cargo clippy --release
 
       - name: Formatting
-        run: |
-          cd custota-tool
-          cargo fmt -- --check
+        working-directory: custota-tool
+        run: cargo fmt -- --check
 
       - name: Build
-        env:
-          RUSTFLAGS: -C strip=symbols
-        run: |
-          cd custota-tool
-          cargo build --release
+        working-directory: custota-tool
+        run: cargo build --release
 
       - name: Archive artifacts
         uses: actions/upload-artifact@v3
