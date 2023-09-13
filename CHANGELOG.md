@@ -9,6 +9,8 @@
 
 ### Unreleased
 
+* Update dependencies ([PR #17 @chenxiaolong])
+
 ### Version 2.2
 
 * Fix crash when showing error notification if the app cannot connect to `update_engine` ([Issue #11], [PR #12 @chenxiaolong])
@@ -48,3 +50,4 @@
 [PR #12 @chenxiaolong]: https://github.com/chenxiaolong/Custota/pull/12
 [PR #13 @chenxiaolong]: https://github.com/chenxiaolong/Custota/pull/13
 [PR #14 @chenxiaolong]: https://github.com/chenxiaolong/Custota/pull/14
+[PR #17 @chenxiaolong]: https://github.com/chenxiaolong/Custota/pull/17
