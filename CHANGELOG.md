@@ -10,6 +10,7 @@
 ### Unreleased
 
 * Update dependencies ([PR #17 @chenxiaolong])
+* Fix non-UTF-8 paths not being accepted by custota-tool's `--cert` option on Linux ([PR #18 @chenxiaolong])
 
 ### Version 2.2
 
@@ -51,3 +52,4 @@
 [PR #13 @chenxiaolong]: https://github.com/chenxiaolong/Custota/pull/13
 [PR #14 @chenxiaolong]: https://github.com/chenxiaolong/Custota/pull/14
 [PR #17 @chenxiaolong]: https://github.com/chenxiaolong/Custota/pull/17
+[PR #18 @chenxiaolong]: https://github.com/chenxiaolong/Custota/pull/18
