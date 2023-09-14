@@ -116,7 +116,7 @@ struct GenerateCsig {
     passphrase_file: Option<PathBuf>,
 
     /// Path to certificate for signing csig.
-    #[arg(short, long)]
+    #[arg(short, long, value_parser)]
     cert: PathBuf,
 
     /// Path to certificate for verifying OTA.
