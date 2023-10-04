@@ -397,26 +397,15 @@ android.applicationVariants.all {
     }
 }
 
-data class LinkRef(val type: String, val number: Int, val user: String?) : Comparable<LinkRef> {
+data class LinkRef(val type: String, val number: Int) : Comparable<LinkRef> {
     override fun compareTo(other: LinkRef): Int = compareValuesBy(
         this,
         other,
         { it.type },
         { it.number },
-        { it.user },
     )
 
-    override fun toString(): String = buildString {
-        append('[')
-        append(type)
-        append(" #")
-        append(number)
-        if (user != null) {
-            append(" @")
-            append(user)
-        }
-        append(']')
-    }
+    override fun toString(): String = "[$type #$number]"
 }
 
 fun checkBrackets(line: String) {
@@ -440,7 +429,7 @@ fun checkBrackets(line: String) {
 fun updateChangelogLinks(baseUrl: String) {
     val file = File(rootDir, "CHANGELOG.md")
     val regexStandaloneLink = Regex("\\[([^\\]]+)\\](?![\\(\\[])")
-    val regexAutoLink = Regex("(Issue|PR) #(\\d+)(?: @([\\w-]+))?")
+    val regexAutoLink = Regex("(Issue|PR) #(\\d+)")
     val links = hashMapOf<LinkRef, String>()
     var skipRemaining = false
     val changelog = mutableListOf<String>()
@@ -461,23 +450,16 @@ fun updateChangelogLinks(baseUrl: String) {
                     val ref = match.groupValues[0]
                     val type = match.groupValues[1]
                     val number = match.groupValues[2].toInt()
-                    val user = match.groups[3]?.value
 
                     val link = when (type) {
-                        "Issue" -> {
-                            require(user == null) { "$ref should not have a username" }
-                            "$baseUrl/issues/$number"
-                        }
-                        "PR" -> {
-                            require(user != null) { "$ref should have a username" }
-                            "$baseUrl/pull/$number"
-                        }
+                        "Issue" -> "$baseUrl/issues/$number"
+                        "PR" -> "$baseUrl/pull/$number"
                         else -> throw IllegalArgumentException("Unknown link type: $type")
                     }
 
                     // #0 is used for examples only
                     if (number != 0) {
-                        links[LinkRef(type, number, user)] = link
+                        links[LinkRef(type, number)] = link
                     }
                 }
 
