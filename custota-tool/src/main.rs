@@ -18,7 +18,7 @@ use anyhow::{anyhow, bail, Context, Result};
 use avbroot::{
     crypto::{self, PassphraseSource},
     format::ota,
-    protobuf::build::tools::releasetools::mod_OtaMetadata::OtaType,
+    protobuf::build::tools::releasetools::ota_metadata::OtaType,
     stream::{self, HashingReader},
 };
 use clap::{Parser, Subcommand};
@@ -281,7 +281,7 @@ fn subcommand_gen_csig(args: &GenerateCsig) -> Result<()> {
     ota::verify_metadata(&mut reader, &metadata, header.blob_offset)
         .with_context(|| anyhow!("Failed to verify OTA metadata offsets"))?;
 
-    if metadata.type_pb != OtaType::AB {
+    if metadata.r#type() != OtaType::Ab {
         bail!("Not an A/B OTA");
     } else if metadata.wipe {
         bail!("OTA unconditionally wipes userdata partition");
