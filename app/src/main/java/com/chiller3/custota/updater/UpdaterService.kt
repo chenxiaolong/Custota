@@ -11,6 +11,7 @@ import android.content.Context
 import android.content.Intent
 import android.content.pm.ServiceInfo
 import android.net.Network
+import android.os.Build
 import android.os.Handler
 import android.os.IBinder
 import android.os.Looper
@@ -179,7 +180,12 @@ class UpdaterService : Service(), UpdaterThread.UpdaterThreadListener {
             showImmediately,
         )
 
-        startForeground(Notifications.ID_PERSISTENT, notification)
+        val type = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+            ServiceInfo.FOREGROUND_SERVICE_TYPE_SYSTEM_EXEMPTED
+        } else {
+            0
+        }
+        startForeground(Notifications.ID_PERSISTENT, notification, type)
     }
 
     @UiThread
