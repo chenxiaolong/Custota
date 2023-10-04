@@ -137,7 +137,9 @@ This creates a Magisk/KernelSU module that overrides `otacerts.zip`. After flash
 
 * `ACCESS_CACHE_FILESYSTEM` (**automatically granted by system app permissions**)
   * Needed to store temporary OTA files.
-* `FOREGROUND_SERVICE` (**automatically granted at install time**)
+* `ACCESS_NETWORK_STATE` (**automatically granted at install time**)
+  * Needed on Android 14+ for unmetered network background run condition.
+* `FOREGROUND_SERVICE`, `FOREGROUND_SERVICE_SYSTEM_EXEMPTED` (**automatically granted at install time**)
   * Needed to run the OTA update service in the background.
 * `INTERNET` (**automatically granted at install time**)
   * Needed to communicate with the OTA server. Custota **does not and will never** communicate with any server outside of the configured OTA server. There are no ads, analytics, or any sort of tracking.

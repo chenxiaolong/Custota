@@ -112,20 +112,20 @@ val gitVersionName = getVersionName(git, gitVersionTriple)
 val projectUrl = "https://github.com/chenxiaolong/Custota"
 val releaseMetadataBranch = "master"
 
-val extraDir = File(buildDir, "extra")
-val archiveDir = File(extraDir, "archive")
+val extraDir = layout.buildDirectory.map { it.dir("extra") }
+val archiveDir = extraDir.map { it.dir("archive") }
 
 android {
     namespace = "com.chiller3.custota"
 
-    compileSdk = 33
-    buildToolsVersion = "33.0.2"
-    ndkVersion = "25.2.9519653"
+    compileSdk = 34
+    buildToolsVersion = "34.0.0"
+    ndkVersion = "26.0.10792818"
 
     defaultConfig {
         applicationId = "com.chiller3.custota"
         minSdk = 33
-        targetSdk = 33
+        targetSdk = 34
         versionCode = gitVersionCode
         versionName = gitVersionName
         resourceConfigurations.addAll(listOf(
@@ -222,7 +222,7 @@ dependencies {
 val archive = tasks.register("archive") {
     inputs.property("gitVersionTriple.third", gitVersionTriple.third)
 
-    val outputFile = File(archiveDir, "archive.tar")
+    val outputFile = archiveDir.map { it.file("archive.tar") }
     outputs.file(outputFile)
 
     doLast {
@@ -230,7 +230,7 @@ val archive = tasks.register("archive") {
 
         ArchiveCommand.registerFormat(format, TarFormat())
         try {
-            outputFile.outputStream().use {
+            outputFile.get().asFile.outputStream().use {
                 git.archive()
                     .setTree(git.repository.resolve(gitVersionTriple.third.name))
                     .setFormat(format)
@@ -246,7 +246,7 @@ val archive = tasks.register("archive") {
 android.applicationVariants.all {
     val variant = this
     val capitalized = variant.name.replaceFirstChar { it.uppercase() }
-    val variantDir = File(extraDir, variant.name)
+    val variantDir = extraDir.map { it.dir(variant.name) }
 
     variant.preBuildProvider.configure {
         dependsOn(archive)
@@ -261,7 +261,7 @@ android.applicationVariants.all {
         inputs.property("variant.versionCode", variant.versionCode)
         inputs.property("variant.versionName", variant.versionName)
 
-        val outputFile = File(variantDir, "module.prop")
+        val outputFile = variantDir.map { it.file("module.prop") }
         outputs.file(outputFile)
 
         doLast {
@@ -277,18 +277,19 @@ android.applicationVariants.all {
                 props["updateJson"] = "${projectUrl}/raw/${releaseMetadataBranch}/app/module/updates/${variant.name}/info.json"
             }
 
-            outputFile.writeText(props.map { "${it.key}=${it.value}" }.joinToString("\n"))
+            outputFile.get().asFile.writeText(
+                props.map { "${it.key}=${it.value}" }.joinToString("\n"))
         }
     }
 
     val permissionsXml = tasks.register("permissionsXml${capitalized}") {
         inputs.property("variant.applicationId", variant.applicationId)
 
-        val outputFile = File(variantDir, "privapp-permissions-${variant.applicationId}.xml")
+        val outputFile = variantDir.map { it.file("privapp-permissions-${variant.applicationId}.xml") }
         outputs.file(outputFile)
 
         doLast {
-            outputFile.writeText("""
+            outputFile.get().asFile.writeText("""
                 <?xml version="1.0" encoding="utf-8"?>
                 <permissions>
                     <privapp-permissions package="${variant.applicationId}">
@@ -306,11 +307,11 @@ android.applicationVariants.all {
     val configXml = tasks.register("configXml${capitalized}") {
         inputs.property("variant.applicationId", variant.applicationId)
 
-        val outputFile = File(variantDir, "config-${variant.applicationId}.xml")
+        val outputFile = variantDir.map { it.file("config-${variant.applicationId}.xml") }
         outputs.file(outputFile)
 
         doLast {
-            outputFile.writeText("""
+            outputFile.get().asFile.writeText("""
                 <?xml version="1.0" encoding="utf-8"?>
                 <config>
                     <allow-in-power-save package="${variant.applicationId}" />
