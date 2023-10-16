@@ -9,6 +9,8 @@
 
 ### Unreleased
 
+* Work around GrapheneOS 14 that causes Custota to crash ([Issue #22], [PR #23])
+
 ### Version 2.3
 
 It's Android 14 release day! Any version of Custota can be used to initially upgrade to Android 14, but Custota 2.2 or newer is needed for future OTAs to be installed.
@@ -48,6 +50,7 @@ Changes:
 [Issue #5]: https://github.com/chenxiaolong/Custota/issues/5
 [Issue #7]: https://github.com/chenxiaolong/Custota/issues/7
 [Issue #11]: https://github.com/chenxiaolong/Custota/issues/11
+[Issue #22]: https://github.com/chenxiaolong/Custota/issues/22
 [PR #1]: https://github.com/chenxiaolong/Custota/pull/1
 [PR #2]: https://github.com/chenxiaolong/Custota/pull/2
 [PR #6]: https://github.com/chenxiaolong/Custota/pull/6
@@ -61,3 +64,4 @@ Changes:
 [PR #18]: https://github.com/chenxiaolong/Custota/pull/18
 [PR #20]: https://github.com/chenxiaolong/Custota/pull/20
 [PR #21]: https://github.com/chenxiaolong/Custota/pull/21
+[PR #23]: https://github.com/chenxiaolong/Custota/pull/23
