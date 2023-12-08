@@ -3,20 +3,36 @@ vulnerability = "deny"
 unmaintained = "deny"
 yanked = "deny"
 notice = "deny"
+ignore = [
+    # This is temporary. See avbroot's deny.toml.
+    "RUSTSEC-2023-0071",
+]
 
 [licenses]
+include-dev = true
 unlicensed = "deny"
 allow = [
     "Apache-2.0",
+    "Apache-2.0 WITH LLVM-exception",
     "BSD-3-Clause",
+    "ISC",
     "MIT",
+    "OpenSSL",
     "Unicode-DFS-2016",
 ]
 copyleft = "allow"
 default = "deny"
 
+[[licenses.clarify]]
+name = "ring"
+expression = "MIT AND ISC AND OpenSSL"
+license-files = [
+    { path = "LICENSE", hash = 0xbd0eed23 },
+]
+
 [bans]
-multiple-versions = "deny"
+multiple-versions = "warn"
+multiple-versions-include-dev = true
 deny = [
     # https://github.com/serde-rs/serde/issues/2538
     { name = "serde_derive", version = ">=1.0.172,<1.0.184" },
@@ -25,3 +41,9 @@ deny = [
 [sources]
 unknown-registry = "deny"
 unknown-git = "deny"
+allow-git = [
+    "https://github.com/chenxiaolong/avbroot",
+    "https://github.com/chenxiaolong/xz2-rs",
+    "https://github.com/chenxiaolong/zip",
+    "https://github.com/jongiddy/bzip2-rs",
+]
