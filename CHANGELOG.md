@@ -9,6 +9,8 @@
 
 ### Unreleased
 
+* Update all dependencies ([PR #26])
+
 ### Version 2.4
 
 * Work around GrapheneOS 14 that causes Custota to crash ([Issue #22], [PR #23])
@@ -67,3 +69,4 @@ Changes:
 [PR #20]: https://github.com/chenxiaolong/Custota/pull/20
 [PR #21]: https://github.com/chenxiaolong/Custota/pull/21
 [PR #23]: https://github.com/chenxiaolong/Custota/pull/23
+[PR #26]: https://github.com/chenxiaolong/Custota/pull/26
