@@ -37,6 +37,8 @@ class MainApplication : Application() {
         // Enable Material You colors
         DynamicColors.applyToActivitiesIfAvailable(this)
 
+        Preferences(this).migrate()
+
         Notifications(this).updateChannels()
 
         UpdaterJob.schedulePeriodic(this, false)

@@ -5,18 +5,23 @@
 
 package com.chiller3.custota
 
+import android.content.ContentResolver
 import android.content.Context
+import android.content.Intent
+import android.net.Uri
+import android.util.Log
 import androidx.core.content.edit
 import androidx.preference.PreferenceManager
-import java.net.URL
 
-class Preferences(context: Context) {
+class Preferences(private val context: Context) {
     companion object {
+        private val TAG = Preferences::class.java.simpleName
+
         const val CATEGORY_CERTIFICATES = "certificates"
         const val CATEGORY_DEBUG = "debug"
 
         const val PREF_CHECK_FOR_UPDATES = "check_for_updates"
-        const val PREF_OTA_SERVER_URL = "ota_server_url"
+        const val PREF_OTA_SOURCE = "ota_source"
         const val PREF_AUTOMATIC_CHECK = "automatic_check"
         const val PREF_AUTOMATIC_INSTALL = "automatic_install"
         const val PREF_UNMETERED_ONLY = "unmetered_only"
@@ -34,6 +39,9 @@ class Preferences(context: Context) {
 
         // Not associated with a UI preference
         private const val PREF_DEBUG_MODE = "debug_mode"
+
+        // Legacy preferences
+        private const val PREF_OTA_SERVER_URL = "ota_server_url"
     }
 
     private val prefs = PreferenceManager.getDefaultSharedPreferences(context)
@@ -42,14 +50,41 @@ class Preferences(context: Context) {
         get() = prefs.getBoolean(PREF_DEBUG_MODE, false)
         set(enabled) = prefs.edit { putBoolean(PREF_DEBUG_MODE, enabled) }
 
-    /** Base URL to fetch OTA updates. */
-    var otaServerUrl: URL?
-        get() = prefs.getString(PREF_OTA_SERVER_URL, null)?.let { URL(it) }
-        set(url) = prefs.edit {
-            if (url == null) {
-                remove(PREF_OTA_SERVER_URL)
-            } else {
-                putString(PREF_OTA_SERVER_URL, url.toString())
+    /** Base URI to fetch OTA updates. This is either an HTTP/HTTPS URL or a SAF URI. */
+    var otaSource: Uri?
+        get() = prefs.getString(PREF_OTA_SOURCE, null)?.let { Uri.parse(it) }
+        set(uri) {
+            val oldUri = otaSource
+            if (oldUri == uri) {
+                // URI is the same as before or both are null
+                return
+            }
+
+            prefs.edit {
+                if (uri != null) {
+                    if (uri.scheme == ContentResolver.SCHEME_CONTENT) {
+                        // Persist permissions for the new URI first
+                        context.contentResolver.takePersistableUriPermission(
+                            uri, Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                    }
+
+                    putString(PREF_OTA_SOURCE, uri.toString())
+                } else {
+                    remove(PREF_OTA_SOURCE)
+                }
+            }
+
+            // Release persisted permissions on the old directory only after the new URI is set to
+            // guarantee atomicity
+            if (oldUri != null && oldUri.scheme == ContentResolver.SCHEME_CONTENT) {
+                // It's not documented, but this can throw an exception when trying to release a
+                // previously persisted URI that's associated with an app that's no longer installed
+                try {
+                    context.contentResolver.releasePersistableUriPermission(
+                        oldUri, Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                } catch (e: Exception) {
+                    Log.w(TAG, "Error when releasing persisted URI permission for: $oldUri", e)
+                }
             }
         }
 
@@ -82,4 +117,12 @@ class Preferences(context: Context) {
     var allowReinstall: Boolean
         get() = prefs.getBoolean(PREF_ALLOW_REINSTALL, false)
         set(enabled) = prefs.edit { putBoolean(PREF_ALLOW_REINSTALL, enabled) }
+
+    /** Migrate legacy preferences to current preferences. */
+    fun migrate() {
+        if (prefs.contains(PREF_OTA_SERVER_URL)) {
+            otaSource = prefs.getString(PREF_OTA_SERVER_URL, null)?.let { Uri.parse(it) }
+            prefs.edit { remove(PREF_OTA_SERVER_URL) }
+        }
+    }
 }

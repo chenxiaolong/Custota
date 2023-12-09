@@ -15,10 +15,10 @@
             app:summary="@string/pref_check_for_updates_desc"
             app:iconSpaceReserved="false" />
 
-        <Preference
-            app:key="ota_server_url"
+        <com.chiller3.custota.view.LongClickablePreference
+            app:key="ota_source"
             app:persistent="false"
-            app:title="@string/pref_ota_server_url_name"
+            app:title="@string/pref_ota_source_name"
             app:iconSpaceReserved="false" />
     </PreferenceCategory>
 

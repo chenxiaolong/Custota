@@ -27,7 +27,8 @@ import com.chiller3.custota.BuildConfig
 import com.chiller3.custota.Permissions
 import com.chiller3.custota.Preferences
 import com.chiller3.custota.R
-import com.chiller3.custota.dialog.OtaServerUrlDialogFragment
+import com.chiller3.custota.dialog.OtaSourceDialogFragment
+import com.chiller3.custota.extension.formattedString
 import com.chiller3.custota.updater.OtaPaths
 import com.chiller3.custota.updater.UpdaterJob
 import com.chiller3.custota.updater.UpdaterThread
@@ -51,7 +52,7 @@ class SettingsFragment : PreferenceFragmentCompat(), Preference.OnPreferenceClic
     private lateinit var categoryCertificates: PreferenceCategory
     private lateinit var categoryDebug: PreferenceCategory
     private lateinit var prefCheckForUpdates: Preference
-    private lateinit var prefOtaServerUrl: Preference
+    private lateinit var prefOtaSource: LongClickablePreference
     private lateinit var prefAndroidVersion: Preference
     private lateinit var prefFingerprint: Preference
     private lateinit var prefBootSlot: Preference
@@ -85,8 +86,9 @@ class SettingsFragment : PreferenceFragmentCompat(), Preference.OnPreferenceClic
         prefCheckForUpdates = findPreference(Preferences.PREF_CHECK_FOR_UPDATES)!!
         prefCheckForUpdates.onPreferenceClickListener = this
 
-        prefOtaServerUrl = findPreference(Preferences.PREF_OTA_SERVER_URL)!!
-        prefOtaServerUrl.onPreferenceClickListener = this
+        prefOtaSource = findPreference(Preferences.PREF_OTA_SOURCE)!!
+        prefOtaSource.onPreferenceClickListener = this
+        prefOtaSource.onPreferenceLongClickListener = this
 
         prefAndroidVersion = findPreference(Preferences.PREF_ANDROID_VERSION)!!
         prefAndroidVersion.summary = Build.VERSION.RELEASE
@@ -115,7 +117,7 @@ class SettingsFragment : PreferenceFragmentCompat(), Preference.OnPreferenceClic
         prefRevertCompleted.onPreferenceClickListener = this
 
         refreshCheckForUpdates()
-        refreshOtaServerUrl()
+        refreshOtaSource()
         refreshVersion()
         refreshDebugPrefs()
 
@@ -154,12 +156,12 @@ class SettingsFragment : PreferenceFragmentCompat(), Preference.OnPreferenceClic
     }
 
     private fun refreshCheckForUpdates() {
-        prefCheckForUpdates.isEnabled = prefs.otaServerUrl != null
+        prefCheckForUpdates.isEnabled = prefs.otaSource != null
     }
 
-    private fun refreshOtaServerUrl() {
-        prefOtaServerUrl.summary = prefs.otaServerUrl?.toString()
-            ?: getString(R.string.pref_ota_server_url_desc_none)
+    private fun refreshOtaSource() {
+        prefOtaSource.summary = prefs.otaSource?.formattedString
+            ?: getString(R.string.pref_ota_source_none)
     }
 
     private fun refreshVersion() {
@@ -223,9 +225,9 @@ class SettingsFragment : PreferenceFragmentCompat(), Preference.OnPreferenceClic
                 performAction()
                 return true
             }
-            prefOtaServerUrl -> {
-                OtaServerUrlDialogFragment().show(parentFragmentManager.beginTransaction(),
-                    OtaServerUrlDialogFragment.TAG)
+            prefOtaSource -> {
+                OtaSourceDialogFragment().show(parentFragmentManager.beginTransaction(),
+                    OtaSourceDialogFragment.TAG)
                 return true
             }
             prefVersion -> {
@@ -257,6 +259,10 @@ class SettingsFragment : PreferenceFragmentCompat(), Preference.OnPreferenceClic
 
     override fun onPreferenceLongClick(preference: Preference): Boolean {
         when (preference) {
+            prefOtaSource -> {
+                prefs.otaSource = null
+                return true
+            }
             prefVersion -> {
                 prefs.isDebugMode = !prefs.isDebugMode
                 refreshVersion()
@@ -270,9 +276,9 @@ class SettingsFragment : PreferenceFragmentCompat(), Preference.OnPreferenceClic
 
     override fun onSharedPreferenceChanged(sharedPreferences: SharedPreferences?, key: String?) {
         when (key) {
-            Preferences.PREF_OTA_SERVER_URL -> {
+            Preferences.PREF_OTA_SOURCE -> {
                 refreshCheckForUpdates()
-                refreshOtaServerUrl()
+                refreshOtaSource()
             }
             Preferences.PREF_UNMETERED_ONLY, Preferences.PREF_BATTERY_NOT_LOW -> {
                 UpdaterJob.schedulePeriodic(requireContext(), true)

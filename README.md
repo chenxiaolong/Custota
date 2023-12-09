@@ -34,6 +34,8 @@ Custota is installed via a Magisk/KernelSU module so that it can run as a system
 
 1. Follow the instructions in the [OTA server](#ota-server) section to set up a webserver and generate the metadata files for the OTA zips.
 
+    Alternatively, Custota supports installing OTAs from a local directory instead of downloading them from an OTA server. When using a local directory, the expected directory structure is exactly the same as how it would be with a server.
+
 2. If you're installing OTA updates signed with a custom key, follow the instructions in the [Custom Verification Key](#custom-verification-key) section.
 
 3. Download the latest version from the [releases page](https://github.com/chenxiaolong/Custota/releases). To verify the digital signature, see the [verifying digital signatures](#verifying-digital-signatures) section.

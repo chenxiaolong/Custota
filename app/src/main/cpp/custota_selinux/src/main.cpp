@@ -839,6 +839,18 @@ static bool apply_patches(
     // allow custota_app oem_lock_service:service_manager find;
     ff(add_rule(pdb, target_type, "oem_lock_service", "service_manager", "find", errors));
 
+    // Now, allow update_engine to access the file descriptor we pass to it via
+    // binder for a file opened from local storage.
+
+    // allow update_engine mediaprovider_app:fd use;
+    ff(add_rule(pdb, "update_engine", "mediaprovider_app", "fd", "use", errors));
+
+    // allow update_engine fuse:file getattr;
+    // allow update_engine fuse:file read;
+    for (auto const &perm : {"getattr", "read"}) {
+        ff(add_rule(pdb, "update_engine", "fuse", "file", perm, errors));
+    }
+
     if (strip_no_audit) {
         ff(raw_strip_no_audit(pdb) != SELinuxResult::Error);
     }

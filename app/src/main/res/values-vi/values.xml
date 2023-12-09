@@ -15,8 +15,6 @@
     <!-- General preferences -->
     <string name="pref_check_for_updates_name">Kiểm tra cập nhật OTA</string>
     <string name="pref_check_for_updates_desc">Đặt lịch kiểm tra cập nhật OTA.</string>
-    <string name="pref_ota_server_url_name">Đường dẫn OTA server</string>
-    <string name="pref_ota_server_url_desc_none">Đường dẫn chưa được thiết lập.</string>
     <string name="pref_certificate_name">Chứng chỉ %1$s</string>
     <string name="pref_certificate_desc_subject">Chủ đề: %1$s</string>
     <string name="pref_certificate_desc_serial">Số sê-ri: %1$s</string>
@@ -63,10 +61,10 @@
     <string name="pref_revert_completed_desc">Lựa chọn này chỉ có thể xảy ra sau khi cài đặt cập nhật hoàn thành, nhưng trước khi khởi động lại máy. Chỉ nên sử dụng cho mục đích gỡ lỗi.</string>
 
     <!-- Dialogs -->
-    <string name="dialog_ota_server_url_title">@string/pref_ota_server_url_name</string>
-    <string name="dialog_ota_server_url_message">Thêm đường dẫn gốc để tải về metadata cho nhật OTA(ngoại trừ tên file).</string>
-    <string name="dialog_ota_server_url_error_bad_protocol">Chỉ đường dẫn http:// và https:// được hỗ trợ.</string>
-    <string name="dialog_ota_server_url_error_malformed">Đương dẫn không hợp lệ.</string>
+    <string name="dialog_ota_source_title">@string/pref_ota_source_name</string>
+    <string name="dialog_ota_source_server_url_message">Thêm đường dẫn gốc để tải về metadata cho nhật OTA(ngoại trừ tên file).</string>
+    <string name="dialog_ota_source_server_url_error_bad_protocol">Chỉ đường dẫn http:// và https:// được hỗ trợ.</string>
+    <string name="dialog_ota_source_server_url_error_malformed">Đương dẫn không hợp lệ.</string>
     <string name="dialog_action_ok">OK</string>
     <string name="dialog_action_cancel">Hủy</string>
 
