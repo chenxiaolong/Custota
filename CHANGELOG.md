@@ -7,7 +7,7 @@
     to update the actual links at the bottom of the file.
 -->
 
-### Unreleased
+### Version 2.5
 
 * Update all dependencies ([PR #26])
 * Add support for installing from a local directory ([Issue #25], [PR #27])
