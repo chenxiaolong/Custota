@@ -11,6 +11,8 @@
 
 * Update all dependencies ([PR #26])
 * Add support for installing from a local directory ([Issue #25], [PR #27])
+* Check for Content-Range in HTTP responses instead of Accept-Ranges ([Issue #29], [PR #30])
+  * Fixes compatibility with nginx
 
 ### Version 2.4
 
@@ -57,6 +59,7 @@ Changes:
 [Issue #11]: https://github.com/chenxiaolong/Custota/issues/11
 [Issue #22]: https://github.com/chenxiaolong/Custota/issues/22
 [Issue #25]: https://github.com/chenxiaolong/Custota/issues/25
+[Issue #29]: https://github.com/chenxiaolong/Custota/issues/29
 [PR #1]: https://github.com/chenxiaolong/Custota/pull/1
 [PR #2]: https://github.com/chenxiaolong/Custota/pull/2
 [PR #6]: https://github.com/chenxiaolong/Custota/pull/6
@@ -73,3 +76,4 @@ Changes:
 [PR #23]: https://github.com/chenxiaolong/Custota/pull/23
 [PR #26]: https://github.com/chenxiaolong/Custota/pull/26
 [PR #27]: https://github.com/chenxiaolong/Custota/pull/27
+[PR #30]: https://github.com/chenxiaolong/Custota/pull/30
