@@ -8,8 +8,10 @@
 package com.chiller3.custota.updater
 
 import android.annotation.SuppressLint
+import android.content.ContentResolver
 import android.content.Context
 import android.net.Network
+import android.net.Uri
 import android.os.Build
 import android.os.IUpdateEngine
 import android.os.IUpdateEngineCallback
@@ -17,8 +19,10 @@ import android.os.Parcelable
 import android.os.PowerManager
 import android.ota.OtaPackageMetadata.OtaMetadata
 import android.util.Log
+import androidx.documentfile.provider.DocumentFile
 import com.chiller3.custota.BuildConfig
 import com.chiller3.custota.Preferences
+import com.chiller3.custota.extension.findNestedFile
 import com.chiller3.custota.extension.toSingleLineString
 import com.chiller3.custota.wrapper.ServiceManagerProxy
 import kotlinx.parcelize.Parcelize
@@ -115,10 +119,6 @@ class UpdaterThread(
     }
 
     init {
-        if (action != Action.REVERT && network == null) {
-            throw IllegalStateException("Network is required for non-revert actions")
-        }
-
         updateEngine.bind(engineCallback)
         engineIsBound = true
     }
@@ -159,8 +159,55 @@ class UpdaterThread(
         updateEngine.cancel()
     }
 
+    /**
+     * Compute [str] relative to [base].
+     *
+     * For local SAF URIs, [str] must be a (potentially nested) child of [base] or an absolute
+     * HTTP(S) URI. For HTTP(S) URIs, [str] can be a relative path, absolute path, or absolute
+     * HTTP(S) URI.
+     *
+     * For HTTP(S) URIs, if [forceBaseAsDir] is true, then [base] is treated as a directory even if
+     * it doesn't end in a trailing slash.
+     */
+    private fun resolveUri(base: Uri, str: String, forceBaseAsDir: Boolean): Uri {
+        if (base.scheme == ContentResolver.SCHEME_CONTENT) {
+            val strUriRaw = Uri.parse(str)
+            if (strUriRaw.scheme == "http" || strUriRaw.scheme == "https") {
+                // Allow local update info to redirect to an absolute URL since that has been the
+                // documented behavior
+                return strUriRaw
+            }
+
+            val file = DocumentFile.fromTreeUri(context, base)
+                ?: throw IOException("Failed to open: $base")
+            // This is safe because SAF does not allow '..'
+            val components = str.split('/')
+
+            val child = file.findNestedFile(components)
+                ?: throw IOException("Failed to find $str inside $base")
+
+            return child.uri
+        } else {
+            var raw = base.toString()
+            if (forceBaseAsDir && !raw.endsWith('/')) {
+                raw += '/'
+            }
+
+            val resolved = Uri.parse(URI(raw).resolve(str).toString())
+            if (resolved.scheme != "http" && resolved.scheme != "https") {
+                throw IllegalStateException("$str resolves to unsupported protocol")
+            }
+
+            return resolved
+        }
+    }
+
     private fun openUrl(url: URL): HttpURLConnection {
-        val c = network!!.openConnection(url) as HttpURLConnection
+        if (network == null) {
+            throw IllegalStateException("Network is required, but no network object available")
+        }
+
+        val c = network.openConnection(url) as HttpURLConnection
         c.connectTimeout = TIMEOUT_MS
         c.readTimeout = TIMEOUT_MS
         c.setRequestProperty("User-Agent", USER_AGENT)
@@ -170,11 +217,16 @@ class UpdaterThread(
         return c
     }
 
-    /** Download and parse update info JSON file. */
-    private fun downloadUpdateInfo(url: URL): UpdateInfo {
-        val updateInfo: UpdateInfo = openUrl(url).inputStream.use {
-            Json.decodeFromStream(it)
+    /** Fetch and parse update info JSON file. */
+    private fun fetchUpdateInfo(uri: Uri): UpdateInfo {
+        val stream = if (uri.scheme == ContentResolver.SCHEME_CONTENT) {
+            context.contentResolver.openInputStream(uri)
+                ?: throw IOException("Failed to open: $uri")
+        } else {
+            openUrl(URL(uri.toString())).inputStream
         }
+
+        val updateInfo: UpdateInfo = stream.use { Json.decodeFromStream(it) }
         Log.d(TAG, "Update info: $updateInfo")
 
         if (updateInfo.version != 2) {
@@ -185,31 +237,40 @@ class UpdaterThread(
     }
 
     /**
-     * Download a property file entry from the OTA zip. The server must support byte ranges. If the
-     * server returns too few or too many bytes, then the download will fail.
+     * Fetch a property file entry from the OTA zip. For HTTP and HTTPS, the server must support
+     * byte ranges. If the server returns too few or too many bytes, then the download will fail.
      *
      * @param output Not closed by this function
      */
-    private fun downloadPropertyFile(url: URL, pf: PropertyFile, output: OutputStream) {
-        val connection = openUrl(url)
-        connection.setRequestProperty("Range", "bytes=${pf.offset}-${pf.offset + pf.size - 1}")
-        connection.connect()
+    private fun fetchPropertyFile(uri: Uri, pf: PropertyFile, output: OutputStream) {
+        val stream = if (uri.scheme == ContentResolver.SCHEME_CONTENT) {
+            val pfd = context.contentResolver.openFileDescriptor(uri, "r")
+                ?: throw IOException("Failed to open: $uri")
 
-        if (connection.responseCode / 100 != 2) {
-            throw IOException("Got ${connection.responseCode} (${connection.responseMessage}) for $url")
-        }
+            PartialFdInputStream(pfd, pf.offset, pf.size)
+        } else {
+            val connection = openUrl(URL(uri.toString()))
+            connection.setRequestProperty("Range", "bytes=${pf.offset}-${pf.offset + pf.size - 1}")
+            connection.connect()
 
-        if (connection.getHeaderField("Accept-Ranges") != "bytes") {
-            throw IOException("Server does not support byte ranges")
-        }
+            if (connection.responseCode / 100 != 2) {
+                throw IOException("Got ${connection.responseCode} (${connection.responseMessage}) for $uri")
+            }
 
-        if (connection.contentLengthLong != pf.size) {
-            throw IOException("Expected ${pf.size} bytes, but Content-Length is ${connection.contentLengthLong}")
+            if (connection.getHeaderField("Accept-Ranges") != "bytes") {
+                throw IOException("Server does not support byte ranges")
+            }
+
+            if (connection.contentLengthLong != pf.size) {
+                throw IOException("Expected ${pf.size} bytes, but Content-Length is ${connection.contentLengthLong}")
+            }
+
+            connection.inputStream
         }
 
         val md = MessageDigest.getInstance("SHA-256")
 
-        connection.inputStream.use { input ->
+        stream.use { input ->
             val buf = ByteArray(16384)
             var downloaded = 0L
 
@@ -289,17 +350,24 @@ class UpdaterThread(
         return result
     }
 
-    /** Download and parse key/value pairs file. */
-    private fun downloadKeyValueFile(url: URL, pf: PropertyFile): Map<String, String> {
+    /** Fetch and parse key/value pairs file. */
+    private fun fetchKeyValueFile(uri: Uri, pf: PropertyFile): Map<String, String> {
         val outputStream = ByteArrayOutputStream()
-        downloadPropertyFile(url, pf, outputStream)
+        fetchPropertyFile(uri, pf, outputStream)
 
         return parseKeyValuePairs(outputStream.toString(Charsets.UTF_8))
     }
 
-    /** Download and verify signature of the csig file. */
-    private fun downloadAndCheckCsig(csigUrl: URL): CsigInfo {
-        val csigRaw = openUrl(csigUrl).inputStream.use { it.readBytes() }
+    /** Fetch and verify signature of the csig file. */
+    private fun downloadAndCheckCsig(uri: Uri): CsigInfo {
+        val stream = if (uri.scheme == ContentResolver.SCHEME_CONTENT) {
+            context.contentResolver.openInputStream(uri)
+                ?: throw IOException("Failed to open: $uri")
+        } else {
+            openUrl(URL(uri.toString())).inputStream
+        }
+
+        val csigRaw = stream.use { it.readBytes() }
         val csigCms = CMSSignedData(csigRaw)
 
         // Verify the signature against the same OTA certs as what's used for the payload.
@@ -324,14 +392,14 @@ class UpdaterThread(
         return csigInfo
     }
 
-    /** Download the OTA metadata and validate that the update is valid for the current system. */
-    private fun downloadAndCheckMetadata(
-        url: URL,
+    /** Fetch the OTA metadata and validate that the update is valid for the current system. */
+    private fun fetchAndCheckMetadata(
+        uri: Uri,
         pf: PropertyFile,
         csigInfo: CsigInfo,
     ): OtaMetadata {
         val outputStream = ByteArrayOutputStream()
-        downloadPropertyFile(url, pf, outputStream)
+        fetchPropertyFile(uri, pf, outputStream)
 
         val metadata = OtaMetadata.newBuilder().mergeFrom(outputStream.toByteArray()).build()
         Log.d(TAG, "OTA metadata: $metadata")
@@ -382,18 +450,18 @@ class UpdaterThread(
     }
 
     /**
-     * Download the payload metadata (protobuf in headers) and verify that the payload is valid for
+     * Fetch the payload metadata (protobuf in headers) and verify that the payload is valid for
      * this device.
      *
      * At a minimum, update_engine checks that the list of partitions in the OTA match the device.
      */
     @SuppressLint("SetWorldReadable")
-    private fun downloadAndCheckPayloadMetadata(url: URL, pf: PropertyFile) {
+    private fun fetchAndCheckPayloadMetadata(uri: Uri, pf: PropertyFile) {
         val file = File(OtaPaths.OTA_PACKAGE_DIR, OtaPaths.PAYLOAD_METADATA_NAME)
 
         try {
             file.outputStream().use { out ->
-                downloadPropertyFile(url, pf, out)
+                fetchPropertyFile(uri, pf, out)
             }
             file.setReadable(true, false)
 
@@ -409,12 +477,12 @@ class UpdaterThread(
      * Returns the path to the written file.
      */
     @SuppressLint("SetWorldReadable")
-    private fun downloadCareMap(url: URL, pf: PropertyFile): File {
+    private fun downloadCareMap(uri: Uri, pf: PropertyFile): File {
         val file = File(OtaPaths.OTA_PACKAGE_DIR, OtaPaths.CARE_MAP_NAME)
 
         try {
             file.outputStream().use { out ->
-                downloadPropertyFile(url, pf, out)
+                fetchPropertyFile(uri, pf, out)
             }
             file.setReadable(true, false)
         } catch (e: Exception) {
@@ -427,25 +495,25 @@ class UpdaterThread(
 
     /** Synchronously check for updates. */
     private fun checkForUpdates(): CheckUpdateResult {
-        val baseUrl = prefs.otaServerUrl ?: throw IllegalStateException("No URL configured")
-        val updateInfoUrl = resolveUrl(baseUrl, "${Build.DEVICE}.json", true)
-        Log.d(TAG, "Update info URL: $updateInfoUrl")
+        val baseUri = prefs.otaSource ?: throw IllegalStateException("No URI configured")
+        val updateInfoUri = resolveUri(baseUri, "${Build.DEVICE}.json", true)
+        Log.d(TAG, "Update info URI: $updateInfoUri")
 
         val updateInfo = try {
-            downloadUpdateInfo(updateInfoUrl)
+            fetchUpdateInfo(updateInfoUri)
         } catch (e: Exception) {
             throw IOException("Failed to download update info", e)
         }
 
-        val otaUrl = resolveUrl(updateInfoUrl, updateInfo.full.locationOta, false)
-        Log.d(TAG, "OTA URL: $otaUrl")
-        val csigUrl = resolveUrl(updateInfoUrl, updateInfo.full.locationCsig, false)
-        Log.d(TAG, "csig URL: $csigUrl")
+        val otaUri = resolveUri(updateInfoUri, updateInfo.full.locationOta, false)
+        Log.d(TAG, "OTA URI: $otaUri")
+        val csigUri = resolveUri(updateInfoUri, updateInfo.full.locationCsig, false)
+        Log.d(TAG, "csig URI: $csigUri")
 
-        val csigInfo = downloadAndCheckCsig(csigUrl)
+        val csigInfo = downloadAndCheckCsig(csigUri)
 
         val pfMetadata = csigInfo.getOrThrow(OtaPaths.METADATA_NAME)
-        val metadata = downloadAndCheckMetadata(otaUrl, pfMetadata, csigInfo)
+        val metadata = fetchAndCheckMetadata(otaUri, pfMetadata, csigInfo)
 
         if (metadata.postcondition.buildCount != 1) {
             throw ValidationException("Metadata postcondition lists multiple fingerprints")
@@ -465,13 +533,13 @@ class UpdaterThread(
         return CheckUpdateResult(
             updateAvailable,
             fingerprint,
-            otaUrl,
+            otaUri,
             csigInfo,
         )
     }
 
     /** Asynchronously trigger the update_engine payload application. */
-    private fun startInstallation(otaUrl: URL, csigInfo: CsigInfo) {
+    private fun startInstallation(otaUri: Uri, csigInfo: CsigInfo) {
         val pfPayload = csigInfo.getOrThrow(OtaPaths.PAYLOAD_NAME)
         val pfPayloadMetadata = csigInfo.getOrThrow(OtaPaths.PAYLOAD_METADATA_NAME)
         val pfPayloadProperties = csigInfo.getOrThrow(OtaPaths.PAYLOAD_PROPERTIES_NAME)
@@ -479,19 +547,19 @@ class UpdaterThread(
 
         Log.i(TAG, "Downloading payload metadata and checking compatibility")
 
-        downloadAndCheckPayloadMetadata(otaUrl, pfPayloadMetadata)
+        fetchAndCheckPayloadMetadata(otaUri, pfPayloadMetadata)
 
         Log.i(TAG, "Downloading dm-verity care map file")
 
         if (pfCareMap != null) {
-            downloadCareMap(otaUrl, pfCareMap)
+            downloadCareMap(otaUri, pfCareMap)
         } else {
             Log.w(TAG, "OTA package does not have a dm-verity care map")
         }
 
         Log.i(TAG, "Downloading payload properties file")
 
-        val payloadProperties = downloadKeyValueFile(otaUrl, pfPayloadProperties)
+        val payloadProperties = fetchKeyValueFile(otaUri, pfPayloadProperties)
 
         Log.i(TAG, "Passing payload information to update_engine")
 
@@ -509,12 +577,28 @@ class UpdaterThread(
             }
         }
 
-        updateEngine.applyPayload(
-            otaUrl.toString(),
-            pfPayload.offset,
-            pfPayload.size,
-            engineProperties.map { "${it.key}=${it.value}" }.toTypedArray(),
-        )
+        val enginePropertiesArray = engineProperties.map { "${it.key}=${it.value}" }.toTypedArray()
+
+        if (otaUri.scheme == ContentResolver.SCHEME_CONTENT) {
+            val pfd = context.contentResolver.openFileDescriptor(otaUri, "r")
+                ?: throw IOException("Failed to open: $otaUri")
+
+            pfd.use {
+                updateEngine.applyPayloadFd(
+                    it,
+                    pfPayload.offset,
+                    pfPayload.size,
+                    enginePropertiesArray,
+                )
+            }
+        } else {
+            updateEngine.applyPayload(
+                otaUri.toString(),
+                pfPayload.offset,
+                pfPayload.size,
+                engineProperties.map { "${it.key}=${it.value}" }.toTypedArray(),
+            )
+        }
     }
 
     private fun startLogcat() {
@@ -606,7 +690,7 @@ class UpdaterThread(
                     }
 
                     startInstallation(
-                        checkUpdateResult.otaUrl,
+                        checkUpdateResult.otaUri,
                         checkUpdateResult.csigInfo,
                     )
                 } else {
@@ -651,7 +735,7 @@ class UpdaterThread(
     private data class CheckUpdateResult(
         val updateAvailable: Boolean,
         val fingerprint: String,
-        val otaUrl: URL,
+        val otaUri: Uri,
         val csigInfo: CsigInfo,
     )
 
@@ -753,14 +837,5 @@ class UpdaterThread(
         private val USER_AGENT_UPDATE_ENGINE = "$USER_AGENT update_engine/${Build.VERSION.SDK_INT}"
 
         private const val TIMEOUT_MS = 30_000
-
-        private fun resolveUrl(base: URL, str: String, forceBaseAsDir: Boolean): URL {
-            var raw = base.toString()
-            if (forceBaseAsDir && !raw.endsWith('/')) {
-                raw += '/'
-            }
-
-            return URI(raw).resolve(str).toURL()
-        }
     }
 }

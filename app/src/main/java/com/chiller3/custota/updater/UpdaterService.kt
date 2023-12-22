@@ -57,7 +57,7 @@ class UpdaterService : Service(), UpdaterThread.UpdaterThreadListener {
                     // returns.
                     updateForegroundNotification(false)
 
-                    if (prefs.otaServerUrl != null) {
+                    if (prefs.otaSource != null) {
                         startUpdate(intent)
                     } else {
                         Log.w(TAG, "Not starting thread because no URL is configured")

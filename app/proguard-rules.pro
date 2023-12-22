@@ -24,6 +24,12 @@
 # only goal of minification.
 -dontobfuscate
 
+# We construct TreeDocumentFile via reflection in DocumentFileExtensions
+# to speed up SAF performance when doing path lookups.
+-keepclassmembers class androidx.documentfile.provider.TreeDocumentFile {
+    <init>(androidx.documentfile.provider.DocumentFile, android.content.Context, android.net.Uri);
+}
+
 # Keep classes generated from AIDL
 -keep class android.os.IUpdateEngine* {
     *;

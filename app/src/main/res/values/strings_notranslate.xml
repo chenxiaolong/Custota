@@ -6,5 +6,5 @@
 <resources>
     <string name="app_name" translatable="false">Custota</string>
 
-    <string name="dialog_ota_server_url_hint" translatable="false">https://hostname[:port]/path</string>
+    <string name="dialog_ota_source_server_url_hint" translatable="false">https://hostname[:port]/path</string>
 </resources>

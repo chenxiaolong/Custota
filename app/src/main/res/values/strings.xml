@@ -15,8 +15,8 @@
     <!-- General preferences -->
     <string name="pref_check_for_updates_name">Check for updates</string>
     <string name="pref_check_for_updates_desc">Schedule a check for new OTA updates.</string>
-    <string name="pref_ota_server_url_name">OTA server URL</string>
-    <string name="pref_ota_server_url_desc_none">No URL set.</string>
+    <string name="pref_ota_source_name">OTA installation source</string>
+    <string name="pref_ota_source_none">No installation source set.</string>
     <string name="pref_certificate_name">Certificate %1$s</string>
     <string name="pref_certificate_desc_subject">Subject: %1$s</string>
     <string name="pref_certificate_desc_serial">Serial: %1$s</string>
@@ -63,10 +63,14 @@
     <string name="pref_revert_completed_desc">This is only possible after an update completes, but before rebooting. This is meant for debugging purposes only.</string>
 
     <!-- Dialogs -->
-    <string name="dialog_ota_server_url_title">@string/pref_ota_server_url_name</string>
-    <string name="dialog_ota_server_url_message">Enter the base URL for fetching OTA update metadata (excluding the filename).</string>
-    <string name="dialog_ota_server_url_error_bad_protocol">Only http:// and https:// URLs are supported.</string>
-    <string name="dialog_ota_server_url_error_malformed">Not a valid URL.</string>
+    <string name="dialog_ota_source_title">@string/pref_ota_source_name</string>
+    <string name="dialog_ota_source_server_url_message">Enter the base URL for fetching OTA update metadata (excluding the filename).</string>
+    <string name="dialog_ota_source_server_url_error_bad_protocol">Only http:// and https:// URLs are supported.</string>
+    <string name="dialog_ota_source_server_url_error_malformed">Not a valid URL.</string>
+    <string name="dialog_ota_source_local_path_message">Select the directory containing the OTA update metadata.</string>
+    <string name="dialog_ota_source_local_path_select_directory">Select directory</string>
+    <string name="dialog_ota_source_use_server_url">Use server URL</string>
+    <string name="dialog_ota_source_use_local_path">Use local path</string>
     <string name="dialog_action_ok">OK</string>
     <string name="dialog_action_cancel">Cancel</string>
 
