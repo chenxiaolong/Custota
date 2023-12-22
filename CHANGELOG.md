@@ -10,6 +10,7 @@
 ### Unreleased
 
 * Update all dependencies ([PR #26])
+* Add support for installing from a local directory ([Issue #25], [PR #27])
 
 ### Version 2.4
 
@@ -55,6 +56,7 @@ Changes:
 [Issue #7]: https://github.com/chenxiaolong/Custota/issues/7
 [Issue #11]: https://github.com/chenxiaolong/Custota/issues/11
 [Issue #22]: https://github.com/chenxiaolong/Custota/issues/22
+[Issue #25]: https://github.com/chenxiaolong/Custota/issues/25
 [PR #1]: https://github.com/chenxiaolong/Custota/pull/1
 [PR #2]: https://github.com/chenxiaolong/Custota/pull/2
 [PR #6]: https://github.com/chenxiaolong/Custota/pull/6
@@ -70,3 +72,4 @@ Changes:
 [PR #21]: https://github.com/chenxiaolong/Custota/pull/21
 [PR #23]: https://github.com/chenxiaolong/Custota/pull/23
 [PR #26]: https://github.com/chenxiaolong/Custota/pull/26
+[PR #27]: https://github.com/chenxiaolong/Custota/pull/27
