@@ -249,16 +249,21 @@ class UpdaterThread(
 
             PartialFdInputStream(pfd, pf.offset, pf.size)
         } else {
+            val range = "${pf.offset}-${pf.offset + pf.size - 1}"
+
             val connection = openUrl(URL(uri.toString()))
-            connection.setRequestProperty("Range", "bytes=${pf.offset}-${pf.offset + pf.size - 1}")
+            connection.setRequestProperty("Range", "bytes=$range")
             connection.connect()
 
             if (connection.responseCode / 100 != 2) {
                 throw IOException("Got ${connection.responseCode} (${connection.responseMessage}) for $uri")
             }
 
-            if (connection.getHeaderField("Accept-Ranges") != "bytes") {
-                throw IOException("Server does not support byte ranges")
+            val responseRange = connection.getHeaderField("Content-Range")
+                ?: throw IOException("Server does not support byte ranges")
+
+            if (responseRange.split('/').firstOrNull() != "bytes $range") {
+                throw IOException("Response range ($responseRange) does not match request ($range)")
             }
 
             if (connection.contentLengthLong != pf.size) {
