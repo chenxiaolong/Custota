@@ -398,7 +398,7 @@ fn subcommand_gen_update_info(args: &GenerateUpdateInfo) -> Result<()> {
             (f, UpdateInfo::default(), true)
         }
         Err(e) => {
-            return Err(e).with_context(|| anyhow!("Failed to open: {:?}", args.file))?;
+            return Err(e).with_context(|| anyhow!("Failed to open: {:?}", args.file));
         }
     };
 
