@@ -89,10 +89,21 @@ jobs:
           cargo build --release --features static \
               --target ${{ steps.get_target.outputs.name }}
 
+      # Due to https://github.com/rust-lang/rust/issues/78210, we have to use
+      # the --target option, which puts all output files in a different path.
+      # Symlink that path to the normal output directory so that we don't need
+      # to specify the Rust triple everywhere.
+      - name: Symlink target directory
+        shell: bash
+        working-directory: custota-tool
+        run: |
+          rm -rf target/output
+          ln -s ${{ steps.get_target.outputs.name }}/release target/output
+
       - name: Archive artifacts
         uses: actions/upload-artifact@v3
         with:
           name: custota-tool-${{ steps.get_version.outputs.version }}-${{ steps.get_target.outputs.name }}
           path: |
-            custota-tool/target/release/custota-tool
-            custota-tool/target/release/custota-tool.exe
+            custota-tool/target/output/custota-tool
+            custota-tool/target/output/custota-tool.exe
