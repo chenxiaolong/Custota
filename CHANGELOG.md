@@ -7,7 +7,7 @@
     to update the actual links at the bottom of the file.
 -->
 
-### Unreleased
+### Version 3.0
 
 Happy New Year! avbroot 3.0.0 was also released today, which added support for patching the system partition's `otacerts.zip`. With that change, Custota's `customotacerts` module is no longer needed.
 
