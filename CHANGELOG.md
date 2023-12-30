@@ -10,6 +10,7 @@
 ### Unreleased
 
 * Update all dependencies ([PR #31])
+* Build precompiled `custota-tool` executables as statically linked executables ([PR #32])
 
 ### Version 2.5
 
@@ -82,3 +83,4 @@ Changes:
 [PR #27]: https://github.com/chenxiaolong/Custota/pull/27
 [PR #30]: https://github.com/chenxiaolong/Custota/pull/30
 [PR #31]: https://github.com/chenxiaolong/Custota/pull/31
+[PR #32]: https://github.com/chenxiaolong/Custota/pull/32
