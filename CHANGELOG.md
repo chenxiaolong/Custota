@@ -22,7 +22,7 @@
 
 ### Version 2.4
 
-* Work around GrapheneOS 14 that causes Custota to crash ([Issue #22], [PR #23])
+* Work around GrapheneOS 14 change that causes Custota to crash ([Issue #22], [PR #23])
 
 ### Version 2.3
 
