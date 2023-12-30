@@ -9,9 +9,16 @@
 
 ### Unreleased
 
+Happy New Year! avbroot 3.0.0 was also released today, which added support for patching the system partition's `otacerts.zip`. With that change, Custota's `customotacerts` module is no longer needed.
+
+After updating to an OTA that was patched by avbroot 3.0.0 or newer, the `customotacerts` module can be safely uninstalled.
+
+Changes:
+
 * Update all dependencies ([PR #31])
 * Build precompiled `custota-tool` executables as statically linked executables ([PR #32])
 * Fix minor clippy warning ([PR #33])
+* Remove `customotacerts` module ([PR #34])
 
 ### Version 2.5
 
@@ -86,3 +93,4 @@ Changes:
 [PR #31]: https://github.com/chenxiaolong/Custota/pull/31
 [PR #32]: https://github.com/chenxiaolong/Custota/pull/32
 [PR #33]: https://github.com/chenxiaolong/Custota/pull/33
+[PR #34]: https://github.com/chenxiaolong/Custota/pull/34
