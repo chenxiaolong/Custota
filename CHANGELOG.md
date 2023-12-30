@@ -9,6 +9,8 @@
 
 ### Unreleased
 
+* Update all dependencies ([PR #31])
+
 ### Version 2.5
 
 * Update all dependencies ([PR #26])
@@ -79,3 +81,4 @@ Changes:
 [PR #26]: https://github.com/chenxiaolong/Custota/pull/26
 [PR #27]: https://github.com/chenxiaolong/Custota/pull/27
 [PR #30]: https://github.com/chenxiaolong/Custota/pull/30
+[PR #31]: https://github.com/chenxiaolong/Custota/pull/31
