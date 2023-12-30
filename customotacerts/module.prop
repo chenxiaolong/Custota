@@ -1,6 +1,0 @@
-id=customotacerts
-name=Custom OTA certificates
-version=1
-versionCode=1
-author=n/a
-description=Custom certificates for verifying OTA update packages
