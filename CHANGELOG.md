@@ -16,7 +16,7 @@ After updating to an OTA that was patched by avbroot 3.0.0 or newer, the `custom
 Changes:
 
 * Update all dependencies ([PR #31])
-* Build precompiled `custota-tool` executables as statically linked executables ([PR #32])
+* Build precompiled `custota-tool` executables as statically linked executables ([PR #32], [PR #35])
 * Fix minor clippy warning ([PR #33])
 * Remove `customotacerts` module ([PR #34])
 
@@ -94,3 +94,4 @@ Changes:
 [PR #32]: https://github.com/chenxiaolong/Custota/pull/32
 [PR #33]: https://github.com/chenxiaolong/Custota/pull/33
 [PR #34]: https://github.com/chenxiaolong/Custota/pull/34
+[PR #35]: https://github.com/chenxiaolong/Custota/pull/35
