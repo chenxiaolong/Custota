@@ -125,15 +125,7 @@ If the CA certificate ever needs to be updated again, just repeat these steps.
 
 ## Custom verification key
 
-Android's `update_engine` verifies OTA signatures against certificates contained within `/system/etc/security/otacerts.zip`. To install custom signed OTAs, this zip file needs to be replaced with one that contains the custom signing certificate.
-
-To do so, run:
-
-```bash
-python3 customotacerts/build.py -c /path/to/certificate.crt
-```
-
-This creates a Magisk/KernelSU module that overrides `otacerts.zip`. After flashing both this module and Custota, to confirm that it works, just open the Custota app. The app lists the certificates that are currently active on the system.
+Android's `update_engine` verifies OTA signatures against certificates contained within `/system/etc/security/otacerts.zip`. If your OTAs were signed by a custom key via avbroot, make sure it was done with avbroot 3.0.0 or newer, which added support for patching the system partition's copy of `otacerts.zip` (instead of just the recovery partition's copy).
 
 ## Permissions
 
@@ -187,7 +179,7 @@ Normally, an update can be cancelled by presing the `Cancel` button in the notif
 
 The A/B update process in Android is handled by a builtin component called `update_engine`. The engine is used both for sideloading OTA updates when booted into recovery mode and for regular OTA updates while booted into Android. It is responsible for checking the signature of `payload.bin` inside the OTA zip against `/system/etc/security/otacerts.zip`, verifying existing partition checksums (for incremental updates), and then installing the payload. It also handles the download process when used in the streaming mode, which is always requested by Custota. Custota itself is responsible for the other parts, such as checking for updates, verifying compatibility, and preventing downgrades (which could cause the device to be unbootable due to Android Verified Boot's rollback index mechanism).
 
-In order for Custota to talk to `update_engine` or even discover that the component exists, the SELinux policy must be modified to allow this access. The module ships with a [script](./app/module/post-fs-data.sh) that these modifications (non-persistently) on boot. This script is the only time root access is used.
+In order for Custota to talk to `update_engine` or even discover that the component exists, the SELinux policy must be modified to allow this access. The module ships with a [script](./app/module/post-fs-data.sh) that makes these modifications (non-persistently) on boot. This script is the only time root access is used.
 
 There are two parts to the SELinux changes:
 
