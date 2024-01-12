@@ -57,7 +57,7 @@ To reduce battery usage, the scheduling of the update checks is controlled by An
 Custota only requires a basic webserver capable of serving static files and supporting the HTTP `Range` header. Any standard webserver, like Apache, Nginx, or Caddy, will do the trick. For testing, Caddy is very useful because it can serve files from a directory without setting up any config files:
 
 ```bash
-caddy file-server --access-log --listen :8080 --path /path/to/ota/directory
+caddy file-server --access-log --listen :8080 --root /path/to/ota/directory
 ```
 
 The following static files need to be hosted:
