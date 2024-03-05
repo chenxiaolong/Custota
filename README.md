@@ -185,7 +185,7 @@ There are two parts to the SELinux changes:
 
 1. There's a [`custota_selinux` native executable](./app/src/main/cpp/custota_selinux) that performs all of the policy modifications. It takes the `untrusted_app` domain and makes a copy of it as `custota_app`. Then, it adds the relevant rules to allow only `custota_app` to access `update_engine`. The domain is copied from `untrusted_app` instead of the normal `priv_app` domain that is assigned to system apps because Custota does not require any of the additional privileges that would have been granted by `priv_app`.
 
-2. An `seapp_contexts` rule is added to `/dev/selinux/apex_seapp_contexts`, which actually sets up the association between Custota (app package ID: `com.chiller3.custota`) and the new SELinux domain (`custota_app`).
+2. An `seapp_contexts` rule is added to `/system/etc/selinux/plat_seapp_contexts`, which actually sets up the association between Custota (app package ID: `com.chiller3.custota`) and the new SELinux domain (`custota_app`).
 
 These changes help limit Custota's privileges to exactly what is needed and avoids potentially increasing the attack surface via other apps.
 
