@@ -9,6 +9,9 @@
 
 ### Unreleased
 
+* Switch to modifying `/system/etc/selinux/plat_seapp_contexts` ([Issue #40], [PR #41])
+  * Fixes `ServiceNotFoundException` when connecting to `update_engine` on Android 14 QPR2 (2024 March security update)
+
 ### Version 3.0
 
 Happy New Year! avbroot 3.0.0 was also released today, which added support for patching the system partition's `otacerts.zip`. With that change, Custota's `customotacerts` module is no longer needed.
@@ -75,6 +78,7 @@ Changes:
 [Issue #22]: https://github.com/chenxiaolong/Custota/issues/22
 [Issue #25]: https://github.com/chenxiaolong/Custota/issues/25
 [Issue #29]: https://github.com/chenxiaolong/Custota/issues/29
+[Issue #40]: https://github.com/chenxiaolong/Custota/issues/40
 [PR #1]: https://github.com/chenxiaolong/Custota/pull/1
 [PR #2]: https://github.com/chenxiaolong/Custota/pull/2
 [PR #6]: https://github.com/chenxiaolong/Custota/pull/6
@@ -97,3 +101,4 @@ Changes:
 [PR #33]: https://github.com/chenxiaolong/Custota/pull/33
 [PR #34]: https://github.com/chenxiaolong/Custota/pull/34
 [PR #35]: https://github.com/chenxiaolong/Custota/pull/35
+[PR #41]: https://github.com/chenxiaolong/Custota/pull/41
