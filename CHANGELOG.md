@@ -7,7 +7,7 @@
     to update the actual links at the bottom of the file.
 -->
 
-### Unreleased
+### Version 3.1
 
 * Switch to modifying `/system/etc/selinux/plat_seapp_contexts` ([Issue #40], [PR #41])
   * Fixes `ServiceNotFoundException` when connecting to `update_engine` on Android 14 QPR2 (2024 March security update)
