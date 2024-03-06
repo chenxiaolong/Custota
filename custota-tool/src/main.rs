@@ -1,14 +1,15 @@
 /*
- * SPDX-FileCopyrightText: 2023 Andrew Gunnerson
+ * SPDX-FileCopyrightText: 2023-2024 Andrew Gunnerson
  * SPDX-License-Identifier: GPL-3.0-only
  */
 
 use std::{
     borrow::Cow,
-    collections::HashMap,
+    collections::{HashMap, HashSet},
     ffi::{OsStr, OsString},
+    fmt::Write as _,
     fs::{self, File, OpenOptions},
-    io::{self, BufReader, BufWriter, Read, Seek, SeekFrom},
+    io::{self, BufReader, BufWriter, Read, Seek, SeekFrom, Write},
     path::{Path, PathBuf},
     str::FromStr,
     sync::{atomic::AtomicBool, Arc},
@@ -37,6 +38,7 @@ use x509_cert::{
     spki::AlgorithmIdentifierOwned,
     Certificate,
 };
+use zip::{write::FileOptions, ZipWriter};
 
 const CSIG_EXT: &str = ".csig";
 
@@ -153,10 +155,26 @@ struct GenerateUpdateInfo {
     file: PathBuf,
 }
 
+/// Generate a module for system CA certificates.
+///
+/// The module will install a set of certificates into the system CA trust store.
+#[derive(Debug, Parser)]
+struct GenerateCertModule {
+    /// Output path for module zip.
+    #[arg(short, long, value_parser)]
+    output: PathBuf,
+
+    /// Path to certificate.
+    #[arg(value_parser, num_args = 1)]
+    cert: Vec<PathBuf>,
+}
+
+#[allow(clippy::enum_variant_names)]
 #[derive(Debug, Subcommand)]
 enum Command {
     GenCsig(GenerateCsig),
     GenUpdateInfo(GenerateUpdateInfo),
+    GenCertModule(GenerateCertModule),
 }
 
 #[derive(Debug, Parser)]
@@ -423,11 +441,92 @@ fn subcommand_gen_update_info(args: &GenerateUpdateInfo) -> Result<()> {
     Ok(())
 }
 
+fn subcommand_gen_cert_module(args: &GenerateCertModule) -> Result<()> {
+    if args.cert.is_empty() {
+        bail!("No certificates specified");
+    }
+
+    let mut certs = vec![];
+    let mut seen = HashSet::new();
+
+    for path in &args.cert {
+        let cert = crypto::read_pem_cert_file(path)
+            .with_context(|| format!("Failed to load cert: {path:?}"))?;
+
+        let mut subject_der = vec![];
+        cert.tbs_certificate
+            .subject
+            .encode_to_vec(&mut subject_der)?;
+
+        // Android uses openssl's X509_NAME_hash_old per:
+        // https://android.googlesource.com/platform/system/ca-certificates/+/refs/tags/android-14.0.0_r29/README.cacerts
+        let subject_md5 = md5::compute(subject_der);
+        let subject_hash = u32::from_le_bytes(subject_md5.0[0..4].try_into().unwrap());
+
+        if !seen.insert(subject_hash) {
+            eprintln!("Skipping duplicate cert: {path:?}");
+            continue;
+        }
+
+        certs.push((subject_hash, cert));
+    }
+
+    let raw_writer = File::create(&args.output)
+        .with_context(|| format!("Failed to open for writing: {:?}", args.output))?;
+    let buf_writer = BufWriter::new(raw_writer);
+    let mut zip_writer = ZipWriter::new(buf_writer);
+    let options = FileOptions::default();
+
+    let mut description = "Certs: ".to_owned();
+    for (i, (hash, _)) in certs.iter().enumerate() {
+        if i > 0 {
+            write!(&mut description, ", ")?;
+        }
+        write!(&mut description, "{hash:08x}")?;
+    }
+    description.push('\n');
+
+    zip_writer.start_file("module.prop", options)?;
+    zip_writer.write_all(include_bytes!("../system-ca-certs/module.prop"))?;
+    zip_writer.write_all(description.as_bytes())?;
+
+    zip_writer.start_file("post-fs-data.sh", options)?;
+    zip_writer.write_all(include_bytes!("../system-ca-certs/post-fs-data.sh"))?;
+
+    for dir in [
+        "META-INF",
+        "META-INF/com",
+        "META-INF/com/google",
+        "META-INF/com/google/android",
+    ] {
+        zip_writer.add_directory(dir, options)?;
+    }
+
+    zip_writer.start_file("META-INF/com/google/android/update-binary", options)?;
+    zip_writer.write_all(include_bytes!("../system-ca-certs/update-binary"))?;
+
+    zip_writer.start_file("META-INF/com/google/android/updater-script", options)?;
+    zip_writer.write_all(include_bytes!("../system-ca-certs/updater-script"))?;
+
+    zip_writer.add_directory("cacerts", options)?;
+
+    for (hash, cert) in certs {
+        let name = format!("cacerts/{hash:08x}.0");
+        zip_writer.start_file(name, options)?;
+        crypto::write_pem_cert(&mut zip_writer, &cert)?;
+    }
+
+    zip_writer.finish()?.flush()?;
+
+    Ok(())
+}
+
 fn main() -> Result<()> {
     let args = Cli::parse();
 
     match args.command {
         Command::GenCsig(args) => subcommand_gen_csig(&args),
         Command::GenUpdateInfo(args) => subcommand_gen_update_info(&args),
+        Command::GenCertModule(args) => subcommand_gen_cert_module(&args),
     }
 }

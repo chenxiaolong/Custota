@@ -36,3 +36,29 @@ fi
 cat >> "${mod_seapp_file}" << EOF
 user=_app isPrivApp=true name=${app_id} domain=custota_app type=app_data_file levelFrom=all
 EOF
+
+header Linking CA store
+
+apex_store=/apex/com.android.conscrypt/cacerts
+system_store=/system/etc/security/cacerts
+google_store=${system_store}_google
+standard_store=${system_store}
+update_engine_store=${system_store}
+
+if [[ -d "${apex_store}" ]]; then
+    standard_store=${apex_store}
+fi
+
+if [[ -d "${google_store}" ]]; then
+    update_engine_store=${google_store}
+fi
+
+echo "Standard trust store: ${standard_store}"
+echo "update_engine trust store: ${update_engine_store}"
+
+rm -rf "${mod_dir}"/system/etc/security
+
+if [[ "${standard_store}" != "${update_engine_store}" ]]; then
+    mkdir -p "${mod_dir}"/system/etc/security
+    ln -sfn "${standard_store}" "${mod_dir}${update_engine_store}"
+fi

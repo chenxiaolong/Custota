@@ -1,0 +1,9 @@
+#!/sbin/sh
+
+OUTFD=${2}
+ZIPFILE=${3}
+
+umask 022
+
+. /data/adb/magisk/util_functions.sh
+install_module

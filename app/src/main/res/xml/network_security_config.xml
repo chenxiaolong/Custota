@@ -1,15 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-    SPDX-FileCopyrightText: 2023 Andrew Gunnerson
+    SPDX-FileCopyrightText: 2023-2024 Andrew Gunnerson
     SPDX-License-Identifier: GPL-3.0-only
 -->
 <network-security-config xmlns:tools="http://schemas.android.com/tools">
     <base-config cleartextTrafficPermitted="true"
         tools:ignore="InsecureBaseConfiguration">
         <trust-anchors>
-            <!-- We intentionally allow user CA certificates -->
-            <certificates src="user"
-                tools:ignore="AcceptsUserCertificates" />
             <certificates src="system"/>
         </trust-anchors>
     </base-config>

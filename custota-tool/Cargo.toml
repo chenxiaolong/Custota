@@ -12,6 +12,7 @@ clap = { version = "4.4.1", features = ["derive"] }
 cms = { version = "0.2.2", features = ["std", "builder"] }
 const-oid = "0.9.5"
 hex = "0.4.3"
+md5 = "0.7.0"
 ring = "0.17.0"
 rsa = { version = "0.9.2", features = ["sha2"] }
 serde = { version = "1.0.188", features = ["derive"] }
@@ -21,7 +22,14 @@ x509-cert = "0.2.4"
 
 [dependencies.avbroot]
 git = "https://github.com/chenxiaolong/avbroot"
-tag = "v3.0.0"
+tag = "v3.1.1"
+
+# https://github.com/zip-rs/zip/pull/383
+[dependencies.zip]
+git = "https://github.com/chenxiaolong/zip"
+rev = "989101f9384b9e94e36e6e9e0f51908fdf98bde6"
+default-features = false
+features = ["deflate"]
 
 [features]
 static = ["avbroot/static"]

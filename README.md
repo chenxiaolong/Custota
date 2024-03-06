@@ -111,17 +111,11 @@ To generate the csig and update info files:
 
 ### HTTPS
 
-Custota respects Android's user trust store, but `update_engine` does not. In fact, it doesn't even use the normal system trust store and instead, has its own at `/system/etc/security/cacerts_google`. This limited trust store only contains a few CA certificates, notably excluding Let's Encrypt.
+To use a self-signed certificate or a custom CA certificate, it needs to be installed into the system CA trust store. To generate a module that does this, run the following command and then flash the generated module zip.
 
-Custota's module will automatically override `update_engine`'s trust store to match the normal system trust store _and_ user trust store.
-
-To use a self-signed certificate or a custom CA certificate:
-
-1. Import the certificate into the user trust store in Android's Settings app.
-
-2. Flash (or reflash) Custota.
-
-If the CA certificate ever needs to be updated again, just repeat these steps.
+```bash
+custota-tool gen-cert-module -o system-ca-certs.zip /path/to/cert.pem
+```
 
 ## Custom verification key
 
@@ -191,13 +185,22 @@ These changes help limit Custota's privileges to exactly what is needed and avoi
 
 ### TLS trust store
 
-One caveat about `update_engine` is that it uses its own trust store for CA certificates at `/system/etc/security/cacerts_google`. To work around this, Custota's module will [override this directory](./app/module/customize.sh) to match the system and user 0 (primary user) trust store. It does so by copying all certificates from:
+Depending on the Android version, different components use different CA trust stores for validating certificates.
 
-* `/apex/com.android.conscrypt/cacerts` (updatable system trust store on Android 14+)
-* `/system/etc/security/cacerts` (system trust store on Android 13)
-* `/data/misc/user/0/cacerts-added` (primary user trust store)
+| Component                            | Trust store     |
+|--------------------------------------|-----------------|
+| Custota (Android >= 14)              | `apex`          |
+| Custota (Android < 14)               | `system`        |
+| `update_engine` (Android >= 14 QPR2) | `system`        |
+| `update_engine` (Android < 14 QPR2)  | `system_google` |
 
-Then, any certificate with a matching name in `/data/misc/user/0/cacerts-removed` is removed, in case the user revoked its trust. These operations are done at module installation time. Custota needs to be reflashed for changes to CA certificates to take effect.
+Custota's module automatically bind mounts trust store directories on boot so that `update_engine` will use the same trust store that regular apps, including Custota, use. This way, there will never be a situation where, for example, Custota can download the OTA, but `update_engine` cannot.
+
+| Android version     | Bind mount                  |
+|---------------------|-----------------------------|
+| < 14                | `system` -> `system_google` |
+| >= 14 but < 14 QPR2 | `apex` -> `system_google`   |
+| >= 14 QPR2          | `apex` -> `system`          |
 
 ### File formats
 
