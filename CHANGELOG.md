@@ -9,6 +9,15 @@
 
 ### Unreleased
 
+This release has no changes for most folks, but does have a breaking change for those using custom CA certificates:
+
+* Custota used to automatically copy all user CA certificates from Android's settings into `update_engine`'s trust store. However, as of Android 14 QPR2, `update_engine` has been changed to use the regular system trust store. Instead of adapting the feature to copy user CA certificates into the system trust store, the feature has been removed because it would impact the entire system instead of just `update_engine`.
+* The custom CA certificate use case is still fully supported. The certificate just needs to be explicitly installed now. Please see [this section of the documentation](./README.md#https) for details on how to do so.
+
+Changes:
+
+* Replace automatic installation of user CA certificates with a certificate module zip generator ([Issue #42], [PR #43])
+
 ### Version 3.1
 
 * Switch to modifying `/system/etc/selinux/plat_seapp_contexts` ([Issue #40], [PR #41])
@@ -81,6 +90,7 @@ Changes:
 [Issue #25]: https://github.com/chenxiaolong/Custota/issues/25
 [Issue #29]: https://github.com/chenxiaolong/Custota/issues/29
 [Issue #40]: https://github.com/chenxiaolong/Custota/issues/40
+[Issue #42]: https://github.com/chenxiaolong/Custota/issues/42
 [PR #1]: https://github.com/chenxiaolong/Custota/pull/1
 [PR #2]: https://github.com/chenxiaolong/Custota/pull/2
 [PR #6]: https://github.com/chenxiaolong/Custota/pull/6
@@ -104,3 +114,4 @@ Changes:
 [PR #34]: https://github.com/chenxiaolong/Custota/pull/34
 [PR #35]: https://github.com/chenxiaolong/Custota/pull/35
 [PR #41]: https://github.com/chenxiaolong/Custota/pull/41
+[PR #43]: https://github.com/chenxiaolong/Custota/pull/43
