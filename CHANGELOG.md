@@ -7,7 +7,7 @@
     to update the actual links at the bottom of the file.
 -->
 
-### Unreleased
+### Version 4.0
 
 This release has no changes for most folks, but does have a breaking change for those using custom CA certificates:
 
