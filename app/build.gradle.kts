@@ -447,7 +447,6 @@ fun updateChangelogLinks(baseUrl: String) {
                     val match = regexAutoLink.matchEntire(linkText)
                     require(match != null) { "Invalid link format: $linkText" }
 
-                    val ref = match.groupValues[0]
                     val type = match.groupValues[1]
                     val number = match.groupValues[2].toInt()
 
