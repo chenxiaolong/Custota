@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: 2022-2023 Andrew Gunnerson
+ * SPDX-FileCopyrightText: 2022-2024 Andrew Gunnerson
  * SPDX-License-Identifier: GPL-3.0-only
  * Based on BCR code.
  */
@@ -61,6 +61,7 @@ class SettingsFragment : PreferenceFragmentCompat(), Preference.OnPreferenceClic
     private lateinit var prefVersion: LongClickablePreference
     private lateinit var prefOpenLogDir: Preference
     private lateinit var prefRevertCompleted: Preference
+    private lateinit var prefInstallCsigCert: Preference
 
     private lateinit var scheduledAction: UpdaterThread.Action
 
@@ -70,6 +71,12 @@ class SettingsFragment : PreferenceFragmentCompat(), Preference.OnPreferenceClic
                 performAction()
             } else {
                 startActivity(Permissions.getAppInfoIntent(requireContext()))
+            }
+        }
+    private val requestSafInstallCsigCert =
+        registerForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
+            uri?.let {
+                viewModel.installCsigCert(it)
             }
         }
 
@@ -115,6 +122,9 @@ class SettingsFragment : PreferenceFragmentCompat(), Preference.OnPreferenceClic
 
         prefRevertCompleted = findPreference(Preferences.PREF_REVERT_COMPLETED)!!
         prefRevertCompleted.onPreferenceClickListener = this
+
+        prefInstallCsigCert = findPreference(Preferences.PREF_INSTALL_CSIG_CERT)!!
+        prefInstallCsigCert.onPreferenceClickListener = this
 
         refreshCheckForUpdates()
         refreshOtaSource()
@@ -252,21 +262,36 @@ class SettingsFragment : PreferenceFragmentCompat(), Preference.OnPreferenceClic
                 performAction()
                 return true
             }
+            prefInstallCsigCert -> {
+                // See AOSP's frameworks/base/mime/java-res/android.mime.types
+                requestSafInstallCsigCert.launch(arrayOf(
+                    "application/x-x509-ca-cert",
+                    "application/x-x509-user-cert",
+                    "application/x-x509-server-cert",
+                    "application/x-pem-file",
+                ))
+                return true
+            }
         }
 
         return false
     }
 
     override fun onPreferenceLongClick(preference: Preference): Boolean {
-        when (preference) {
-            prefOtaSource -> {
+        when {
+            preference === prefOtaSource -> {
                 prefs.otaSource = null
                 return true
             }
-            prefVersion -> {
+            preference === prefVersion -> {
                 prefs.isDebugMode = !prefs.isDebugMode
                 refreshVersion()
                 refreshDebugPrefs()
+                return true
+            }
+            preference.key.startsWith(PREF_CERT_PREFIX) -> {
+                val index = preference.key.removePrefix(PREF_CERT_PREFIX).toInt()
+                viewModel.removeCsigCert(index)
                 return true
             }
         }
@@ -286,7 +311,7 @@ class SettingsFragment : PreferenceFragmentCompat(), Preference.OnPreferenceClic
         }
     }
 
-    private fun addCertPreferences(certs: List<X509Certificate>) {
+    private fun addCertPreferences(certs: List<Pair<X509Certificate, Boolean>>) {
         val context = requireContext()
 
         prefNoCertificates.isVisible = certs.isEmpty()
@@ -299,11 +324,14 @@ class SettingsFragment : PreferenceFragmentCompat(), Preference.OnPreferenceClic
             }
         }
 
-        for ((i, cert) in certs.withIndex()) {
-            val p = Preference(context).apply {
+        for ((i, item) in certs.withIndex()) {
+            val (cert, isSystem) = item
+            val validates = if (isSystem) { "OTA + csig" } else { "csig" }
+
+            val p = LongClickablePreference(context).apply {
                 key = PREF_CERT_PREFIX + i
                 isPersistent = false
-                title = getString(R.string.pref_certificate_name, (i + 1).toString())
+                title = getString(R.string.pref_certificate_name, (i + 1).toString(), validates)
                 summary = buildString {
                     append(getString(R.string.pref_certificate_desc_subject,
                         cert.subjectDN.toString()))
@@ -316,6 +344,10 @@ class SettingsFragment : PreferenceFragmentCompat(), Preference.OnPreferenceClic
                     append(getString(R.string.pref_certificate_desc_type, cert.typeName))
                 }
                 isIconSpaceReserved = false
+
+                if (!isSystem) {
+                    onPreferenceLongClickListener = this@SettingsFragment
+                }
             }
 
             categoryCertificates.addPreference(p)

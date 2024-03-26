@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: 2023 Andrew Gunnerson
+ * SPDX-FileCopyrightText: 2023-2024 Andrew Gunnerson
  * SPDX-License-Identifier: GPL-3.0-only
  */
 
@@ -375,16 +375,14 @@ class UpdaterThread(
         val csigRaw = stream.use { it.readBytes() }
         val csigCms = CMSSignedData(csigRaw)
 
-        // Verify the signature against the same OTA certs as what's used for the payload.
-        val csigValid = OtaPaths.otaCerts.any { cert ->
+        // Verify the signature against both the system OTA certificates and the custom certificates
+        // installed by the user. The custom certificates cannot be used for verifying the payload.
+        val csigCert = (OtaPaths.otaCerts + prefs.csigCerts).find { cert ->
             csigCms.signerInfos.any { signerInfo ->
                 signerInfo.verify(JcaSimpleSignerInfoVerifierBuilder().build(cert))
             }
-        }
-        if (!csigValid) {
-            throw ValidationException("csig is not signed by a trusted key")
-        }
-        Log.d(TAG, "csig signature is valid")
+        } ?: throw ValidationException("csig is not signed by a trusted key")
+        Log.d(TAG, "csig is signed by: $csigCert")
 
         val csigInfoRaw = String(csigCms.signedContent.content as ByteArray)
         val csigInfo: CsigInfo = Json.decodeFromString(csigInfoRaw)

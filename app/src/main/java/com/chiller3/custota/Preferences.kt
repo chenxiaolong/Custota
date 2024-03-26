@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: 2023 Andrew Gunnerson
+ * SPDX-FileCopyrightText: 2023-2024 Andrew Gunnerson
  * SPDX-License-Identifier: GPL-3.0-only
  */
 
@@ -9,9 +9,13 @@ import android.content.ContentResolver
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
+import android.util.Base64
 import android.util.Log
 import androidx.core.content.edit
 import androidx.preference.PreferenceManager
+import java.io.ByteArrayInputStream
+import java.security.cert.CertificateFactory
+import java.security.cert.X509Certificate
 
 class Preferences(private val context: Context) {
     companion object {
@@ -36,9 +40,11 @@ class Preferences(private val context: Context) {
         const val PREF_OPEN_LOG_DIR = "open_log_dir"
         const val PREF_ALLOW_REINSTALL = "allow_reinstall"
         const val PREF_REVERT_COMPLETED = "revert_completed"
+        const val PREF_INSTALL_CSIG_CERT = "install_csig_cert"
 
         // Not associated with a UI preference
         private const val PREF_DEBUG_MODE = "debug_mode"
+        private const val PREF_CSIG_CERTS = "csig_certs"
 
         // Legacy preferences
         private const val PREF_OTA_SERVER_URL = "ota_server_url"
@@ -117,6 +123,33 @@ class Preferences(private val context: Context) {
     var allowReinstall: Boolean
         get() = prefs.getBoolean(PREF_ALLOW_REINSTALL, false)
         set(enabled) = prefs.edit { putBoolean(PREF_ALLOW_REINSTALL, enabled) }
+
+    var csigCerts: Set<X509Certificate>
+        get() {
+            val encoded = prefs.getStringSet(PREF_CSIG_CERTS, emptySet())!!
+            val factory = CertificateFactory.getInstance("X.509")
+
+            return encoded
+                .asSequence()
+                .map { base64 ->
+                    val der = Base64.decode(base64, Base64.DEFAULT)
+
+                    ByteArrayInputStream(der).use {
+                        factory.generateCertificate(it) as X509Certificate
+                    }
+                }
+                .toSet()
+        }
+        set(certs) {
+            val encoded = certs
+                .asSequence()
+                .map {
+                    Base64.encodeToString(it.encoded, Base64.NO_WRAP)
+                }
+                .toSet()
+
+            prefs.edit { putStringSet(PREF_CSIG_CERTS, encoded) }
+        }
 
     /** Migrate legacy preferences to current preferences. */
     fun migrate() {

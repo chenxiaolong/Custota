@@ -139,5 +139,12 @@
             app:title="@string/pref_revert_completed_name"
             app:summary="@string/pref_revert_completed_desc"
             app:iconSpaceReserved="false" />
+
+        <Preference
+            app:key="install_csig_cert"
+            app:persistent="false"
+            app:title="@string/pref_install_csig_cert_name"
+            app:summary="@string/pref_install_csig_cert_desc"
+            app:iconSpaceReserved="false" />
     </PreferenceCategory>
 </PreferenceScreen>

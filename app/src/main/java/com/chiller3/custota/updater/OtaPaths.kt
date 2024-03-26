@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: 2023 Andrew Gunnerson
+ * SPDX-FileCopyrightText: 2023-2024 Andrew Gunnerson
  * SPDX-License-Identifier: GPL-3.0-only
  */
 
@@ -35,9 +35,9 @@ object OtaPaths {
     const val METADATA_NAME = "metadata.pb"
 
     /** Parse X509 certificates from [OTACERTS_ZIP]. */
-    val otaCerts: List<X509Certificate>
+    val otaCerts: Set<X509Certificate>
         get() {
-            val result = mutableListOf<X509Certificate>()
+            val result = mutableSetOf<X509Certificate>()
             val factory = CertificateFactory.getInstance("X.509")
 
             ZipFile(OTACERTS_ZIP).use { zip ->
