@@ -9,6 +9,8 @@
 
 ### Unreleased
 
+* Add debug option for installing custom csig validation certs ([Issue #47], [PR #48])
+
 ### Version 4.0
 
 This release has no changes for most folks, but does have a breaking change for those using custom CA certificates:
@@ -93,6 +95,7 @@ Changes:
 [Issue #29]: https://github.com/chenxiaolong/Custota/issues/29
 [Issue #40]: https://github.com/chenxiaolong/Custota/issues/40
 [Issue #42]: https://github.com/chenxiaolong/Custota/issues/42
+[Issue #47]: https://github.com/chenxiaolong/Custota/issues/47
 [PR #1]: https://github.com/chenxiaolong/Custota/pull/1
 [PR #2]: https://github.com/chenxiaolong/Custota/pull/2
 [PR #6]: https://github.com/chenxiaolong/Custota/pull/6
@@ -117,3 +120,4 @@ Changes:
 [PR #35]: https://github.com/chenxiaolong/Custota/pull/35
 [PR #41]: https://github.com/chenxiaolong/Custota/pull/41
 [PR #43]: https://github.com/chenxiaolong/Custota/pull/43
+[PR #48]: https://github.com/chenxiaolong/Custota/pull/48
