@@ -10,6 +10,7 @@
 ### Unreleased
 
 * Add debug option for installing custom csig validation certs ([Issue #47], [PR #48])
+* Update Kotlin and Rust dependencies ([PR #49])
 
 ### Version 4.0
 
@@ -121,3 +122,4 @@ Changes:
 [PR #41]: https://github.com/chenxiaolong/Custota/pull/41
 [PR #43]: https://github.com/chenxiaolong/Custota/pull/43
 [PR #48]: https://github.com/chenxiaolong/Custota/pull/48
+[PR #49]: https://github.com/chenxiaolong/Custota/pull/49
