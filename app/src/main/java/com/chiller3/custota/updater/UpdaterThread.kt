@@ -412,14 +412,16 @@ class UpdaterThread(
         val postSecurityPatchLevel = metadata.postcondition.securityPatchLevel
         val postTimestamp = metadata.postcondition.timestamp * 1000
 
+        val securityPatch = getSecurityPatch()
+
         if (metadata.type != OtaMetadata.OtaType.AB) {
             throw ValidationException("Not an A/B OTA package")
         } else if (!preDevices.contains(Build.DEVICE)) {
             throw ValidationException("Mismatched device ID: " +
                     "current=${Build.DEVICE}, ota=$preDevices")
-        } else if (postSecurityPatchLevel < Build.VERSION.SECURITY_PATCH) {
+        } else if (postSecurityPatchLevel < securityPatch) {
             throw ValidationException("Downgrading to older security patch is not allowed: " +
-                    "current=${Build.VERSION.SECURITY_PATCH}, ota=$postSecurityPatchLevel")
+                    "current=$securityPatch, ota=$postSecurityPatchLevel")
         } else if (postTimestamp < Build.TIME) {
             throw ValidationException("Downgrading to older timestamp is not allowed: " +
                     "current=${Build.TIME}, ota=$postTimestamp")
@@ -840,5 +842,32 @@ class UpdaterThread(
         private val USER_AGENT_UPDATE_ENGINE = "$USER_AGENT update_engine/${Build.VERSION.SDK_INT}"
 
         private const val TIMEOUT_MS = 30_000
+
+        private const val PROP_SECURITY_PATCH = "ro.build.version.security_patch"
+
+        /**
+         * Get the OS security patch level.
+         *
+         * CalyxOS lies about the value when queried from [Build.VERSION.SECURITY_PATCH]. This will
+         * return the property value of [PROP_SECURITY_PATCH] and log a warning if the OS lies.
+         */
+        @SuppressLint("PrivateApi")
+        private fun getSecurityPatch(): String {
+            val reportedPatch = Build.VERSION.SECURITY_PATCH
+            val actualPatch = try {
+                val systemProperties = Class.forName("android.os.SystemProperties")
+                val get = systemProperties.getDeclaredMethod("get", String::class.java)
+                get.invoke(null, PROP_SECURITY_PATCH) as String
+            } catch (e: Exception) {
+                Log.w(TAG, "Failed to query $PROP_SECURITY_PATCH property", e)
+                null
+            }
+
+            if (reportedPatch != actualPatch) {
+                Log.w(TAG, "OS lies about security patch: reported=$reportedPatch, actual=$actualPatch")
+            }
+
+            return actualPatch ?: reportedPatch
+        }
     }
 }
