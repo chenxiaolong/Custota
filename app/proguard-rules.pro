@@ -45,3 +45,8 @@
 -keep class android.ota.OtaPackageMetadata* {
     *;
 }
+
+# Keep standalone CLI utilities
+-keep class com.chiller3.custota.standalone.* {
+    *;
+}

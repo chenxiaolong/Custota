@@ -1,12 +1,12 @@
 # SPDX-FileCopyrightText: 2023-2024 Andrew Gunnerson
 # SPDX-License-Identifier: GPL-3.0-only
 
+source "${0%/*}/boot_common.sh" /data/local/tmp/custota_selinux.log
+
 # We don't want to give any arbitrary system app permissions to update_engine.
 # Thus, we create a new context for custota and only give access to that
 # specific type. Magisk currently has no builtin way to modify seapp_contexts,
 # so we'll do it manually.
-
-source "${0%/*}/boot_common.sh" /data/local/tmp/custota_selinux.log
 
 header Creating custota_app domain
 
@@ -36,6 +36,25 @@ fi
 cat >> "${mod_seapp_file}" << EOF
 user=_app isPrivApp=true name=${app_id} domain=custota_app type=app_data_file levelFrom=all
 EOF
+
+# On some devices, the system time is set too late in the boot process. This,
+# for some reason, causes the package manager service to not update the package
+# info cache entry despite the mtime of the apk being newer than the mtime of
+# the cache entry [1]. This causes the sysconfig file's hidden-api-whitelist
+# option to not take effect, among other issues. Work around this by forcibly
+# deleting the relevant cache entries on every boot.
+#
+# [1] https://cs.android.com/android/platform/superproject/+/android-13.0.0_r42:frameworks/base/services/core/java/com/android/server/pm/parsing/PackageCacher.java;l=139
+
+ls -lZ "${cli_apk}"
+ls -lZ "${cli_apk#"${mod_dir}"}"
+find /data/system/package_cache -name "${app_id}-*" -exec ls -lZ {} \+
+
+header Clear package manager caches
+run_cli_apk com.chiller3.custota.standalone.ClearPackageManagerCachesKt
+
+# Bind mount the appropriate CA stores so that update_engine will use the
+# regular system CA store.
 
 header Linking CA store
 
