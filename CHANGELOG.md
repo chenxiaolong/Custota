@@ -7,7 +7,7 @@
     to update the actual links at the bottom of the file.
 -->
 
-### Unreleased
+### Version 4.1
 
 * Add debug option for installing custom csig validation certs ([Issue #47], [PR #48])
 * Update Kotlin and Rust dependencies ([PR #49])
