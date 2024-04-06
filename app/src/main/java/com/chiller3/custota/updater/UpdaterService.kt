@@ -108,8 +108,24 @@ class UpdaterService : Service(), UpdaterThread.UpdaterThreadListener {
 
             updateForegroundNotification(true)
 
-            updaterThread = UpdaterThread(this, network, action, this).apply {
-                start()
+            try {
+                updaterThread = UpdaterThread(this, network, action, this).apply {
+                    start()
+                }
+            } catch (e: Exception) {
+                Log.e(TAG, "Failed to initialize updater thread", e)
+
+                notifications.sendAlertNotification(
+                    Notifications.CHANNEL_ID_FAILURE,
+                    false,
+                    R.string.notification_update_init_failed,
+                    R.drawable.ic_notifications,
+                    e.toSingleLineString(),
+                    emptyList(),
+                )
+
+                tryStop()
+                return
             }
 
             updaterAction = action
@@ -203,7 +219,7 @@ class UpdaterService : Service(), UpdaterThread.UpdaterThreadListener {
                 channel = Notifications.CHANNEL_ID_CHECK
                 // Only bug the user once while the notification is still shown
                 onlyAlertOnce = true
-                titleResId = R.string.notification_update_available
+                titleResId = R.string.notification_update_ota_available
                 message = result.fingerprint
                 showInstall = true
                 showRetry = false
@@ -218,7 +234,7 @@ class UpdaterService : Service(), UpdaterThread.UpdaterThreadListener {
 
                 channel = Notifications.CHANNEL_ID_CHECK
                 onlyAlertOnce = false
-                titleResId = R.string.notification_update_unnecessary
+                titleResId = R.string.notification_update_ota_unnecessary
                 message = null
                 showInstall = false
                 showRetry = false
@@ -228,7 +244,7 @@ class UpdaterService : Service(), UpdaterThread.UpdaterThreadListener {
                 channel = Notifications.CHANNEL_ID_SUCCESS
                 // Only bug the user once while the notification is still shown
                 onlyAlertOnce = result is UpdaterThread.UpdateNeedReboot
-                titleResId = R.string.notification_update_succeeded
+                titleResId = R.string.notification_update_ota_succeeded
                 message = null
                 showInstall = false
                 showRetry = false
@@ -237,7 +253,7 @@ class UpdaterService : Service(), UpdaterThread.UpdaterThreadListener {
             UpdaterThread.UpdateReverted -> {
                 channel = Notifications.CHANNEL_ID_SUCCESS
                 onlyAlertOnce = false
-                titleResId = R.string.notification_update_reverted
+                titleResId = R.string.notification_update_ota_reverted
                 message = null
                 showInstall = false
                 showRetry = false
@@ -246,7 +262,7 @@ class UpdaterService : Service(), UpdaterThread.UpdaterThreadListener {
             UpdaterThread.UpdateCancelled -> {
                 channel = Notifications.CHANNEL_ID_FAILURE
                 onlyAlertOnce = false
-                titleResId = R.string.notification_update_cancelled
+                titleResId = R.string.notification_update_ota_cancelled
                 message = null
                 showInstall = false
                 showRetry = true
@@ -255,7 +271,7 @@ class UpdaterService : Service(), UpdaterThread.UpdaterThreadListener {
             is UpdaterThread.UpdateFailed -> {
                 channel = Notifications.CHANNEL_ID_FAILURE
                 onlyAlertOnce = false
-                titleResId = R.string.notification_update_failed
+                titleResId = R.string.notification_update_ota_failed
                 message = result.errorMsg
                 showInstall = false
                 showRetry = true
