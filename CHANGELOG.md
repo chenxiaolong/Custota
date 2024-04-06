@@ -13,6 +13,7 @@
 * Update Kotlin and Rust dependencies ([PR #49])
 * Work around Android builds that lie about the security patch release in `Build.VERSION.SECURITY_PATCH` ([Issue #51], [PR #52])
 * Show a notification instead of hard crashing when Custota's `/system/etc/sysconfig/` is being ignored by Android ([Issue #51], [PR #53])
+* Work around crashes due to Android not invalidating the package manager cache when a device has the wrong system time during boot ([Issue #51], [PR #54])
 
 ### Version 4.0
 
@@ -128,3 +129,4 @@ Changes:
 [PR #49]: https://github.com/chenxiaolong/Custota/pull/49
 [PR #52]: https://github.com/chenxiaolong/Custota/pull/52
 [PR #53]: https://github.com/chenxiaolong/Custota/pull/53
+[PR #54]: https://github.com/chenxiaolong/Custota/pull/54
