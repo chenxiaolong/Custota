@@ -11,6 +11,7 @@
 
 * Add debug option for installing custom csig validation certs ([Issue #47], [PR #48])
 * Update Kotlin and Rust dependencies ([PR #49])
+* Work around Android builds that lie about the security patch release in `Build.VERSION.SECURITY_PATCH` ([Issue #51], [PR #52])
 
 ### Version 4.0
 
@@ -97,6 +98,7 @@ Changes:
 [Issue #40]: https://github.com/chenxiaolong/Custota/issues/40
 [Issue #42]: https://github.com/chenxiaolong/Custota/issues/42
 [Issue #47]: https://github.com/chenxiaolong/Custota/issues/47
+[Issue #51]: https://github.com/chenxiaolong/Custota/issues/51
 [PR #1]: https://github.com/chenxiaolong/Custota/pull/1
 [PR #2]: https://github.com/chenxiaolong/Custota/pull/2
 [PR #6]: https://github.com/chenxiaolong/Custota/pull/6
@@ -123,3 +125,4 @@ Changes:
 [PR #43]: https://github.com/chenxiaolong/Custota/pull/43
 [PR #48]: https://github.com/chenxiaolong/Custota/pull/48
 [PR #49]: https://github.com/chenxiaolong/Custota/pull/49
+[PR #52]: https://github.com/chenxiaolong/Custota/pull/52
