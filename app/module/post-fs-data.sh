@@ -46,11 +46,11 @@ EOF
 #
 # [1] https://cs.android.com/android/platform/superproject/+/android-13.0.0_r42:frameworks/base/services/core/java/com/android/server/pm/parsing/PackageCacher.java;l=139
 
-ls -lZ "${cli_apk}"
-ls -lZ "${cli_apk#"${mod_dir}"}"
-find /data/system/package_cache -name "${app_id}-*" -exec ls -lZ {} \+
-
 header Clear package manager caches
+
+ls -ldZ "${cli_apk%/*}"
+find /data/system/package_cache -name "${app_id}-*" -exec ls -ldZ {} \+
+
 run_cli_apk com.chiller3.custota.standalone.ClearPackageManagerCachesKt
 
 # Bind mount the appropriate CA stores so that update_engine will use the
