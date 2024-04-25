@@ -9,6 +9,8 @@
 
 ### Unreleased
 
+* Fix `update_engine` failing with `9/DOWNLOAD_TRANSFER_ERROR` on newer Android versions ([PR #56])
+
 ### Version 4.1
 
 * Add debug option for installing custom csig validation certs ([Issue #47], [PR #48])
@@ -132,3 +134,4 @@ Changes:
 [PR #52]: https://github.com/chenxiaolong/Custota/pull/52
 [PR #53]: https://github.com/chenxiaolong/Custota/pull/53
 [PR #54]: https://github.com/chenxiaolong/Custota/pull/54
+[PR #56]: https://github.com/chenxiaolong/Custota/pull/56
