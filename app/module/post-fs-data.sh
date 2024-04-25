@@ -79,5 +79,11 @@ rm -rf "${mod_dir}"/system/etc/security
 
 if [[ "${standard_store}" != "${update_engine_store}" ]]; then
     mkdir -p "${mod_dir}"/system/etc/security
-    ln -sfn "${standard_store}" "${mod_dir}${update_engine_store}"
+    # This copies the directory instead of symlinking it because the SELinux
+    # policy in newer Android versions no longer allows reading the targets of
+    # symlinks labelled with the system_security_cacerts_file type.
+    cp -r "${standard_store}" "${mod_dir}${update_engine_store}"
+
+    # Replace the whole directory instead of merging it.
+    touch "${mod_dir}${update_engine_store}/.replace"
 fi
