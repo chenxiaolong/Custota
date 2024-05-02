@@ -7,7 +7,7 @@
     to update the actual links at the bottom of the file.
 -->
 
-### Unreleased
+### Version 4.3
 
 * Build universal binary for macOS ([PR #57])
 
