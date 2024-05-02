@@ -9,6 +9,8 @@
 
 ### Unreleased
 
+* Build universal binary for macOS ([PR #57])
+
 ### Version 4.2
 
 * Fix `update_engine` failing with `9/DOWNLOAD_TRANSFER_ERROR` on newer Android versions ([PR #56])
@@ -137,3 +139,4 @@ Changes:
 [PR #53]: https://github.com/chenxiaolong/Custota/pull/53
 [PR #54]: https://github.com/chenxiaolong/Custota/pull/54
 [PR #56]: https://github.com/chenxiaolong/Custota/pull/56
+[PR #57]: https://github.com/chenxiaolong/Custota/pull/57
