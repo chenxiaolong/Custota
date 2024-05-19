@@ -9,6 +9,8 @@
 
 ### Unreleased
 
+* Update all dependencies ([PR #59])
+
 ### Version 4.3
 
 * Build universal binary for macOS ([PR #57])
