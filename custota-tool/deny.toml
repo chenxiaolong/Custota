@@ -1,27 +1,24 @@
 [advisories]
-vulnerability = "deny"
-unmaintained = "deny"
+version = 2
 yanked = "deny"
-notice = "deny"
 ignore = [
     # This is temporary. See avbroot's deny.toml.
     "RUSTSEC-2023-0071",
 ]
 
 [licenses]
+version = 2
 include-dev = true
-unlicensed = "deny"
 allow = [
     "Apache-2.0",
     "Apache-2.0 WITH LLVM-exception",
     "BSD-3-Clause",
+    "GPL-3.0",
     "ISC",
     "MIT",
     "OpenSSL",
     "Unicode-DFS-2016",
 ]
-copyleft = "allow"
-default = "deny"
 
 [[licenses.clarify]]
 name = "ring"
@@ -43,7 +40,7 @@ unknown-registry = "deny"
 unknown-git = "deny"
 allow-git = [
     "https://github.com/chenxiaolong/avbroot",
+    "https://github.com/chenxiaolong/bzip2-rs",
     "https://github.com/chenxiaolong/xz2-rs",
     "https://github.com/chenxiaolong/zip",
-    "https://github.com/jongiddy/bzip2-rs",
 ]
