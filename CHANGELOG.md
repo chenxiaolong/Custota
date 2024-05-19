@@ -144,3 +144,4 @@ Changes:
 [PR #54]: https://github.com/chenxiaolong/Custota/pull/54
 [PR #56]: https://github.com/chenxiaolong/Custota/pull/56
 [PR #57]: https://github.com/chenxiaolong/Custota/pull/57
+[PR #59]: https://github.com/chenxiaolong/Custota/pull/59
