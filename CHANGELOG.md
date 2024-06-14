@@ -7,7 +7,7 @@
     to update the actual links at the bottom of the file.
 -->
 
-### Unreleased
+### Version 4.4
 
 * Update all dependencies ([PR #59])
 * Add prebuilt custota-tool binary for Android (aarch64) ([Issue #60], [PR #61])
