@@ -10,6 +10,7 @@
 ### Unreleased
 
 * Update all dependencies ([PR #59])
+* Add prebuilt custota-tool binary for Android (aarch64) ([Issue #60], [PR #61])
 
 ### Version 4.3
 
@@ -113,6 +114,7 @@ Changes:
 [Issue #42]: https://github.com/chenxiaolong/Custota/issues/42
 [Issue #47]: https://github.com/chenxiaolong/Custota/issues/47
 [Issue #51]: https://github.com/chenxiaolong/Custota/issues/51
+[Issue #60]: https://github.com/chenxiaolong/Custota/issues/60
 [PR #1]: https://github.com/chenxiaolong/Custota/pull/1
 [PR #2]: https://github.com/chenxiaolong/Custota/pull/2
 [PR #6]: https://github.com/chenxiaolong/Custota/pull/6
@@ -145,3 +147,4 @@ Changes:
 [PR #56]: https://github.com/chenxiaolong/Custota/pull/56
 [PR #57]: https://github.com/chenxiaolong/Custota/pull/57
 [PR #59]: https://github.com/chenxiaolong/Custota/pull/59
+[PR #61]: https://github.com/chenxiaolong/Custota/pull/61
