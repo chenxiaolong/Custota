@@ -370,6 +370,14 @@ The output binary is written to `target/release/custota-tool`.
 
 Debug builds work too, but they will run significantly slower (in the sha256 computations) due to compiler optimizations being turned off.
 
+### Android cross-compilation
+
+To cross-compile for Android, install [cargo-android](https://github.com/chenxiaolong/cargo-android) and use the `cargo android` wrapper. To make a release build for aarch64, run:
+
+```bash
+cargo android build --release --target aarch64-linux-android
+```
+
 ## Contributing
 
 Bug fix and translation pull requests are welcome and much appreciated!
