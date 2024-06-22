@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: 2023 Andrew Gunnerson
+ * SPDX-FileCopyrightText: 2023-2024 Andrew Gunnerson
  * SPDX-License-Identifier: GPL-3.0-only
  * Based on BCR code.
  */
@@ -8,7 +8,9 @@
 
 package com.chiller3.custota.standalone
 
+import android.util.Log
 import com.chiller3.custota.BuildConfig
+import java.lang.invoke.MethodHandles
 import java.nio.file.Path
 import java.nio.file.Paths
 import kotlin.io.path.ExperimentalPathApi
@@ -18,15 +20,17 @@ import kotlin.io.path.readBytes
 import kotlin.io.path.walk
 import kotlin.system.exitProcess
 
+private val TAG = MethodHandles.lookup().lookupClass().simpleName
+
 private val PACKAGE_CACHE_DIR = Paths.get("/data/system/package_cache")
 
 private var dryRun = false
 
 private fun delete(path: Path) {
     if (dryRun) {
-        println("Would have deleted: $path")
+        Log.i(TAG, "Would have deleted: $path")
     } else {
-        println("Deleting: $path")
+        Log.i(TAG, "Deleting: $path")
         path.deleteIfExists()
     }
 }
@@ -74,7 +78,7 @@ private fun clearPackageManagerCache(appId: String): Boolean {
                 delete(path)
             }
         } catch (e: Exception) {
-            e.printStackTrace()
+            Log.w(TAG, "Failed to delete $path", e)
             ret = false
         }
     }
@@ -94,8 +98,7 @@ fun main(args: Array<String>) {
     try {
         mainInternal()
     } catch (e: Exception) {
-        System.err.println("Failed to clear caches")
-        e.printStackTrace()
+        Log.e(TAG, "Failed to clear caches", e)
         exitProcess(1)
     }
 }
