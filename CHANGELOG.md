@@ -9,6 +9,8 @@
 
 ### Unreleased
 
+* Log boot script output to logcat ([PR #62])
+
 ### Version 4.4
 
 * Update all dependencies ([PR #59])
@@ -150,3 +152,4 @@ Changes:
 [PR #57]: https://github.com/chenxiaolong/Custota/pull/57
 [PR #59]: https://github.com/chenxiaolong/Custota/pull/59
 [PR #61]: https://github.com/chenxiaolong/Custota/pull/61
+[PR #62]: https://github.com/chenxiaolong/Custota/pull/62
