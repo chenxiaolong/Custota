@@ -11,6 +11,7 @@
 
 * Log boot script output to logcat ([PR #62])
 * Replace custota-selinux with a new implementation based on the sepatch library ([PR #63])
+* Update all dependencies ([PR #64])
 
 ### Version 4.4
 
@@ -155,3 +156,4 @@ Changes:
 [PR #61]: https://github.com/chenxiaolong/Custota/pull/61
 [PR #62]: https://github.com/chenxiaolong/Custota/pull/62
 [PR #63]: https://github.com/chenxiaolong/Custota/pull/63
+[PR #64]: https://github.com/chenxiaolong/Custota/pull/64
