@@ -9,6 +9,8 @@
 
 ### Unreleased
 
+* custota-selinux: Move workaround for broken linking on x86_64 from sepatch to cargo-android ([PR #65])
+
 ### Version 4.5
 
 * Log boot script output to logcat ([PR #62])
@@ -159,3 +161,4 @@ Changes:
 [PR #62]: https://github.com/chenxiaolong/Custota/pull/62
 [PR #63]: https://github.com/chenxiaolong/Custota/pull/63
 [PR #64]: https://github.com/chenxiaolong/Custota/pull/64
+[PR #65]: https://github.com/chenxiaolong/Custota/pull/65
