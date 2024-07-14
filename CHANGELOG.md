@@ -7,7 +7,7 @@
     to update the actual links at the bottom of the file.
 -->
 
-### Unreleased
+### Version 4.5
 
 * Log boot script output to logcat ([PR #62])
 * Replace custota-selinux with a new implementation based on the sepatch library ([PR #63])
