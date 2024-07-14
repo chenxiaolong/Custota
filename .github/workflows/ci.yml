@@ -29,7 +29,7 @@ jobs:
         run: |
           cargo install \
               --git https://github.com/chenxiaolong/cargo-android \
-              --tag v0.1.1
+              --tag v0.1.2
 
       - name: Install toolchains
         shell: bash
@@ -85,7 +85,7 @@ jobs:
         run: |
           cargo install \
               --git https://github.com/chenxiaolong/cargo-android \
-              --tag v0.1.1
+              --tag v0.1.2
 
       - name: Get version
         id: get_version
