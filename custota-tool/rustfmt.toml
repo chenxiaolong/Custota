@@ -1,8 +1,0 @@
-use_field_init_shorthand = true
-use_try_shorthand = true
-
-# Nighly only
-unstable_features = true
-group_imports = "StdExternalCrate"
-imports_granularity = "One"
-wrap_comments = true

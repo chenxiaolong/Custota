@@ -15,6 +15,7 @@ allow = [
     "BSD-3-Clause",
     "GPL-3.0",
     "ISC",
+    "LGPL-2.1",
     "MIT",
     "OpenSSL",
     "Unicode-DFS-2016",
@@ -41,6 +42,6 @@ unknown-git = "deny"
 allow-git = [
     "https://github.com/chenxiaolong/avbroot",
     "https://github.com/chenxiaolong/bzip2-rs",
-    "https://github.com/chenxiaolong/xz2-rs",
+    "https://github.com/chenxiaolong/sepatch",
     "https://github.com/chenxiaolong/zip",
 ]

@@ -154,7 +154,7 @@ To access the Custota's logs, enable debug mode and press `Open log directory` t
 
 * `check.log`, `install.log`, and `revert.log`: Logs for the last check/install/revert operation.
 * `crash.log`: Logs for the last crash.
-* `/data/local/tmp/custota_selinux.log`: Logs for the SELinux changes made during boot.
+* `/data/local/tmp/custota.log`: Logs for the SELinux changes made during boot.
   * This log cannot be saved to the normal log directory because it is written prior to the user unlocking the device for the first time after booting.
 
 When reporting bugs, please include the log files as it is extremely helpful for identifying what might be going wrong. The logs should contain no sensitive information besides the OTA URLs.
@@ -177,7 +177,7 @@ In order for Custota to talk to `update_engine` or even discover that the compon
 
 There are two parts to the SELinux changes:
 
-1. There's a [`custota_selinux` native executable](./app/src/main/cpp/custota_selinux) that performs all of the policy modifications. It takes the `untrusted_app` domain and makes a copy of it as `custota_app`. Then, it adds the relevant rules to allow only `custota_app` to access `update_engine`. The domain is copied from `untrusted_app` instead of the normal `priv_app` domain that is assigned to system apps because Custota does not require any of the additional privileges that would have been granted by `priv_app`.
+1. There's a [`custota-selinux` native executable](./custota-selinux) that performs all of the policy modifications. It takes the `untrusted_app` domain and makes a copy of it as `custota_app`. Then, it adds the relevant rules to allow only `custota_app` to access `update_engine`. The domain is copied from `untrusted_app` instead of the normal `priv_app` domain that is assigned to system apps because Custota does not require any of the additional privileges that would have been granted by `priv_app`.
 
 2. An `seapp_contexts` rule is added to `/system/etc/selinux/plat_seapp_contexts`, which actually sets up the association between Custota (app package ID: `com.chiller3.custota`) and the new SELinux domain (`custota_app`).
 

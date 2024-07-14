@@ -24,6 +24,22 @@ jobs:
           java-version: 21
           cache: gradle
 
+      - name: Install cargo-android
+        shell: bash
+        run: |
+          cargo install \
+              --git https://github.com/chenxiaolong/cargo-android \
+              --tag v0.1.1
+
+      - name: Install toolchains
+        shell: bash
+        run: |
+          rustup target add aarch64-linux-android
+          rustup target add x86_64-linux-android
+
+      - name: Cache Rust dependencies
+        uses: Swatinem/rust-cache@v2
+
       - name: Build and test
         # Debug build only since release builds require a signing key
         run: ./gradlew --no-daemon build zipDebug -x assembleRelease
@@ -89,12 +105,9 @@ jobs:
 
       - name: Cache Rust dependencies
         uses: Swatinem/rust-cache@v2
-        with:
-          workspaces: custota-tool
 
       - name: Clippy
         shell: bash
-        working-directory: custota-tool
         run: |
           for target in ${TARGETS}; do
               cargo android \
@@ -103,12 +116,10 @@ jobs:
           done
 
       - name: Formatting
-        working-directory: custota-tool
         run: cargo fmt -- --check
 
       - name: Build
         shell: bash
-        working-directory: custota-tool
         run: |
           for target in ${TARGETS}; do
               cargo android \
@@ -118,7 +129,6 @@ jobs:
 
       - name: Create output directory
         shell: bash
-        working-directory: custota-tool
         run: |
           rm -rf target/output
 
@@ -145,5 +155,5 @@ jobs:
         with:
           name: custota-tool-${{ steps.get_version.outputs.version }}-${{ matrix.artifact.name }}
           path: |
-            custota-tool/target/output/custota-tool
-            custota-tool/target/output/custota-tool.exe
+            target/output/custota-tool
+            target/output/custota-tool.exe

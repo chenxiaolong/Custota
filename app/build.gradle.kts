@@ -9,6 +9,7 @@ import org.eclipse.jgit.api.ArchiveCommand
 import org.eclipse.jgit.api.Git
 import org.eclipse.jgit.archive.TarFormat
 import org.eclipse.jgit.lib.ObjectId
+import org.gradle.kotlin.dsl.support.uppercaseFirstChar
 import org.json.JSONObject
 
 plugins {
@@ -119,7 +120,7 @@ android {
 
     compileSdk = 34
     buildToolsVersion = "34.0.0"
-    ndkVersion = "26.1.10909125"
+    ndkVersion = "26.3.11579264"
 
     defaultConfig {
         applicationId = "com.chiller3.custota"
@@ -171,11 +172,6 @@ android {
     }
     kotlinOptions {
         jvmTarget = "17"
-    }
-    externalNativeBuild {
-        cmake {
-            path("src/main/cpp/CMakeLists.txt")
-        }
     }
     buildFeatures {
         aidl = true
@@ -248,9 +244,53 @@ val archive = tasks.register("archive") {
     }
 }
 
+var custotaSelinuxTasks = mutableMapOf<String, TaskProvider<Exec>>()
+
+for ((target, abi) in listOf(
+    "aarch64-linux-android" to "arm64-v8a",
+    "x86_64-linux-android" to "x86_64",
+)) {
+    val suffix = abi.split('-', '_').joinToString("") { it.uppercaseFirstChar() }
+
+    val custotaSelinux = tasks.register<Exec>("custotaSelinux$suffix") {
+        val srcDir = File(rootDir, "custota-selinux")
+
+        inputs.files(
+            File(rootDir, "Cargo.lock"),
+            File(srcDir, "Cargo.toml"),
+            File(File(srcDir, "src"), "main.rs"),
+        )
+        inputs.properties(
+            "android.defaultConfig.minSdk" to android.defaultConfig.minSdk,
+            "android.ndkDirectory" to android.ndkDirectory,
+        )
+        outputs.files(
+            File(File(File(File(rootDir, "target"), target), "release"), "custota-selinux")
+        )
+
+        executable = "cargo"
+        args = listOf(
+            "android",
+            "build",
+            "--release",
+            "--target",
+            target,
+        )
+        environment(
+            "ANDROID_NDK_ROOT" to android.ndkDirectory,
+            "ANDROID_API" to android.defaultConfig.minSdk,
+            "RUSTFLAGS" to "-C strip=symbols -C target-feature=+crt-static",
+        )
+
+        workingDir(srcDir)
+    }
+
+    custotaSelinuxTasks[abi] = custotaSelinux
+}
+
 android.applicationVariants.all {
     val variant = this
-    val capitalized = variant.name.replaceFirstChar { it.uppercase() }
+    val capitalized = variant.name.uppercaseFirstChar()
     val variantDir = extraDir.map { it.dir(variant.name) }
 
     variant.preBuildProvider.configure {
@@ -351,6 +391,11 @@ android.applicationVariants.all {
         }
         from(variant.outputs.map { it.outputFile }) {
             into("system/priv-app/${variant.applicationId}")
+        }
+        for ((abi, task) in custotaSelinuxTasks) {
+            from(task.map { it.outputs }) {
+                rename { "custota-selinux.${abi}" }
+            }
         }
 
         val moduleDir = File(projectDir, "module")

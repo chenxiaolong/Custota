@@ -1,0 +1,11 @@
+[workspace]
+default-members = ["custota-tool"]
+members = ["custota-selinux", "custota-tool"]
+resolver = "2"
+
+[workspace.package]
+version = "0.1.0"
+license = "GPL-3.0-only"
+edition = "2021"
+repository = "https://github.com/chenxiaolong/Custota"
+publish = false

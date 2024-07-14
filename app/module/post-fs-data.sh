@@ -1,7 +1,7 @@
 # SPDX-FileCopyrightText: 2023-2024 Andrew Gunnerson
 # SPDX-License-Identifier: GPL-3.0-only
 
-source "${0%/*}/boot_common.sh" /data/local/tmp/custota_selinux.log
+source "${0%/*}/boot_common.sh" /data/local/tmp/custota.log
 
 # We don't want to give any arbitrary system app permissions to update_engine.
 # Thus, we create a new context for custota and only give access to that
@@ -10,7 +10,7 @@ source "${0%/*}/boot_common.sh" /data/local/tmp/custota_selinux.log
 
 header Creating custota_app domain
 
-"${mod_dir}"/custota_selinux -ST
+"${mod_dir}"/custota-selinux."$(getprop ro.product.cpu.abi)" -ST
 
 header Updating seapp_contexts
 
