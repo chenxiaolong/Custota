@@ -63,8 +63,8 @@ pub fn main() -> Result<()> {
 
     let t_source = t!(n_source_type);
     let t_source_uffd = t!(n_source_uffd_type);
-    let t_target = pdb.create_type(&n_target_type, false)?.0;
-    let t_target_uffd = pdb.create_type(&n_target_uffd_type, false)?.0;
+    let t_target = pdb.create_type(n_target_type, false)?.0;
+    let t_target_uffd = pdb.create_type(n_target_uffd_type, false)?.0;
 
     pdb.copy_roles(t_source, t_target)?;
     pdb.copy_roles(t_source_uffd, t_target_uffd)?;

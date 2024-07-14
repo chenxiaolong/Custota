@@ -17,7 +17,7 @@ use std::{
 
 use anyhow::{anyhow, bail, Context, Result};
 use avbroot::{
-    crypto::{self, PassphraseSource},
+    crypto::{self, PassphraseSource, RsaSigningKey},
     format::ota,
     protobuf::build::tools::releasetools::ota_metadata::OtaType,
     stream::{self, HashingReader},
@@ -257,7 +257,10 @@ fn subcommand_gen_csig(args: &GenerateCsig) -> Result<()> {
     let signing_cert = crypto::read_pem_cert_file(&args.cert)
         .with_context(|| anyhow!("Failed to load certificate: {:?}", args.cert))?;
 
-    if !crypto::cert_matches_key(&signing_cert, &signing_private_key)? {
+    if !crypto::cert_matches_key(
+        &signing_cert,
+        &RsaSigningKey::Internal(signing_private_key.clone()),
+    )? {
         bail!(
             "Private key {:?} does not match certificate {:?}",
             args.key,

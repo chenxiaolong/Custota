@@ -21,7 +21,7 @@ x509-cert = "0.2.4"
 
 [dependencies.avbroot]
 git = "https://github.com/chenxiaolong/avbroot"
-tag = "v3.2.0"
+tag = "v3.4.0"
 
 # https://github.com/zip-rs/zip/pull/383
 [dependencies.zip]
