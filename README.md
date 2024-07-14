@@ -307,7 +307,16 @@ Then, check that the SHA-256 digest of the APK signing certificate is:
 
 ### Building app and module
 
-Custota can be built like most other Android apps using Android Studio or the gradle command line.
+Make sure the [Rust toolchain](https://www.rust-lang.org/) is installed. Rust must be installed via rustup because it provides the required Android toolchains:
+
+```bash
+rustup target add aarch64-linux-android
+rustup target add x86_64-linux-android
+```
+
+[cargo-android](https://github.com/chenxiaolong/cargo-android) must also be installed.
+
+Then, Custota can be built like most other Android apps using Android Studio or the gradle command line.
 
 To build the APK:
 
