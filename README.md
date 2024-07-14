@@ -287,23 +287,7 @@ Both the zip file and the APK contained within are digitally signed.
 
 ### Verifying zip file signature
 
-First, save the public key to a file listing the keys to be trusted.
-
-```bash
-echo 'custota ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIDOe6/tBnO7xZhAWXRj3ApUYgn+XZ0wnQiXM8B7tPgv4' > custota_trusted_keys
-```
-
-Then, verify the signature of the zip file using the list of trusted keys.
-
-```bash
-ssh-keygen -Y verify -f custota_trusted_keys -I custota -n file -s Custota-<version>-release.zip.sig < Custota-<version>-release.zip
-```
-
-If the file is successfully verified, the output will be:
-
-```
-Good "file" signature for custota with ED25519 key SHA256:Ct0HoRyrFLrnF9W+A/BKEiJmwx7yWkgaW/JvghKrboA
-```
+To verify the digital signatures of the downloads, follow [the steps here](https://github.com/chenxiaolong/chenxiaolong/blob/master/VERIFY_SSH_SIGNATURES.md).
 
 ### Verifying apk signature
 
