@@ -7,7 +7,7 @@
     to update the actual links at the bottom of the file.
 -->
 
-### Unreleased
+### Version 4.6
 
 * custota-selinux: Move workaround for broken linking on x86_64 from sepatch to cargo-android ([PR #65])
 * post-fs-data: Mount `plat_seapp_contexts` directly for better compatibility with other modules also need to modify the file ([PR #66])
