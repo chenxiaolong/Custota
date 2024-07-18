@@ -11,6 +11,7 @@
 
 * custota-selinux: Move workaround for broken linking on x86_64 from sepatch to cargo-android ([PR #65])
 * post-fs-data: Mount `plat_seapp_contexts` directly for better compatibility with other modules also need to modify the file ([PR #66])
+* Update checksum for `tensorflow-lite-metadata-0.1.0-rc2.pom` dependency ([PR #67])
 
 ### Version 4.5
 
@@ -164,3 +165,4 @@ Changes:
 [PR #64]: https://github.com/chenxiaolong/Custota/pull/64
 [PR #65]: https://github.com/chenxiaolong/Custota/pull/65
 [PR #66]: https://github.com/chenxiaolong/Custota/pull/66
+[PR #67]: https://github.com/chenxiaolong/Custota/pull/67
