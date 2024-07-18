@@ -14,28 +14,22 @@ header Creating custota_app domain
 
 header Updating seapp_contexts
 
-seapp_dir=/system/etc/selinux
-seapp_file=${seapp_dir}/plat_seapp_contexts
-mod_seapp_dir=${mod_dir}${seapp_dir}
-mod_seapp_file=${mod_dir}${seapp_file}
+seapp_file=/system/etc/selinux/plat_seapp_contexts
+seapp_temp_dir=${mod_dir}/seapp_temp
+seapp_temp_file=${mod_dir}/seapp_temp/plat_seapp_contexts
 
-rm -rf "${mod_seapp_dir}"
-mkdir -p "${mod_seapp_dir}"
-
-# If, for whatever reason, we couldn't wipe the directory, mount a blank tmpfs
-# on top. An outdated file can cause the system to boot loop due to system apps
-# running under the wrong SELinux context.
-if [[ -e "${mod_seapp_file}" ]]; then
-    mount -t tmpfs tmpfs "${mod_seapp_dir}"
-fi
+mkdir -p "${seapp_temp_dir}"
+mount -t tmpfs tmpfs "${seapp_temp_dir}"
 
 # Full path because Magisk runs this script in busybox's standalone ash mode and
 # we need Android's toybox version of cp.
-/system/bin/cp --preserve=a "${seapp_file}" "${mod_seapp_file}"
+/system/bin/cp --preserve=a "${seapp_file}" "${seapp_temp_file}"
 
-cat >> "${mod_seapp_file}" << EOF
+cat >> "${seapp_temp_file}" << EOF
 user=_app isPrivApp=true name=${app_id} domain=custota_app type=app_data_file levelFrom=all
 EOF
+
+mount -o ro,bind "${seapp_temp_file}" "${seapp_file}"
 
 # On some devices, the system time is set too late in the boot process. This,
 # for some reason, causes the package manager service to not update the package
