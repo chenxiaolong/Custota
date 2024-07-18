@@ -258,7 +258,9 @@ for ((target, abi) in listOf(
         inputs.files(
             File(rootDir, "Cargo.lock"),
             File(srcDir, "Cargo.toml"),
-            File(File(srcDir, "src"), "main.rs"),
+            File(srcDir, "src").listFiles()!!.filter {
+                it.endsWith(".rs")
+            },
         )
         inputs.properties(
             "android.defaultConfig.minSdk" to android.defaultConfig.minSdk,
