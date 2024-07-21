@@ -97,6 +97,8 @@
     <string name="notification_update_ota_cancelled">OTA update process was cancelled</string>
     <string name="notification_update_ota_reverted">Successfully reverted OTA update</string>
     <string name="notification_update_ota_failed">Failed to install OTA update</string>
+    <string name="notification_null_network_fallback">Background job network restrictions are broken in this build of Android. Disable the Require Unmetered Network option to allow using any active network.</string>
+    <string name="notification_null_network_unavailable">Background job network restrictions are broken in this build of Android. The background job ran despite there being no active network connection.</string>
     <string name="notification_action_install">Install</string>
     <string name="notification_action_pause">Pause</string>
     <string name="notification_action_resume">Resume</string>

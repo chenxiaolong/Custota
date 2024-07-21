@@ -11,11 +11,27 @@ import android.app.job.JobScheduler
 import android.app.job.JobService
 import android.content.ComponentName
 import android.content.Context
+import android.net.ConnectivityManager
 import android.os.PersistableBundle
 import android.util.Log
+import androidx.annotation.StringRes
+import com.chiller3.custota.Notifications
 import com.chiller3.custota.Preferences
+import com.chiller3.custota.R
 
 class UpdaterJob: JobService() {
+    private fun notifyAlert(@StringRes messageId: Int) {
+        val notifications = Notifications(this)
+        notifications.sendAlertNotification(
+            Notifications.CHANNEL_ID_FAILURE,
+            true,
+            R.string.notification_update_init_failed,
+            R.drawable.ic_notifications,
+            getString(messageId),
+            emptyList()
+        )
+    }
+
     override fun onStartJob(params: JobParameters): Boolean {
         val prefs = Preferences(this)
 
@@ -34,15 +50,35 @@ class UpdaterJob: JobService() {
         }
 
         val action = if (!isPeriodic) {
-            UpdaterThread.Action.values()[actionIndex]
+            UpdaterThread.Action.entries[actionIndex]
         } else if (prefs.automaticInstall) {
             UpdaterThread.Action.INSTALL
         } else {
             UpdaterThread.Action.CHECK
         }
 
+        var network = params.network
+        if (network == null) {
+            // This was reported to happen on the Android 15 beta.
+            Log.w(TAG, "Job parameters contain a null network instance")
+
+            if (prefs.requireUnmetered) {
+                Log.w(TAG, "Aborting due to require unmetered network option")
+                notifyAlert(R.string.notification_null_network_fallback)
+                return false
+            }
+
+            val connectivityManager = getSystemService(ConnectivityManager::class.java)
+            network = connectivityManager.activeNetwork
+            if (network == null) {
+                Log.e(TAG, "Aborting due to active network also being null")
+                notifyAlert(R.string.notification_null_network_unavailable)
+                return false
+            }
+        }
+
         startForegroundService(UpdaterService.createStartIntent(
-            applicationContext, params.network!!, action, isPeriodic))
+            applicationContext, network, action, isPeriodic))
         return false
     }
 
