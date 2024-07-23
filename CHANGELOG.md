@@ -9,6 +9,9 @@
 
 ### Unreleased
 
+* Work around Android builds where the job scheduler implementation implementation is broken and returns a null `Network` instance ([Issue #68], [PR #69])
+  * This appears to happen to some folks on the Android 15 beta. If this Android bug occurs, Custota will show a notification saying the `Require Unmetered Network` option must be disabled. This is required to work around the bug.
+
 ### Version 4.6
 
 * custota-selinux: Move workaround for broken linking on x86_64 from sepatch to cargo-android ([PR #65])
@@ -129,6 +132,7 @@ Changes:
 [Issue #47]: https://github.com/chenxiaolong/Custota/issues/47
 [Issue #51]: https://github.com/chenxiaolong/Custota/issues/51
 [Issue #60]: https://github.com/chenxiaolong/Custota/issues/60
+[Issue #68]: https://github.com/chenxiaolong/Custota/issues/68
 [PR #1]: https://github.com/chenxiaolong/Custota/pull/1
 [PR #2]: https://github.com/chenxiaolong/Custota/pull/2
 [PR #6]: https://github.com/chenxiaolong/Custota/pull/6
@@ -168,3 +172,4 @@ Changes:
 [PR #65]: https://github.com/chenxiaolong/Custota/pull/65
 [PR #66]: https://github.com/chenxiaolong/Custota/pull/66
 [PR #67]: https://github.com/chenxiaolong/Custota/pull/67
+[PR #69]: https://github.com/chenxiaolong/Custota/pull/69
