@@ -7,7 +7,7 @@
     to update the actual links at the bottom of the file.
 -->
 
-### Unreleased
+### Version 4.7
 
 * Work around Android builds where the job scheduler implementation implementation is broken and returns a null `Network` instance ([Issue #68], [PR #69])
   * This appears to happen to some folks on the Android 15 beta. If this Android bug occurs, Custota will show a notification saying the `Require Unmetered Network` option must be disabled. This is required to work around the bug.
