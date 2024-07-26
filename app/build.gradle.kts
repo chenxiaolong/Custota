@@ -259,7 +259,7 @@ for ((target, abi) in listOf(
             File(rootDir, "Cargo.lock"),
             File(srcDir, "Cargo.toml"),
             File(srcDir, "src").listFiles()!!.filter {
-                it.endsWith(".rs")
+                it.name.endsWith(".rs")
             },
         )
         inputs.properties(
