@@ -9,6 +9,8 @@
 
 ### Unreleased
 
+* Fix incorrect gradle inputs causing Rust source code to not be rebuilt ([PR #70])
+
 ### Version 4.7
 
 * Work around Android builds where the job scheduler implementation implementation is broken and returns a null `Network` instance ([Issue #68], [PR #69])
@@ -175,3 +177,4 @@ Changes:
 [PR #66]: https://github.com/chenxiaolong/Custota/pull/66
 [PR #67]: https://github.com/chenxiaolong/Custota/pull/67
 [PR #69]: https://github.com/chenxiaolong/Custota/pull/69
+[PR #70]: https://github.com/chenxiaolong/Custota/pull/70
