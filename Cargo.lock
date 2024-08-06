@@ -1550,8 +1550,8 @@ dependencies = [
 
 [[package]]
 name = "sepatch"
-version = "0.1.2"
-source = "git+https://github.com/chenxiaolong/sepatch?tag=v0.1.2#373f8143950028ff66f94651c10e6e60878457ee"
+version = "0.2.0"
+source = "git+https://github.com/chenxiaolong/sepatch?tag=v0.2.0#1af38bbd833963c868cc2d64dacfec2ff8a94c03"
 dependencies = [
  "bindgen",
  "cc",

@@ -9,7 +9,7 @@ use std::{
 use anyhow::{anyhow, Context, Result};
 use clap::{Args, Parser};
 
-use sepatch::PolicyDb;
+use sepatch::{PolicyDb, RuleAction};
 
 pub fn main() -> Result<()> {
     let cli = Cli::parse();
@@ -165,7 +165,7 @@ pub fn main() -> Result<()> {
         p_dir_watch_reads,
         p_dir_write,
     ] {
-        pdb.set_allow(t_target, t_ota_package_file, c_dir, perm, true);
+        pdb.set_rule(t_target, t_ota_package_file, c_dir, perm, RuleAction::Allow);
     }
 
     // allow custota_app ota_package_file:file create_file_perms;
@@ -185,46 +185,58 @@ pub fn main() -> Result<()> {
         p_file_watch_reads,
         p_file_write,
     ] {
-        pdb.set_allow(t_target, t_ota_package_file, c_file, perm, true);
+        pdb.set_rule(
+            t_target,
+            t_ota_package_file,
+            c_file,
+            perm,
+            RuleAction::Allow,
+        );
     }
 
     // binder_call(custota_app, update_engine)
     // binder_call(update_engine, custota_app)
     for perm in [p_binder_call, p_binder_transfer] {
-        pdb.set_allow(t_target, t_update_engine, c_binder, perm, true);
-        pdb.set_allow(t_update_engine, t_target, c_binder, perm, true);
+        pdb.set_rule(t_target, t_update_engine, c_binder, perm, RuleAction::Allow);
+        pdb.set_rule(t_update_engine, t_target, c_binder, perm, RuleAction::Allow);
     }
-    pdb.set_allow(t_target, t_update_engine, c_fd, p_fd_use, true);
-    pdb.set_allow(t_update_engine, t_target, c_fd, p_fd_use, true);
+    pdb.set_rule(t_target, t_update_engine, c_fd, p_fd_use, RuleAction::Allow);
+    pdb.set_rule(t_update_engine, t_target, c_fd, p_fd_use, RuleAction::Allow);
 
     // allow custota_app update_engine_service:service_manager find;
-    pdb.set_allow(
+    pdb.set_rule(
         t_target,
         t_update_engine_service,
         c_service_manager,
         p_service_manager_find,
-        true,
+        RuleAction::Allow,
     );
 
     // allow custota_app oem_lock_service:service_manager find;
-    pdb.set_allow(
+    pdb.set_rule(
         t_target,
         t_oem_lock_service,
         c_service_manager,
         p_service_manager_find,
-        true,
+        RuleAction::Allow,
     );
 
     // Now, allow update_engine to access the file descriptor we pass to it via
     // binder for a file opened from local storage.
 
     // allow update_engine mediaprovider_app:fd use;
-    pdb.set_allow(t_update_engine, t_mediaprovider_app, c_fd, p_fd_use, true);
+    pdb.set_rule(
+        t_update_engine,
+        t_mediaprovider_app,
+        c_fd,
+        p_fd_use,
+        RuleAction::Allow,
+    );
 
     // allow update_engine fuse:file getattr;
     // allow update_engine fuse:file read;
     for perm in [p_file_getattr, p_file_read] {
-        pdb.set_allow(t_update_engine, t_fuse, c_file, perm, true);
+        pdb.set_rule(t_update_engine, t_fuse, c_file, perm, RuleAction::Allow);
     }
 
     if cli.strip_no_audit {
