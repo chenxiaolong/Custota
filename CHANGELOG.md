@@ -11,6 +11,7 @@
 
 * Fix incorrect gradle inputs causing Rust source code to not be rebuilt ([PR #70])
 * Use Material 3 switches for switch preferences ([PR #71])
+* Update dependencies ([PR #73])
 
 ### Version 4.7
 
@@ -180,3 +181,4 @@ Changes:
 [PR #69]: https://github.com/chenxiaolong/Custota/pull/69
 [PR #70]: https://github.com/chenxiaolong/Custota/pull/70
 [PR #71]: https://github.com/chenxiaolong/Custota/pull/71
+[PR #73]: https://github.com/chenxiaolong/Custota/pull/73
