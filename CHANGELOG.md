@@ -12,6 +12,8 @@
 * Fix incorrect gradle inputs causing Rust source code to not be rebuilt ([PR #70])
 * Use Material 3 switches for switch preferences ([PR #71])
 * Update dependencies ([PR #73])
+* custota-selinux: Prevent updating the modification timestamp of `/sys/fs/selinux/load` ([Issue #72], [PR #74])
+  * Please note there are no plans to implement further ways of evading detection by apps. This workaround just happened to be easy enough to implement.
 
 ### Version 4.7
 
@@ -139,6 +141,7 @@ Changes:
 [Issue #51]: https://github.com/chenxiaolong/Custota/issues/51
 [Issue #60]: https://github.com/chenxiaolong/Custota/issues/60
 [Issue #68]: https://github.com/chenxiaolong/Custota/issues/68
+[Issue #72]: https://github.com/chenxiaolong/Custota/issues/72
 [PR #1]: https://github.com/chenxiaolong/Custota/pull/1
 [PR #2]: https://github.com/chenxiaolong/Custota/pull/2
 [PR #6]: https://github.com/chenxiaolong/Custota/pull/6
@@ -182,3 +185,4 @@ Changes:
 [PR #70]: https://github.com/chenxiaolong/Custota/pull/70
 [PR #71]: https://github.com/chenxiaolong/Custota/pull/71
 [PR #73]: https://github.com/chenxiaolong/Custota/pull/73
+[PR #74]: https://github.com/chenxiaolong/Custota/pull/74
