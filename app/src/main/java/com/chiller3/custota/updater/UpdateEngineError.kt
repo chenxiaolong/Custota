@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: 2023 Andrew Gunnerson
+ * SPDX-FileCopyrightText: 2023-2024 Andrew Gunnerson
  * SPDX-License-Identifier: GPL-3.0-only
  */
 
@@ -72,6 +72,9 @@ object UpdateEngineError {
     const val DEVICE_CORRUPTED = 61
     const val PACKAGE_EXCLUDED_FROM_UPDATE = 62
     const val POST_INSTALL_MOUNT_ERROR = 63
+    const val OVERLAYFS_ENABLED_ERROR = 64
+    const val UPDATE_PROCESSING = 65
+    const val UPDATE_ALREADY_INSTALLED = 66
 
     private val STRINGS = arrayOf(
         UpdateEngineError::SUCCESS.name,
@@ -138,6 +141,9 @@ object UpdateEngineError {
         UpdateEngineError::DEVICE_CORRUPTED.name,
         UpdateEngineError::PACKAGE_EXCLUDED_FROM_UPDATE.name,
         UpdateEngineError::POST_INSTALL_MOUNT_ERROR.name,
+        UpdateEngineError::OVERLAYFS_ENABLED_ERROR.name,
+        UpdateEngineError::UPDATE_PROCESSING.name,
+        UpdateEngineError::UPDATE_ALREADY_INSTALLED,
     )
 
     /**

@@ -101,6 +101,7 @@ class UpdaterThread(
                 UpdateEngineStatus.DOWNLOADING -> ProgressType.UPDATE
                 UpdateEngineStatus.VERIFYING -> ProgressType.VERIFY
                 UpdateEngineStatus.FINALIZING -> ProgressType.FINALIZE
+                UpdateEngineStatus.CLEANUP_PREVIOUS_UPDATE -> ProgressType.CLEANUP
                 else -> null
             }?.let {
                 listener.onUpdateProgress(this@UpdaterThread, it, current, max)
@@ -647,8 +648,6 @@ class UpdaterThread(
         try {
             wakeLock.acquire()
 
-            listener.onUpdateProgress(this, ProgressType.INIT, 0, 0)
-
             Log.d(TAG, "Waiting for initial engine status")
             val status = waitForStatus { it != -1 }
             val statusStr = UpdateEngineStatus.toString(status)
@@ -707,8 +706,13 @@ class UpdaterThread(
                 Log.d(TAG, "Update engine result: $errorStr")
 
                 if (UpdateEngineError.isUpdateSucceeded(error)) {
-                    Log.d(TAG, "Successfully completed upgrade")
-                    listener.onUpdateResult(this, UpdateSucceeded)
+                    if (status == UpdateEngineStatus.CLEANUP_PREVIOUS_UPDATE) {
+                        Log.d(TAG, "Successfully cleaned up upgrade")
+                        listener.onUpdateResult(this, UpdateCleanedUp)
+                    } else {
+                        Log.d(TAG, "Successfully completed upgrade")
+                        listener.onUpdateResult(this, UpdateSucceeded)
+                    }
                 } else if (error == UpdateEngineError.USER_CANCELED) {
                     Log.w(TAG, "User cancelled upgrade")
                     listener.onUpdateResult(this, UpdateCancelled)
@@ -804,6 +808,10 @@ class UpdaterThread(
         override val isError = false
     }
 
+    data object UpdateCleanedUp : Result {
+        override val isError = false
+    }
+
     /** Update succeeded in a previous updater run. */
     data object UpdateNeedReboot : Result {
         override val isError = false
@@ -822,11 +830,14 @@ class UpdaterThread(
     }
 
     enum class ProgressType {
-        INIT,
         CHECK,
         UPDATE,
         VERIFY,
         FINALIZE,
+        CLEANUP;
+
+        val isActionable: Boolean
+            get() = this == UPDATE || this == VERIFY || this == FINALIZE
     }
 
     interface UpdaterThreadListener {

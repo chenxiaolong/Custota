@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: 2023 Andrew Gunnerson
+ * SPDX-FileCopyrightText: 2023-2024 Andrew Gunnerson
  * SPDX-License-Identifier: GPL-3.0-only
  */
 
@@ -165,25 +165,28 @@ class UpdaterService : Service(), UpdaterThread.UpdaterThreadListener {
         Log.d(TAG, "Updating foreground notification for state: $state")
 
         val titleResId = when (state?.type) {
-            UpdaterThread.ProgressType.INIT, null -> R.string.notification_state_init
+            null -> R.string.notification_state_init
             UpdaterThread.ProgressType.CHECK -> R.string.notification_state_check
             UpdaterThread.ProgressType.UPDATE -> R.string.notification_state_install
             UpdaterThread.ProgressType.VERIFY -> R.string.notification_state_verify
             UpdaterThread.ProgressType.FINALIZE -> R.string.notification_state_finalize
+            UpdaterThread.ProgressType.CLEANUP -> R.string.notification_state_cleanup
         }
         val actionResIds = mutableListOf<Int>()
         val actionIntents = mutableListOf<Intent>()
 
-        updaterThread?.let { thread ->
-            if (thread.isPaused) {
-                actionResIds.add(R.string.notification_action_resume)
-                actionIntents.add(createActionIntent(ACTION_RESUME))
-            } else {
-                actionResIds.add(R.string.notification_action_pause)
-                actionIntents.add(createActionIntent(ACTION_PAUSE))
+        if (state?.type?.isActionable == true) {
+            updaterThread?.let { thread ->
+                if (thread.isPaused) {
+                    actionResIds.add(R.string.notification_action_resume)
+                    actionIntents.add(createActionIntent(ACTION_RESUME))
+                } else {
+                    actionResIds.add(R.string.notification_action_pause)
+                    actionIntents.add(createActionIntent(ACTION_PAUSE))
+                }
+                actionResIds.add(R.string.notification_action_cancel)
+                actionIntents.add(createActionIntent(ACTION_CANCEL))
             }
-            actionResIds.add(R.string.notification_action_cancel)
-            actionIntents.add(createActionIntent(ACTION_CANCEL))
         }
 
         val notification = notifications.createPersistentNotification(
@@ -215,6 +218,11 @@ class UpdaterService : Service(), UpdaterThread.UpdaterThreadListener {
         val showReboot: Boolean
 
         when (result) {
+            is UpdaterThread.UpdateCleanedUp -> {
+                // No need to bug the user about this since it's automatic and not directly caused
+                // in response to a user action.
+                return
+            }
             is UpdaterThread.UpdateAvailable -> {
                 channel = Notifications.CHANNEL_ID_CHECK
                 // Only bug the user once while the notification is still shown

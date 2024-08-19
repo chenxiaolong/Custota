@@ -90,6 +90,7 @@
     <string name="notification_state_install">Installing OTA update</string>
     <string name="notification_state_verify">Verifying OTA update</string>
     <string name="notification_state_finalize">Finalizing OTA update</string>
+    <string name="notification_state_cleanup">Cleaning up OTA update</string>
     <string name="notification_update_init_failed">Failed to initialize OTA updater</string>
     <string name="notification_update_ota_available">OTA update is available</string>
     <string name="notification_update_ota_unnecessary">OS is already up to date</string>

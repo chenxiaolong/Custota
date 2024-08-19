@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-    SPDX-FileCopyrightText: 2023 Andrew Gunnerson
+    SPDX-FileCopyrightText: 2023-2024 Andrew Gunnerson
     SPDX-License-Identifier: GPL-3.0-only
 -->
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
@@ -46,6 +46,15 @@
             android:name=".updater.UpdaterService"
             android:foregroundServiceType="specialUse"
             android:exported="false" />
+
+        <receiver
+            android:name=".updater.UpdaterBootReceiver"
+            android:enabled="true"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+            </intent-filter>
+        </receiver>
 
         <activity
             android:name=".settings.SettingsActivity"

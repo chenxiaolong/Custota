@@ -1,11 +1,11 @@
 /*
- * SPDX-FileCopyrightText: 2023 Andrew Gunnerson
+ * SPDX-FileCopyrightText: 2023-2024 Andrew Gunnerson
  * SPDX-License-Identifier: GPL-3.0-only
  */
 
 package com.chiller3.custota.updater
 
-/** Must match AOSP's system/update_engine/common/error_code.h. */
+/** Must match AOSP's system/update_engine/client_library/include/update_engine/update_status.h. */
 @Suppress("MemberVisibilityCanBePrivate")
 object UpdateEngineStatus {
     const val IDLE = 0
@@ -18,6 +18,8 @@ object UpdateEngineStatus {
     const val REPORTING_ERROR_EVENT = 7
     const val ATTEMPTING_ROLLBACK = 8
     const val DISABLED = 9
+    const val NEED_PERMISSION_TO_UPDATE = 10
+    const val CLEANUP_PREVIOUS_UPDATE = 11
 
     private val STRINGS = arrayOf(
         UpdateEngineStatus::IDLE.name,
@@ -30,6 +32,8 @@ object UpdateEngineStatus {
         UpdateEngineStatus::REPORTING_ERROR_EVENT.name,
         UpdateEngineStatus::ATTEMPTING_ROLLBACK.name,
         UpdateEngineStatus::DISABLED.name,
+        UpdateEngineStatus::NEED_PERMISSION_TO_UPDATE.name,
+        UpdateEngineStatus::CLEANUP_PREVIOUS_UPDATE.name,
     )
 
     init {

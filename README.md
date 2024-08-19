@@ -139,6 +139,7 @@ Android's `update_engine` verifies OTA signatures against certificates contained
   * Needed to reboot the device when the user explicitly presses the reboot button in Custota's notification after an update is installed.
 * `RECEIVE_BOOT_COMPLETED` (**automatically granted at install time**)
   * Needed to schedule periodic update checks.
+  * Needed to show the OTA cleanup notification on the reboot following an OTA update.
 * `WAKE_LOCK` (**automatically granted at install time**)
   * Needed to keep the CPU awake while an update is being installed.
 
