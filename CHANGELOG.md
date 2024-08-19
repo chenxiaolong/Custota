@@ -9,6 +9,10 @@
 
 ### Unreleased
 
+* Show notification for OTA cleanup phase following the reboot after an OTA is installed ([PR #78])
+* Fix the initializing OTA updater notification message being shown longer than expected ([PR #78])
+* Fix the pause, resume, and cancel buttons being shown during phases where they cannot work ([PR #78])
+
 ### Version 4.8
 
 * Fix incorrect gradle inputs causing Rust source code to not be rebuilt ([PR #70])
@@ -188,3 +192,4 @@ Changes:
 [PR #71]: https://github.com/chenxiaolong/Custota/pull/71
 [PR #73]: https://github.com/chenxiaolong/Custota/pull/73
 [PR #74]: https://github.com/chenxiaolong/Custota/pull/74
+[PR #78]: https://github.com/chenxiaolong/Custota/pull/78
