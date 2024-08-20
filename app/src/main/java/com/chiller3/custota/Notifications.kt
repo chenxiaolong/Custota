@@ -111,7 +111,10 @@ class Notifications(
             setOnlyAlertOnce(true)
 
             if (progressCurrent != null && progressMax != null) {
-                if (progressMax <= 0) {
+                // We also show an indeterminate progress bar when the current progress is 0 because
+                // some phases, like the finalization and cleanup phases, don't always report their
+                // actual progress.
+                if (progressMax <= 0 || progressCurrent == 0) {
                     setProgress(0, 0, true)
                 } else {
                     setProgress(progressMax, progressCurrent, false)
