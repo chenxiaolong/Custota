@@ -7,6 +7,8 @@
     to update the actual links at the bottom of the file.
 -->
 
+### Unreleased
+
 ### Version 4.9
 
 * Show notification for OTA cleanup phase following the reboot after an OTA is installed ([PR #78])
