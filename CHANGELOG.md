@@ -9,6 +9,8 @@
 
 ### Unreleased
 
+* Fix "OS is already up to date" notification showing after a reboot ([PR #81])
+
 ### Version 4.9
 
 * Show notification for OTA cleanup phase following the reboot after an OTA is installed ([PR #78])
@@ -197,3 +199,4 @@ Changes:
 [PR #74]: https://github.com/chenxiaolong/Custota/pull/74
 [PR #78]: https://github.com/chenxiaolong/Custota/pull/78
 [PR #80]: https://github.com/chenxiaolong/Custota/pull/80
+[PR #81]: https://github.com/chenxiaolong/Custota/pull/81
