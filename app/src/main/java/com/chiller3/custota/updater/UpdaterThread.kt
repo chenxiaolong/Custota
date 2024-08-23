@@ -648,6 +648,8 @@ class UpdaterThread(
         try {
             wakeLock.acquire()
 
+            Log.d(TAG, "Action: $action")
+
             Log.d(TAG, "Waiting for initial engine status")
             val status = waitForStatus { it != -1 }
             val statusStr = UpdateEngineStatus.toString(status)
@@ -676,6 +678,12 @@ class UpdaterThread(
                 listener.onUpdateResult(this, UpdateNeedReboot)
             } else {
                 if (status == UpdateEngineStatus.IDLE) {
+                    if (action == Action.MONITOR) {
+                        // Nothing to do.
+                        listener.onUpdateResult(this, NothingToMonitor)
+                        return
+                    }
+
                     Log.d(TAG, "Starting new update because engine is idle")
 
                     listener.onUpdateProgress(this, ProgressType.CHECK, 0, 0)
@@ -683,11 +691,11 @@ class UpdaterThread(
                     val checkUpdateResult = checkForUpdates()
 
                     if (!checkUpdateResult.updateAvailable) {
-                        // Update not needed
+                        // Update not needed.
                         listener.onUpdateResult(this, UpdateUnnecessary)
                         return
                     } else if (action == Action.CHECK) {
-                        // Just alert that an update is available
+                        // Just alert that an update is available.
                         listener.onUpdateResult(this,
                             UpdateAvailable(checkUpdateResult.fingerprint))
                         return
@@ -787,6 +795,7 @@ class UpdaterThread(
 
     @Parcelize
     enum class Action : Parcelable {
+        MONITOR,
         CHECK,
         INSTALL,
         REVERT,
@@ -794,6 +803,10 @@ class UpdaterThread(
 
     sealed interface Result {
         val isError : Boolean
+    }
+
+    data object NothingToMonitor : Result {
+        override val isError = false
     }
 
     data class UpdateAvailable(val fingerprint: String) : Result {

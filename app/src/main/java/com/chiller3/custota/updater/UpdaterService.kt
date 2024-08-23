@@ -218,7 +218,7 @@ class UpdaterService : Service(), UpdaterThread.UpdaterThreadListener {
         val showReboot: Boolean
 
         when (result) {
-            is UpdaterThread.UpdateCleanedUp -> {
+            is UpdaterThread.NothingToMonitor, is UpdaterThread.UpdateCleanedUp -> {
                 // No need to bug the user about this since it's automatic and not directly caused
                 // in response to a user action.
                 return

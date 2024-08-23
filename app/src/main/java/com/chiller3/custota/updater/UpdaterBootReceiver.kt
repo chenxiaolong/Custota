@@ -16,6 +16,6 @@ class UpdaterBootReceiver : BroadcastReceiver() {
         }
 
         // This will monitor the cleanup process on the reboot immediately following an OTA.
-        UpdaterJob.scheduleImmediate(context, UpdaterThread.Action.CHECK)
+        UpdaterJob.scheduleImmediate(context, UpdaterThread.Action.MONITOR)
     }
 }
