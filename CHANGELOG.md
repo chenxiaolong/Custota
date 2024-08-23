@@ -7,6 +7,8 @@
     to update the actual links at the bottom of the file.
 -->
 
+### Unreleased
+
 ### Version 4.10
 
 * Fix "OS is already up to date" notification showing after a reboot ([PR #81])
