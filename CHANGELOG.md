@@ -9,6 +9,8 @@
 
 ### Unreleased
 
+* Target API 35 ([PR #82])
+
 ### Version 4.10
 
 * Fix "OS is already up to date" notification showing after a reboot ([PR #81])
@@ -202,3 +204,4 @@ Changes:
 [PR #78]: https://github.com/chenxiaolong/Custota/pull/78
 [PR #80]: https://github.com/chenxiaolong/Custota/pull/80
 [PR #81]: https://github.com/chenxiaolong/Custota/pull/81
+[PR #82]: https://github.com/chenxiaolong/Custota/pull/82
