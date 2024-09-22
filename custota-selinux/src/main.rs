@@ -277,8 +277,17 @@ pub fn main() -> Result<()> {
 
     // allow update_engine fuse:file getattr;
     // allow update_engine fuse:file read;
-    for perm in [p_file_getattr, p_file_read] {
-        pdb.set_rule(t_update_engine, t_fuse, c_file, perm, RuleAction::Allow);
+    let mut internal_storage_types = vec![t_fuse];
+    // These are needed for older devices that use sdcardfs.
+    for name in ["sdcardfs", "media_rw_data_file"] {
+        if let Some(target) = pdb.get_type_id(name) {
+            internal_storage_types.push(target);
+        }
+    }
+    for target in internal_storage_types {
+        for perm in [p_file_getattr, p_file_read] {
+            pdb.set_rule(t_update_engine, target, c_file, perm, RuleAction::Allow);
+        }
     }
 
     if cli.strip_no_audit {
