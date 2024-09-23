@@ -7,7 +7,7 @@
     to update the actual links at the bottom of the file.
 -->
 
-### Unreleased
+### Version 4.11
 
 * Target API 35 ([PR #82])
 * Add support for local directory installation on older devices that use sdcardfs, like the Pixel 4a ([Issue #83], [PR #84])
