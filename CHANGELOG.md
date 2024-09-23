@@ -10,6 +10,7 @@
 ### Unreleased
 
 * Target API 35 ([PR #82])
+* Add support for local directory installation on older devices that use sdcardfs, like the Pixel 4a ([Issue #83], [PR #84])
 
 ### Version 4.10
 
@@ -157,6 +158,7 @@ Changes:
 [Issue #60]: https://github.com/chenxiaolong/Custota/issues/60
 [Issue #68]: https://github.com/chenxiaolong/Custota/issues/68
 [Issue #72]: https://github.com/chenxiaolong/Custota/issues/72
+[Issue #83]: https://github.com/chenxiaolong/Custota/issues/83
 [PR #1]: https://github.com/chenxiaolong/Custota/pull/1
 [PR #2]: https://github.com/chenxiaolong/Custota/pull/2
 [PR #6]: https://github.com/chenxiaolong/Custota/pull/6
@@ -205,3 +207,4 @@ Changes:
 [PR #80]: https://github.com/chenxiaolong/Custota/pull/80
 [PR #81]: https://github.com/chenxiaolong/Custota/pull/81
 [PR #82]: https://github.com/chenxiaolong/Custota/pull/82
+[PR #84]: https://github.com/chenxiaolong/Custota/pull/84
