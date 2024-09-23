@@ -80,8 +80,7 @@ jobs:
               - aarch64-apple-darwin
               - x86_64-apple-darwin
             combine: lipo
-          # ubuntu-latest is not 24.04 yet and 22.04's qemu-user-static segfaults.
-          - os: ubuntu-24.04
+          - os: ubuntu-latest
             name: aarch64-linux-android31
             targets:
               - aarch64-linux-android
@@ -118,6 +117,8 @@ jobs:
 
       - name: Cache Rust dependencies
         uses: Swatinem/rust-cache@v2
+        with:
+          key: ${{ matrix.artifact.name }}
 
       - name: Clippy
         shell: bash
