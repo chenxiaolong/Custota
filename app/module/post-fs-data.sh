@@ -69,15 +69,24 @@ fi
 echo "Standard trust store: ${standard_store}"
 echo "update_engine trust store: ${update_engine_store}"
 
-rm -rf "${mod_dir}"/system/etc/security
-
 if [[ "${standard_store}" != "${update_engine_store}" ]]; then
-    mkdir -p "${mod_dir}"/system/etc/security
-    # This copies the directory instead of symlinking it because the SELinux
-    # policy in newer Android versions no longer allows reading the targets of
-    # symlinks labelled with the system_security_cacerts_file type.
-    cp -r "${standard_store}" "${mod_dir}${update_engine_store}"
+    mnt_dir=${mod_dir}/mnt
 
-    # Replace the whole directory instead of merging it.
-    touch "${mod_dir}${update_engine_store}/.replace"
+    rm -rf "${mnt_dir}"
+    mkdir "${mnt_dir}"
+
+    nsenter --mount=/proc/1/ns/mnt -- \
+        mount -t tmpfs "${app_id}" "${mnt_dir}"
+
+    cp -r "${standard_store}/." "${mnt_dir}"
+
+    context=$(ls -Zd "${update_engine_store}" | awk '{print $1}')
+    chcon -R "${context}" "${mnt_dir}"
+
+    while mountpoint -q "${update_engine_store}"; do
+        umount -l "${update_engine_store}"
+    done
+
+    nsenter --mount=/proc/1/ns/mnt -- \
+        mount -o ro,bind "${mnt_dir}" "${update_engine_store}"
 fi
