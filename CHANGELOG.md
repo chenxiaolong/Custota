@@ -7,7 +7,7 @@
     to update the actual links at the bottom of the file.
 -->
 
-### Unreleased
+### Version 4.12
 
 * Fix custom CA certificates being mounted incorrectly ([Issue #87], [PR #88])
   * If you use custom CA certificates, you will need to regenerate and flash the `system-ca-certs` module
