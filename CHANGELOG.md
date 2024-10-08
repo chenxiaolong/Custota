@@ -9,6 +9,9 @@
 
 ### Unreleased
 
+* Fix custom CA certificates being mounted incorrectly ([Issue #87], [PR #88])
+  * If you use custom CA certificates, you will need to regenerate and flash the `system-ca-certs` module
+
 ### Version 4.11
 
 * Target API 35 ([PR #82])
@@ -161,6 +164,7 @@ Changes:
 [Issue #68]: https://github.com/chenxiaolong/Custota/issues/68
 [Issue #72]: https://github.com/chenxiaolong/Custota/issues/72
 [Issue #83]: https://github.com/chenxiaolong/Custota/issues/83
+[Issue #87]: https://github.com/chenxiaolong/Custota/issues/87
 [PR #1]: https://github.com/chenxiaolong/Custota/pull/1
 [PR #2]: https://github.com/chenxiaolong/Custota/pull/2
 [PR #6]: https://github.com/chenxiaolong/Custota/pull/6
@@ -210,3 +214,4 @@ Changes:
 [PR #81]: https://github.com/chenxiaolong/Custota/pull/81
 [PR #82]: https://github.com/chenxiaolong/Custota/pull/82
 [PR #84]: https://github.com/chenxiaolong/Custota/pull/84
+[PR #88]: https://github.com/chenxiaolong/Custota/pull/88
