@@ -7,14 +7,23 @@ module_prop() {
     grep "^${1}=" "${mod_dir}/module.prop" | cut -d= -f2
 }
 
+# toybox's `mountpoint` command only works for directories, but bind mounts can
+# be files too.
+has_mountpoint() {
+    local mnt=${1}
+
+    awk -v "mnt=${mnt}" \
+        'BEGIN { ret=1 } $5 == mnt { ret=0; exit } END { exit ret }' \
+        /proc/self/mountinfo
+}
+
 module_id=$(module_prop id)
 apex_dir=/apex/com.android.conscrypt/cacerts
 system_dir=/system/etc/security/cacerts
 mnt_base=${mod_dir}/mnt
 mnt_index=0
 
-rm -rf "${mnt_base}"
-mkdir "${mnt_base}"
+mkdir -p "${mnt_base}"
 
 for cert_dir in "${apex_dir}" "${system_dir}"; do
     if [[ ! -d "${cert_dir}" ]]; then
@@ -34,7 +43,7 @@ for cert_dir in "${apex_dir}" "${system_dir}"; do
     context=$(ls -Zd "${cert_dir}" | awk '{print $1}')
     chcon -R "${context}" "${mnt_dir}"
 
-    while mountpoint -q "${cert_dir}"; do
+    while has_mountpoint "${cert_dir}"; do
         umount -l "${cert_dir}"
     done
 
