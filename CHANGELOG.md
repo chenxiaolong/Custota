@@ -9,6 +9,8 @@
 
 ### Unreleased
 
+* Fix compatibility when installed alongside other modules that modify `plat_seapp_contexts` with upcoming versions of Magisk ([PR #89])
+
 ### Version 4.12
 
 * Fix custom CA certificates being mounted incorrectly ([Issue #87], [PR #88])
@@ -217,3 +219,4 @@ Changes:
 [PR #82]: https://github.com/chenxiaolong/Custota/pull/82
 [PR #84]: https://github.com/chenxiaolong/Custota/pull/84
 [PR #88]: https://github.com/chenxiaolong/Custota/pull/88
+[PR #89]: https://github.com/chenxiaolong/Custota/pull/89
