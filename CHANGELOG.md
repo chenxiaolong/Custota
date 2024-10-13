@@ -10,6 +10,7 @@
 ### Unreleased
 
 * Fix Cursor resource leak ([PR #90])
+* Minor notification code cleanup ([PR #91])
 
 ### Version 4.13
 
@@ -225,3 +226,4 @@ Changes:
 [PR #88]: https://github.com/chenxiaolong/Custota/pull/88
 [PR #89]: https://github.com/chenxiaolong/Custota/pull/89
 [PR #90]: https://github.com/chenxiaolong/Custota/pull/90
+[PR #91]: https://github.com/chenxiaolong/Custota/pull/91
