@@ -9,6 +9,9 @@
 
 ### Unreleased
 
+* Use the vbmeta digest in addition to the fingerprint to determine if the OS is update to date ([Issue #38], [PR #92])
+  * This means Custota will now report that an update is available if the OTA's contents changed, even if the OS version remains the same. OTAs where only Magisk/KernelSU/etc. is updated will now be properly detected as updates.
+  * This feature bumps the `.csig` file format version from 1 to 2. Older versions of Custota **cannot** read new version 2 files, but newer versions of Custota **can** read old version 1 files.
 * Fix Cursor resource leak ([PR #90])
 * Minor notification code cleanup ([PR #91])
 
@@ -165,6 +168,7 @@ Changes:
 [Issue #22]: https://github.com/chenxiaolong/Custota/issues/22
 [Issue #25]: https://github.com/chenxiaolong/Custota/issues/25
 [Issue #29]: https://github.com/chenxiaolong/Custota/issues/29
+[Issue #38]: https://github.com/chenxiaolong/Custota/issues/38
 [Issue #40]: https://github.com/chenxiaolong/Custota/issues/40
 [Issue #42]: https://github.com/chenxiaolong/Custota/issues/42
 [Issue #47]: https://github.com/chenxiaolong/Custota/issues/47
@@ -227,3 +231,4 @@ Changes:
 [PR #89]: https://github.com/chenxiaolong/Custota/pull/89
 [PR #90]: https://github.com/chenxiaolong/Custota/pull/90
 [PR #91]: https://github.com/chenxiaolong/Custota/pull/91
+[PR #92]: https://github.com/chenxiaolong/Custota/pull/92
