@@ -7,7 +7,7 @@
     to update the actual links at the bottom of the file.
 -->
 
-### Unreleased
+### Version 5.0
 
 * Use the vbmeta digest in addition to the fingerprint to determine if the OS is update to date ([Issue #38], [PR #92])
   * This means Custota will now report that an update is available if the OTA's contents changed, even if the OS version remains the same. OTAs where only Magisk/KernelSU/etc. is updated will now be properly detected as updates.
