@@ -14,6 +14,7 @@
   * This feature bumps the `.csig` file format version from 1 to 2. Older versions of Custota **cannot** read new version 2 files, but newer versions of Custota **can** read old version 1 files.
 * Fix Cursor resource leak ([PR #90])
 * Minor notification code cleanup ([PR #91])
+* Update all dependencies ([PR #93])
 
 ### Version 4.13
 
@@ -232,3 +233,4 @@ Changes:
 [PR #90]: https://github.com/chenxiaolong/Custota/pull/90
 [PR #91]: https://github.com/chenxiaolong/Custota/pull/91
 [PR #92]: https://github.com/chenxiaolong/Custota/pull/92
+[PR #93]: https://github.com/chenxiaolong/Custota/pull/93
