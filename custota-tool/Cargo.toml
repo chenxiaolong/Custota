@@ -7,9 +7,12 @@ publish.workspace = true
 
 [dependencies]
 anyhow = "1.0.75"
+cap-std = "3.0.0"
+cap-tempfile = "3.0.0"
 clap = { version = "4.4.1", features = ["derive"] }
 cms = { version = "0.2.2", features = ["std", "builder"] }
 const-oid = "0.9.5"
+ctrlc = "3.4.5"
 hex = "0.4.3"
 md5 = "0.7.0"
 ring = "0.17.0"
@@ -21,7 +24,7 @@ x509-cert = "0.2.4"
 
 [dependencies.avbroot]
 git = "https://github.com/chenxiaolong/avbroot"
-tag = "v3.6.0"
+tag = "v3.8.0"
 
 # https://github.com/zip-rs/zip/pull/383
 [dependencies.zip]

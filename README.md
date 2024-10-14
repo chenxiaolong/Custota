@@ -215,7 +215,7 @@ The csig file contains a signed JSON message of the form:
 
 ```jsonc
 {
-    "version": 1,
+    "version": 2,
     "files": [
         {
             "name": "payload_metadata.bin",
@@ -230,7 +230,8 @@ The csig file contains a signed JSON message of the form:
             "digest": "62b73ad358b06eebd186fa7c9895ef40bfdaf97060ae572984783dfa91397fb3"
         },
         // ...
-    ]
+    ],
+    "vbmeta_digest": "61a7175e883636fb6a4a18139746f7d3ffbf7f5a53e9a4ced6f560a9820ccdb4"
 }
 ```
 

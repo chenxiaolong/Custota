@@ -25,6 +25,7 @@ import com.chiller3.custota.Preferences
 import com.chiller3.custota.extension.findNestedFile
 import com.chiller3.custota.extension.toSingleLineString
 import com.chiller3.custota.wrapper.ServiceManagerProxy
+import com.chiller3.custota.wrapper.SystemPropertiesProxy
 import kotlinx.parcelize.Parcelize
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.SerialName
@@ -389,8 +390,9 @@ class UpdaterThread(
         val csigInfo: CsigInfo = Json.decodeFromString(csigInfoRaw)
         Log.d(TAG, "csig info: $csigInfo")
 
-        if (csigInfo.version != 1) {
-            throw BadFormatException("Only CsigInfo version 1 is supported")
+        // The only difference in version 2 is the introduction of the vbmeta_digest field.
+        if (csigInfo.version != 1 && csigInfo.version != 2) {
+            throw BadFormatException("Only CsigInfo versions 1 and 2 are supported")
         }
 
         return csigInfo
@@ -526,6 +528,17 @@ class UpdaterThread(
         }
         val fingerprint = metadata.postcondition.getBuild(0)
         var updateAvailable = fingerprint != Build.FINGERPRINT
+
+        // We allow "upgrading" to the same version if the vbmeta digest differs. This happens, for
+        // example, if a newer version of Magisk was used when patching an OTA with the same OS
+        // version as what is currently running.
+        if (!updateAvailable && csigInfo.vbmetaDigest != null) {
+            val vbmetaDigest = SystemPropertiesProxy.get(PROP_VBMETA_DIGEST)
+
+            Log.d(TAG, "Current vbmeta digest: $vbmetaDigest")
+            Log.d(TAG, "OTA vbmeta digest: ${csigInfo.vbmetaDigest}")
+            updateAvailable = csigInfo.vbmetaDigest != vbmetaDigest
+        }
 
         if (!updateAvailable) {
             Log.w(TAG, "Already up to date")
@@ -771,7 +784,17 @@ class UpdaterThread(
     private data class CsigInfo(
         val version: Int,
         val files: List<PropertyFile>,
+        @SerialName("vbmeta_digest")
+        val vbmetaDigest: String? = null,
     ) {
+        init {
+            if (version == 2) {
+                require(vbmetaDigest != null) { "vbmeta_digest must be present in csig version 2" }
+            } else {
+                require(vbmetaDigest == null) { "vbmeta_digest is not supported in csig version 1" }
+            }
+        }
+
         fun get(name: String) = files.find { it.name == name }
 
         fun getOrThrow(name: String) = get(name)
@@ -868,6 +891,7 @@ class UpdaterThread(
         private const val TIMEOUT_MS = 30_000
 
         private const val PROP_SECURITY_PATCH = "ro.build.version.security_patch"
+        private const val PROP_VBMETA_DIGEST = "ro.boot.vbmeta.digest"
 
         /**
          * Get the OS security patch level.

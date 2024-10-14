@@ -5,23 +5,28 @@
 
 use std::{
     borrow::Cow,
-    collections::{HashMap, HashSet},
+    collections::{BTreeSet, HashMap, HashSet},
     ffi::{OsStr, OsString},
     fmt::Write as _,
     fs::{self, File, OpenOptions},
     io::{self, BufReader, BufWriter, Read, Seek, SeekFrom, Write},
     path::{Path, PathBuf},
     str::FromStr,
-    sync::{atomic::AtomicBool, Arc},
+    sync::{
+        atomic::{AtomicBool, Ordering},
+        Arc,
+    },
 };
 
 use anyhow::{anyhow, bail, Context, Result};
 use avbroot::{
     crypto::{self, PassphraseSource, RsaSigningKey},
-    format::ota,
+    format::{ota, payload::PayloadHeader},
     protobuf::build::tools::releasetools::ota_metadata::OtaType,
-    stream::{self, HashingReader},
+    stream::{self, HashingReader, PSeekFile},
 };
+use cap_std::ambient_authority;
+use cap_tempfile::TempDir;
 use clap::{Parser, Subcommand};
 use cms::{
     builder::{SignedDataBuilder, SignerInfoBuilder},
@@ -54,6 +59,8 @@ struct PropertyFile {
 struct CsigInfo {
     version: u8,
     files: Vec<PropertyFile>,
+    #[serde(with = "hex")]
+    vbmeta_digest: [u8; 32],
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
@@ -184,18 +191,18 @@ struct Cli {
 }
 
 /// Compute the SHA256 digest of a section of a file.
-fn hash_section(mut reader: impl Read + Seek, offset: u64, size: u64) -> Result<Digest> {
+fn hash_section(
+    mut reader: impl Read + Seek,
+    offset: u64,
+    size: u64,
+    cancel_signal: &AtomicBool,
+) -> Result<Digest> {
     reader.seek(SeekFrom::Start(offset))?;
 
     let mut hashing_reader =
         HashingReader::new(reader, ring::digest::Context::new(&ring::digest::SHA256));
 
-    stream::copy_n(
-        &mut hashing_reader,
-        io::sink(),
-        size,
-        &Arc::new(AtomicBool::new(false)),
-    )?;
+    stream::copy_n(&mut hashing_reader, io::sink(), size, cancel_signal)?;
 
     let (_, context) = hashing_reader.finish();
 
@@ -243,7 +250,39 @@ fn sign_cms_inline(key: &RsaPrivateKey, cert: &Certificate, data: &[u8]) -> Resu
     Ok(sd)
 }
 
-fn subcommand_gen_csig(args: &GenerateCsig) -> Result<()> {
+fn compute_vbmeta_digest(
+    raw_reader: PSeekFile,
+    offset: u64,
+    size: u64,
+    header: &PayloadHeader,
+    cancel_signal: &AtomicBool,
+) -> Result<[u8; 32]> {
+    println!("Computing vbmeta digest...");
+
+    let authority = ambient_authority();
+    let temp_dir = TempDir::new(authority).context("Failed to create temporary directory")?;
+    let unique_images = header
+        .manifest
+        .partitions
+        .iter()
+        .map(|p| &p.partition_name)
+        .cloned()
+        .collect::<BTreeSet<_>>();
+
+    avbroot::cli::ota::extract_payload(
+        &raw_reader,
+        &temp_dir,
+        offset,
+        size,
+        header,
+        &unique_images,
+        cancel_signal,
+    )?;
+
+    avbroot::cli::avb::compute_digest(&temp_dir, "vbmeta", cancel_signal)
+}
+
+fn subcommand_gen_csig(args: &GenerateCsig, cancel_signal: &AtomicBool) -> Result<()> {
     let passphrase_source = if let Some(v) = &args.passphrase_env_var {
         PassphraseSource::EnvVar(v.clone())
     } else if let Some(p) = &args.passphrase_file {
@@ -278,15 +317,12 @@ fn subcommand_gen_csig(args: &GenerateCsig) -> Result<()> {
     };
 
     let file = File::open(&args.input)
+        .map(PSeekFile::new)
         .with_context(|| anyhow!("Failed to open for reading: {:?}", args.input))?;
     let mut reader = BufReader::new(file);
 
     println!("Verifying OTA signature...");
-    let embedded_cert = ota::verify_ota(
-        &mut reader,
-        // We don't use a signal handler.
-        &Arc::new(AtomicBool::new(false)),
-    )?;
+    let embedded_cert = ota::verify_ota(&mut reader, cancel_signal)?;
 
     let (metadata, ota_cert, header, _) = ota::parse_zip_ota_info(&mut reader)
         .with_context(|| anyhow!("Failed to parse OTA info from zip"))?;
@@ -341,6 +377,12 @@ fn subcommand_gen_csig(args: &GenerateCsig) -> Result<()> {
         .with_context(|| anyhow!("Failed to parse property files: {}", ota::PF_NAME))?;
     let file_size = reader.seek(SeekFrom::End(0))?;
 
+    let (pf_payload_offset, pf_payload_size) = pfs
+        .iter()
+        .find(|pf| pf.name == ota::PATH_PAYLOAD)
+        .ok_or_else(|| anyhow!("Missing property files entry: {}", ota::PATH_PAYLOAD))
+        .map(|pf| (pf.offset, pf.size))?;
+
     let invalid_pfs = pfs
         .iter()
         .filter(|p| p.offset + p.size > file_size)
@@ -353,7 +395,7 @@ fn subcommand_gen_csig(args: &GenerateCsig) -> Result<()> {
     let digested_pfs = pfs
         .into_iter()
         .map(|pf| {
-            hash_section(&mut reader, pf.offset, pf.size).map(|d| PropertyFile {
+            hash_section(&mut reader, pf.offset, pf.size, cancel_signal).map(|d| PropertyFile {
                 name: pf.name,
                 offset: pf.offset,
                 size: pf.size,
@@ -362,9 +404,21 @@ fn subcommand_gen_csig(args: &GenerateCsig) -> Result<()> {
         })
         .collect::<Result<_>>()?;
 
+    let raw_reader = reader.into_inner();
+    let vbmeta_digest = compute_vbmeta_digest(
+        raw_reader,
+        pf_payload_offset,
+        pf_payload_size,
+        &header,
+        cancel_signal,
+    )?;
+
+    println!("vbmeta digest: {}", hex::encode(vbmeta_digest));
+
     let csig_info = CsigInfo {
-        version: 1,
+        version: 2,
         files: digested_pfs,
+        vbmeta_digest,
     };
     let csig_info_raw = serde_json::to_string(&csig_info)?;
 
@@ -525,10 +579,21 @@ fn subcommand_gen_cert_module(args: &GenerateCertModule) -> Result<()> {
 }
 
 fn main() -> Result<()> {
+    // Set up a cancel signal so we can properly clean up any temporary files.
+    let cancel_signal = Arc::new(AtomicBool::new(false));
+    {
+        let signal = cancel_signal.clone();
+
+        ctrlc::set_handler(move || {
+            signal.store(true, Ordering::SeqCst);
+        })
+        .expect("Failed to set signal handler");
+    }
+
     let args = Cli::parse();
 
     match args.command {
-        Command::GenCsig(args) => subcommand_gen_csig(&args),
+        Command::GenCsig(args) => subcommand_gen_csig(&args, &cancel_signal),
         Command::GenUpdateInfo(args) => subcommand_gen_update_info(&args),
         Command::GenCertModule(args) => subcommand_gen_cert_module(&args),
     }
