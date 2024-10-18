@@ -9,6 +9,8 @@
 
 ### Unreleased
 
+* Add new `--csig-version` option to custota-tool to allow generating version 1 csig files ([Issue #94], [PR #95])
+
 ### Version 5.0
 
 * Use the vbmeta digest in addition to the fingerprint to determine if the OS is update to date ([Issue #38], [PR #92])
@@ -181,6 +183,7 @@ Changes:
 [Issue #72]: https://github.com/chenxiaolong/Custota/issues/72
 [Issue #83]: https://github.com/chenxiaolong/Custota/issues/83
 [Issue #87]: https://github.com/chenxiaolong/Custota/issues/87
+[Issue #94]: https://github.com/chenxiaolong/Custota/issues/94
 [PR #1]: https://github.com/chenxiaolong/Custota/pull/1
 [PR #2]: https://github.com/chenxiaolong/Custota/pull/2
 [PR #6]: https://github.com/chenxiaolong/Custota/pull/6
@@ -236,3 +239,4 @@ Changes:
 [PR #91]: https://github.com/chenxiaolong/Custota/pull/91
 [PR #92]: https://github.com/chenxiaolong/Custota/pull/92
 [PR #93]: https://github.com/chenxiaolong/Custota/pull/93
+[PR #95]: https://github.com/chenxiaolong/Custota/pull/95
