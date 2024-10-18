@@ -7,7 +7,7 @@
     to update the actual links at the bottom of the file.
 -->
 
-### Unreleased
+### Version 5.1
 
 * Add new `--csig-version` option to custota-tool to allow generating version 1 csig files ([Issue #94], [PR #95])
 * Ignore unknown fields in csig files and update JSON files to allow better backwards compatibility in the future ([Issue #94], [PR #96])
