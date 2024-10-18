@@ -10,6 +10,7 @@
 ### Unreleased
 
 * Add new `--csig-version` option to custota-tool to allow generating version 1 csig files ([Issue #94], [PR #95])
+* Ignore unknown fields in csig files and update JSON files to allow better backwards compatibility in the future ([Issue #94], [PR #96])
 
 ### Version 5.0
 
@@ -240,3 +241,4 @@ Changes:
 [PR #92]: https://github.com/chenxiaolong/Custota/pull/92
 [PR #93]: https://github.com/chenxiaolong/Custota/pull/93
 [PR #95]: https://github.com/chenxiaolong/Custota/pull/95
+[PR #96]: https://github.com/chenxiaolong/Custota/pull/96
