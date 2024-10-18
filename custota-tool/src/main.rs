@@ -27,7 +27,7 @@ use avbroot::{
 };
 use cap_std::ambient_authority;
 use cap_tempfile::TempDir;
-use clap::{Parser, Subcommand};
+use clap::{Parser, Subcommand, ValueEnum};
 use cms::{
     builder::{SignedDataBuilder, SignerInfoBuilder},
     cert::{CertificateChoices, IssuerAndSerialNumber},
@@ -37,6 +37,7 @@ use cms::{
 use ring::digest::Digest;
 use rsa::{pkcs1v15::SigningKey, RsaPrivateKey};
 use serde::{Deserialize, Serialize};
+use serde_repr::{Deserialize_repr, Serialize_repr};
 use sha2::Sha256;
 use x509_cert::{
     der::{asn1::OctetStringRef, Any, Encode, Tag},
@@ -56,11 +57,15 @@ struct PropertyFile {
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
+struct VbmetaDigest(#[serde(with = "hex")] [u8; 32]);
+
+#[derive(Clone, Debug, Deserialize, Serialize)]
 struct CsigInfo {
-    version: u8,
+    version: CsigVersion,
     files: Vec<PropertyFile>,
-    #[serde(with = "hex")]
-    vbmeta_digest: [u8; 32],
+    // Version 2 only.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    vbmeta_digest: Option<VbmetaDigest>,
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
@@ -94,6 +99,15 @@ impl FromStr for WebUrlOrRelativePath {
 
         Ok(Self(s.to_owned()))
     }
+}
+
+#[derive(Clone, Copy, Debug, ValueEnum, Deserialize_repr, Serialize_repr)]
+#[repr(u8)]
+enum CsigVersion {
+    #[value(name = "1")]
+    Version1 = 1,
+    #[value(name = "2")]
+    Version2 = 2,
 }
 
 /// Generate a csig file for an OTA zip.
@@ -134,6 +148,15 @@ struct GenerateCsig {
     /// defaults to the value of -c/--cert.
     #[arg(short = 'C', long)]
     cert_verify: Option<PathBuf>,
+
+    /// csig file format version.
+    ///
+    /// csig version 1 is supported by all versions of Custota. Version 2 is
+    /// supported since version 5.0 of Custota and adds support for storing the
+    /// vbmeta digest to allow detecting updates when the OS version does not
+    /// change.
+    #[arg(long, value_enum, default_value_t = CsigVersion::Version2)]
+    csig_version: CsigVersion,
 }
 
 /// Generate or update an update info file.
@@ -405,18 +428,25 @@ fn subcommand_gen_csig(args: &GenerateCsig, cancel_signal: &AtomicBool) -> Resul
         .collect::<Result<_>>()?;
 
     let raw_reader = reader.into_inner();
-    let vbmeta_digest = compute_vbmeta_digest(
-        raw_reader,
-        pf_payload_offset,
-        pf_payload_size,
-        &header,
-        cancel_signal,
-    )?;
+    let vbmeta_digest = match args.csig_version {
+        CsigVersion::Version1 => None,
+        CsigVersion::Version2 => {
+            let digest = compute_vbmeta_digest(
+                raw_reader,
+                pf_payload_offset,
+                pf_payload_size,
+                &header,
+                cancel_signal,
+            )?;
 
-    println!("vbmeta digest: {}", hex::encode(vbmeta_digest));
+            println!("vbmeta digest: {}", hex::encode(digest));
+
+            Some(VbmetaDigest(digest))
+        }
+    };
 
     let csig_info = CsigInfo {
-        version: 2,
+        version: args.csig_version,
         files: digested_pfs,
         vbmeta_digest,
     };
