@@ -368,6 +368,24 @@ android.applicationVariants.all {
         }
     }
 
+    val seappContexts = tasks.register("seappContexts${capitalized}") {
+        inputs.property("variant.applicationId", variant.applicationId)
+
+        val outputFile = variantDir.map { it.file("plat_seapp_contexts") }
+        outputs.file(outputFile)
+
+        doLast {
+            outputFile.get().asFile.writeText(listOf(
+                "user=_app",
+                "isPrivApp=true",
+                "name=${variant.applicationId}",
+                "domain=msd_app",
+                "type=app_data_file",
+                "levelFrom=all",
+            ).joinToString(" "))
+        }
+    }
+
     tasks.register<Zip>("zip${capitalized}") {
         inputs.property("rootProject.name", rootProject.name)
         inputs.property("variant.applicationId", variant.applicationId)
@@ -391,6 +409,7 @@ android.applicationVariants.all {
         from(configXml.map { it.outputs }) {
             into("system/etc/sysconfig")
         }
+        from(seappContexts.map { it.outputs })
         from(variant.outputs.map { it.outputFile }) {
             into("system/priv-app/${variant.applicationId}")
         }
