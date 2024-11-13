@@ -9,6 +9,8 @@
 
 ### Unreleased
 
+* Enable predictive back gestures ([PR #98])
+
 ### Version 5.1
 
 * Add new `--csig-version` option to custota-tool to allow generating version 1 csig files ([Issue #94], [PR #95])
@@ -244,3 +246,4 @@ Changes:
 [PR #93]: https://github.com/chenxiaolong/Custota/pull/93
 [PR #95]: https://github.com/chenxiaolong/Custota/pull/95
 [PR #96]: https://github.com/chenxiaolong/Custota/pull/96
+[PR #98]: https://github.com/chenxiaolong/Custota/pull/98
