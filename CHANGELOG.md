@@ -10,7 +10,7 @@
 ### Unreleased
 
 * Enable predictive back gestures ([PR #98])
-* Let Magisk/KernelSU handle mounting `/system/etc/selinux/plat_seapp_contexts` ([PR #99])
+* Let Magisk/KernelSU handle mounting `/system/etc/selinux/plat_seapp_contexts` ([PR #99], [PR #101])
 * Update all dependencies ([PR #100])
 
 ### Version 5.1
@@ -251,3 +251,4 @@ Changes:
 [PR #98]: https://github.com/chenxiaolong/Custota/pull/98
 [PR #99]: https://github.com/chenxiaolong/Custota/pull/99
 [PR #100]: https://github.com/chenxiaolong/Custota/pull/100
+[PR #101]: https://github.com/chenxiaolong/Custota/pull/101
