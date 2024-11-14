@@ -379,7 +379,7 @@ android.applicationVariants.all {
                 "user=_app",
                 "isPrivApp=true",
                 "name=${variant.applicationId}",
-                "domain=msd_app",
+                "domain=custota_app",
                 "type=app_data_file",
                 "levelFrom=all",
             ).joinToString(" "))
