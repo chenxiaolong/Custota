@@ -8,8 +8,6 @@ package com.chiller3.custota.extension
 
 import android.content.ContentResolver
 import android.net.Uri
-import android.provider.DocumentsContract
-import android.telecom.PhoneAccount
 
 private const val DOCUMENTSUI_AUTHORITY = "com.android.externalstorage.documents"
 
