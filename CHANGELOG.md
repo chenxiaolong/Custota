@@ -7,6 +7,8 @@
     to update the actual links at the bottom of the file.
 -->
 
+### Unreleased
+
 ### Version 5.2
 
 * Enable predictive back gestures ([PR #98])
