@@ -7,7 +7,7 @@
     to update the actual links at the bottom of the file.
 -->
 
-### Unreleased
+### Version 5.2
 
 * Enable predictive back gestures ([PR #98])
 * Let Magisk/KernelSU handle mounting `/system/etc/selinux/plat_seapp_contexts` ([PR #99], [PR #101])
