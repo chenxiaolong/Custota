@@ -9,6 +9,8 @@
 
 ### Unreleased
 
+* Rebase icon off latest material system update icon ([PR #102])
+
 ### Version 5.2
 
 * Enable predictive back gestures ([PR #98])
@@ -254,3 +256,4 @@ Changes:
 [PR #99]: https://github.com/chenxiaolong/Custota/pull/99
 [PR #100]: https://github.com/chenxiaolong/Custota/pull/100
 [PR #101]: https://github.com/chenxiaolong/Custota/pull/101
+[PR #102]: https://github.com/chenxiaolong/Custota/pull/102
