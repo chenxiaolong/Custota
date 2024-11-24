@@ -19,7 +19,7 @@ allow = [
     "LGPL-2.1",
     "MIT",
     "OpenSSL",
-    "Unicode-DFS-2016",
+    "Unicode-3.0",
 ]
 
 [[licenses.clarify]]

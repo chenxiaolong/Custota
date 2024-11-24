@@ -11,4 +11,4 @@ clap = { version = "4.5.9", features = ["derive"] }
 
 [dependencies.sepatch]
 git = "https://github.com/chenxiaolong/sepatch"
-tag = "v0.3.0"
+tag = "v0.3.1"
