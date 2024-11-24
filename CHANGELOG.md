@@ -10,6 +10,7 @@
 ### Unreleased
 
 * Rebase icon off latest material system update icon ([PR #102])
+* Update all dependencies ([PR #105])
 
 ### Version 5.2
 
@@ -257,3 +258,4 @@ Changes:
 [PR #100]: https://github.com/chenxiaolong/Custota/pull/100
 [PR #101]: https://github.com/chenxiaolong/Custota/pull/101
 [PR #102]: https://github.com/chenxiaolong/Custota/pull/102
+[PR #105]: https://github.com/chenxiaolong/Custota/pull/105
