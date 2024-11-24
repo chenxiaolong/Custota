@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: 2023 Andrew Gunnerson
+ * SPDX-FileCopyrightText: 2023-2024 Andrew Gunnerson
  * SPDX-License-Identifier: GPL-3.0-only
  */
 
@@ -34,9 +34,7 @@ class UpdaterJob: JobService() {
 
     override fun onStartJob(params: JobParameters): Boolean {
         val prefs = Preferences(this)
-
-        val actionIndex = params.extras.getInt(EXTRA_ACTION, -1)
-        val isPeriodic = actionIndex == -1
+        val isPeriodic = params.jobId == ID_PERIODIC
 
         if (isPeriodic) {
             if (!prefs.automaticCheck) {
@@ -49,13 +47,8 @@ class UpdaterJob: JobService() {
             }
         }
 
-        val action = if (!isPeriodic) {
-            UpdaterThread.Action.entries[actionIndex]
-        } else if (prefs.automaticInstall) {
-            UpdaterThread.Action.INSTALL
-        } else {
-            UpdaterThread.Action.CHECK
-        }
+        val actionIndex = params.extras.getInt(EXTRA_ACTION, -1)
+        val action = UpdaterThread.Action.entries[actionIndex]
 
         var network = params.network
         if (network == null) {
@@ -104,26 +97,69 @@ class UpdaterJob: JobService() {
         private fun createJobBuilder(
             context: Context,
             jobId: Int,
-            action: UpdaterThread.Action?,
+            action: UpdaterThread.Action,
         ): JobInfo.Builder {
             val prefs = Preferences(context)
 
-            val networkType = if (prefs.requireUnmetered) {
+            val networkType = if (action.performsLargeDownloads && prefs.requireUnmetered) {
                 JobInfo.NETWORK_TYPE_UNMETERED
-            } else {
+            } else if (action.requiresNetwork) {
                 JobInfo.NETWORK_TYPE_ANY
+            } else {
+                JobInfo.NETWORK_TYPE_NONE
             }
 
+            val requiresBatteryNotLow = action.usesSignificantBattery && prefs.requireBatteryNotLow
+
             val extras = PersistableBundle().apply {
-                if (action != null) {
-                    putInt(EXTRA_ACTION, action.ordinal)
-                }
+                putInt(EXTRA_ACTION, action.ordinal)
             }
 
             return JobInfo.Builder(jobId, ComponentName(context, UpdaterJob::class.java))
                 .setRequiredNetworkType(networkType)
-                .setRequiresBatteryNotLow(prefs.requireBatteryNotLow)
+                .setRequiresBatteryNotLow(requiresBatteryNotLow)
                 .setExtras(extras)
+        }
+
+        private fun bundlesEqual(bundle1: PersistableBundle, bundle2: PersistableBundle): Boolean {
+            if (bundle1.keySet() != bundle2.keySet()) {
+                return false
+            }
+
+            for (key in bundle1.keySet()) {
+                // There's no other API for getting an arbitrary value, regardless of type.
+                @Suppress("DEPRECATION") val object1 = bundle1.get(key)!!
+                @Suppress("DEPRECATION") val object2 = bundle2.get(key)!!
+
+                if (object1 is PersistableBundle && object2 is PersistableBundle) {
+                    if (!bundlesEqual(object1, object2)) {
+                        return false
+                    }
+                } else if (object1 is Array<*> && object2 is Array<*>) {
+                    if (!object1.contentEquals(object2)) {
+                        return false
+                    }
+                } else if (object1 != object2) {
+                    return false
+                }
+            }
+
+            return true
+        }
+
+        private fun JobInfo.toLongString() = buildString {
+            append(this)
+            append(" {requiredNetwork=")
+            append(requiredNetwork)
+            append(", isRequiredBatteryNotLow=")
+            append(isRequireBatteryNotLow)
+            append(", isPersisted=")
+            append(isPersisted)
+            append(", intervalMillis=")
+            append(intervalMillis)
+            append(", extras=")
+            append(extras)
+            append("}")
         }
 
         private fun scheduleIfUnchanged(context: Context, jobInfo: JobInfo) {
@@ -132,25 +168,24 @@ class UpdaterJob: JobService() {
             val oldJobInfo = jobScheduler.getPendingJob(jobInfo.id)
 
             // JobInfo.equals() is unreliable (and the comments in its implementation say so), so
-            // just compare the fields that we set. We don't compare the extras because there's no
-            // sane way to do so. That doesn't matter for our use case because this check is mostly
-            // useful for the periodic job, which doesn't use extras.
+            // just compare the fields that we set.
             if (oldJobInfo != null &&
                 oldJobInfo.requiredNetwork == jobInfo.requiredNetwork &&
                 oldJobInfo.isRequireBatteryNotLow == jobInfo.isRequireBatteryNotLow &&
                 oldJobInfo.isPersisted == jobInfo.isPersisted &&
-                oldJobInfo.intervalMillis == jobInfo.intervalMillis) {
-                Log.i(TAG, "Job already exists and is unchanged: $jobInfo")
+                oldJobInfo.intervalMillis == jobInfo.intervalMillis &&
+                bundlesEqual(oldJobInfo.extras, jobInfo.extras)) {
+                Log.i(TAG, "Job already exists and is unchanged: ${jobInfo.toLongString()}")
                 return
             }
 
-            Log.d(TAG, "Scheduling job: $jobInfo")
+            Log.d(TAG, "Scheduling job: ${jobInfo.toLongString()}")
 
             when (val result = jobScheduler.schedule(jobInfo)) {
                 JobScheduler.RESULT_SUCCESS ->
-                    Log.d(TAG, "Scheduled job: $jobInfo")
+                    Log.d(TAG, "Scheduled job: ${jobInfo.toLongString()}")
                 JobScheduler.RESULT_FAILURE ->
-                    Log.w(TAG, "Failed to schedule job: $jobInfo")
+                    Log.w(TAG, "Failed to schedule job: ${jobInfo.toLongString()}")
                 else -> throw IllegalStateException("Unexpected scheduler error: $result")
             }
         }
@@ -162,7 +197,15 @@ class UpdaterJob: JobService() {
         }
 
         fun schedulePeriodic(context: Context, skipFirstRun: Boolean) {
-            val jobInfo = createJobBuilder(context, ID_PERIODIC, null)
+            val prefs = Preferences(context)
+
+            val action = if (prefs.automaticInstall) {
+                UpdaterThread.Action.INSTALL
+            } else {
+                UpdaterThread.Action.CHECK
+            }
+
+            val jobInfo = createJobBuilder(context, ID_PERIODIC, action)
                 .setPersisted(true)
                 .setPeriodic(PERIODIC_INTERVAL_MS)
                 .build()

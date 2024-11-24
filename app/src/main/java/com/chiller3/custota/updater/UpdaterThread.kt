@@ -821,7 +821,16 @@ class UpdaterThread(
         MONITOR,
         CHECK,
         INSTALL,
-        REVERT,
+        REVERT;
+
+        val requiresNetwork: Boolean
+            get() = this == CHECK || this == INSTALL
+
+        val performsLargeDownloads: Boolean
+            get() = this == INSTALL
+
+        val usesSignificantBattery: Boolean
+            get() = this == INSTALL
     }
 
     sealed interface Result {

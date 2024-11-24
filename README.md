@@ -50,7 +50,7 @@ Custota is installed via a Magisk/KernelSU module so that it can run as a system
 
 Once the OTA server URL is configured, Custota will automatically check for updates periodically. The checks can be turned off completely or extended to automatically install the updates as well.
 
-To reduce battery usage, the scheduling of the update checks is controlled by Android. They run at most once every 6 hours and will not run at all if the `Require unmetered network` or `Require sufficient battery level` conditions aren't met.
+To reduce battery usage, the timing of the periodic update checks is controlled by Android. They run at most once every 6 hours.
 
 ## OTA server
 

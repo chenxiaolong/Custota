@@ -342,7 +342,9 @@ class SettingsFragment : PreferenceFragmentCompat(), Preference.OnPreferenceClic
                 refreshCheckForUpdates()
                 refreshOtaSource()
             }
-            Preferences.PREF_UNMETERED_ONLY, Preferences.PREF_BATTERY_NOT_LOW -> {
+            Preferences.PREF_AUTOMATIC_INSTALL,
+            Preferences.PREF_UNMETERED_ONLY,
+            Preferences.PREF_BATTERY_NOT_LOW -> {
                 UpdaterJob.schedulePeriodic(requireContext(), true)
             }
         }
