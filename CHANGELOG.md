@@ -11,6 +11,8 @@
 
 * Rebase icon off latest material system update icon ([PR #102])
 * Update all dependencies ([PR #105])
+* Only apply the unmetered network and battery level restrictions to the actual OTA installation, not the update check ([Issue #104], [PR #106])
+  * This also fixes the post-reboot OTA cleanup monitoring job and the revert update job so that they don't wait for a network connection or sufficient battery before running
 
 ### Version 5.2
 
@@ -196,6 +198,7 @@ Changes:
 [Issue #83]: https://github.com/chenxiaolong/Custota/issues/83
 [Issue #87]: https://github.com/chenxiaolong/Custota/issues/87
 [Issue #94]: https://github.com/chenxiaolong/Custota/issues/94
+[Issue #104]: https://github.com/chenxiaolong/Custota/issues/104
 [PR #1]: https://github.com/chenxiaolong/Custota/pull/1
 [PR #2]: https://github.com/chenxiaolong/Custota/pull/2
 [PR #6]: https://github.com/chenxiaolong/Custota/pull/6
@@ -259,3 +262,4 @@ Changes:
 [PR #101]: https://github.com/chenxiaolong/Custota/pull/101
 [PR #102]: https://github.com/chenxiaolong/Custota/pull/102
 [PR #105]: https://github.com/chenxiaolong/Custota/pull/105
+[PR #106]: https://github.com/chenxiaolong/Custota/pull/106
