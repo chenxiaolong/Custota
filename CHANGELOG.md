@@ -7,7 +7,7 @@
     to update the actual links at the bottom of the file.
 -->
 
-### Unreleased
+### Version 5.3
 
 * Rebase icon off latest material system update icon ([PR #102])
 * Update all dependencies ([PR #105])
