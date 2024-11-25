@@ -94,7 +94,7 @@ class UpdaterService : Service(), UpdaterThread.UpdaterThreadListener {
             // IntentCompat is required due to an Android 13 bug that's only fixed in 14+
             // https://issuetracker.google.com/issues/274185314
             val network = IntentCompat.getParcelableExtra(
-                intent, EXTRA_NETWORK, Network::class.java)!!
+                intent, EXTRA_NETWORK, Network::class.java)
             val action = IntentCompat.getParcelableExtra(
                 intent, EXTRA_ACTION, UpdaterThread.Action::class.java)!!
             val silent = intent.getBooleanExtra(EXTRA_SILENT, false)
@@ -359,7 +359,7 @@ class UpdaterService : Service(), UpdaterThread.UpdaterThreadListener {
 
         fun createStartIntent(
             context: Context,
-            network: Network,
+            network: Network?,
             action: UpdaterThread.Action,
             silent: Boolean,
         ) = Intent(context, UpdaterService::class.java).apply {

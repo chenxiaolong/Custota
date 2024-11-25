@@ -12,26 +12,12 @@ import android.app.job.JobService
 import android.content.ComponentName
 import android.content.Context
 import android.net.ConnectivityManager
+import android.net.NetworkCapabilities
 import android.os.PersistableBundle
 import android.util.Log
-import androidx.annotation.StringRes
-import com.chiller3.custota.Notifications
 import com.chiller3.custota.Preferences
-import com.chiller3.custota.R
 
 class UpdaterJob: JobService() {
-    private fun notifyAlert(@StringRes messageId: Int) {
-        val notifications = Notifications(this)
-        notifications.sendAlertNotification(
-            Notifications.CHANNEL_ID_FAILURE,
-            true,
-            R.string.notification_update_init_failed,
-            R.drawable.ic_notifications,
-            getString(messageId),
-            emptyList()
-        )
-    }
-
     override fun onStartJob(params: JobParameters): Boolean {
         val prefs = Preferences(this)
         val isPeriodic = params.jobId == ID_PERIODIC
@@ -51,22 +37,33 @@ class UpdaterJob: JobService() {
         val action = UpdaterThread.Action.entries[actionIndex]
 
         var network = params.network
-        if (network == null) {
-            // This was reported to happen on the Android 15 beta.
-            Log.w(TAG, "Job parameters contain a null network instance")
+        if (action.requiresNetwork && network == null) {
+            // Ever since the Android 15 betas, Android sometimes invokes this job with a null
+            // Network instance, even though the network requirement is set and a sufficient network
+            // is available. We'll try to work around this by manually querying the active network.
+            // If the active network is insufficient, we'll just abort and wait for the next
+            // scheduled run.
 
-            if (prefs.requireUnmetered) {
-                Log.w(TAG, "Aborting due to require unmetered network option")
-                notifyAlert(R.string.notification_null_network_fallback)
-                return false
-            }
+            Log.w(TAG, "Job parameters contain a null network instance")
 
             val connectivityManager = getSystemService(ConnectivityManager::class.java)
             network = connectivityManager.activeNetwork
             if (network == null) {
-                Log.e(TAG, "Aborting due to active network also being null")
-                notifyAlert(R.string.notification_null_network_unavailable)
+                Log.w(TAG, "Aborting due to active network also being null")
                 return false
+            }
+
+            if (prefs.requireUnmetered) {
+                val capabilities = connectivityManager.getNetworkCapabilities(network)
+                if (capabilities == null) {
+                    Log.w(TAG, "Aborting due to the network capabilities being null for: $network")
+                    return false
+                }
+
+                if (!capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_NOT_METERED)) {
+                    Log.w(TAG, "Aborting due to active network being metered: $capabilities")
+                    return false
+                }
             }
         }
 
