@@ -13,6 +13,8 @@
 * Update all dependencies ([PR #105])
 * Only apply the unmetered network and battery level restrictions to the actual OTA installation, not the update check ([Issue #104], [PR #106])
   * This also fixes the post-reboot OTA cleanup monitoring job and the revert update job so that they don't wait for a network connection or sufficient battery before running
+* Improve workaround for the Android 15 bug where the periodic update check job is provided with a null `Network` even when a valid network is available ([PR #107])
+  * Custota will no longer show the annoying notification about the bug when it is encountered
 
 ### Version 5.2
 
@@ -263,3 +265,4 @@ Changes:
 [PR #102]: https://github.com/chenxiaolong/Custota/pull/102
 [PR #105]: https://github.com/chenxiaolong/Custota/pull/105
 [PR #106]: https://github.com/chenxiaolong/Custota/pull/106
+[PR #107]: https://github.com/chenxiaolong/Custota/pull/107
