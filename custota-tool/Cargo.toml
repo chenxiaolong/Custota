@@ -21,6 +21,7 @@ serde = { version = "1.0.188", features = ["derive"] }
 serde_json = "1.0.105"
 serde_repr = "0.1.19"
 sha2 = { version = "0.10.7", features = ["std"] }
+tracing = "0.1.41"
 x509-cert = "0.2.4"
 
 [dependencies.avbroot]

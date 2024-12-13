@@ -20,6 +20,7 @@ use std::{
 
 use anyhow::{anyhow, bail, Context, Result};
 use avbroot::{
+    cli::args::LogFormat,
     crypto::{self, PassphraseSource, RsaSigningKey},
     format::{ota, payload::PayloadHeader},
     protobuf::build::tools::releasetools::ota_metadata::OtaType,
@@ -44,6 +45,7 @@ use rsa::{
 use serde::{Deserialize, Serialize};
 use serde_repr::{Deserialize_repr, Serialize_repr};
 use sha2::{Sha256, Sha512};
+use tracing::{info, warn, Level};
 use x509_cert::{
     der::{asn1::OctetStringRef, Any, Decode, Encode, Tag},
     spki::AlgorithmIdentifierOwned,
@@ -243,6 +245,14 @@ enum Command {
 struct Cli {
     #[command(subcommand)]
     command: Command,
+
+    /// Lowest log message severity to output.
+    #[arg(long, global = true, value_name = "LEVEL", default_value_t = Level::INFO)]
+    log_level: Level,
+
+    /// Output format for log messages.
+    #[arg(long, global = true, value_name = "FORMAT", default_value_t)]
+    log_format: LogFormat,
 }
 
 /// Compute the SHA256 digest of a section of a file.
@@ -392,7 +402,7 @@ fn get_cms_inline(ci: &ContentInfo, cert: Option<&Certificate>) -> Result<Vec<u8
     if let Some(cert) = cert {
         verify_cms_signature(&signed_data, econtent_type, econtent_data.as_bytes(), cert)?;
     } else {
-        eprintln!("Skipping signature verification");
+        warn!("Skipping signature verification");
     }
 
     Ok(econtent_data.as_bytes().to_vec())
@@ -446,7 +456,7 @@ fn compute_vbmeta_digest(
     header: &PayloadHeader,
     cancel_signal: &AtomicBool,
 ) -> Result<[u8; 32]> {
-    println!("Computing vbmeta digest...");
+    info!("Computing vbmeta digest...");
 
     let authority = ambient_authority();
     let temp_dir = TempDir::new(authority).context("Failed to create temporary directory")?;
@@ -537,7 +547,7 @@ fn subcommand_gen_csig(args: &GenerateCsig, cancel_signal: &AtomicBool) -> Resul
         .with_context(|| anyhow!("Failed to open for reading: {:?}", args.input))?;
     let mut reader = BufReader::new(file);
 
-    println!("Verifying OTA signature...");
+    info!("Verifying OTA signature...");
     let embedded_cert = ota::verify_ota(&mut reader, cancel_signal)?;
 
     let (metadata, ota_cert, header, _) = ota::parse_zip_ota_info(&mut reader)
@@ -581,9 +591,9 @@ fn subcommand_gen_csig(args: &GenerateCsig, cancel_signal: &AtomicBool) -> Resul
         .first()
         .ok_or_else(|| anyhow!("Postconditions do not list a fingerprint"))?;
 
-    println!("Device name: {device_name}");
-    println!("Fingerprint: {fingerprint}");
-    println!("Security patch: {}", postcondition.security_patch_level);
+    info!("Device name: {device_name}");
+    info!("Fingerprint: {fingerprint}");
+    info!("Security patch: {}", postcondition.security_patch_level);
 
     let pfs_raw = metadata
         .property_files
@@ -632,7 +642,7 @@ fn subcommand_gen_csig(args: &GenerateCsig, cancel_signal: &AtomicBool) -> Resul
                 cancel_signal,
             )?;
 
-            println!("vbmeta digest: {}", hex::encode(digest));
+            info!("vbmeta digest: {}", hex::encode(digest));
 
             Some(VbmetaDigest(digest))
         }
@@ -664,7 +674,7 @@ fn subcommand_gen_csig(args: &GenerateCsig, cancel_signal: &AtomicBool) -> Resul
     fs::write(output.as_ref(), csig_signature_der)
         .with_context(|| anyhow!("Failed to create file: {output:?}"))?;
 
-    println!("Wrote: {output:?}");
+    info!("Wrote: {output:?}");
 
     Ok(())
 }
@@ -713,9 +723,9 @@ fn subcommand_gen_update_info(args: &GenerateUpdateInfo) -> Result<()> {
     serde_json::to_writer_pretty(writer, &update_info)?;
 
     if created {
-        println!("Created: {:?}", args.file);
+        info!("Created: {:?}", args.file);
     } else {
-        println!("Updated: {:?}", args.file);
+        info!("Updated: {:?}", args.file);
     }
 
     Ok(())
@@ -744,7 +754,7 @@ fn subcommand_gen_cert_module(args: &GenerateCertModule) -> Result<()> {
         let subject_hash = u32::from_le_bytes(subject_md5.0[0..4].try_into().unwrap());
 
         if !seen.insert(subject_hash) {
-            eprintln!("Skipping duplicate cert: {path:?}");
+            warn!("Skipping duplicate cert: {path:?}");
             continue;
         }
 
@@ -814,6 +824,8 @@ fn main() -> Result<()> {
     }
 
     let args = Cli::parse();
+
+    avbroot::cli::args::init_logging(args.log_level, args.log_format);
 
     match args.command {
         Command::ShowCsig(args) => subcommand_show_csig(&args),
