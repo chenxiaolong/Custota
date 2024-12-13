@@ -9,6 +9,8 @@
 
 ### Unreleased
 
+* Add new `custota show-csig` subcommand for showing the contents of csig files ([PR #109])
+
 ### Version 5.3
 
 * Rebase icon off latest material system update icon ([PR #102])
@@ -268,3 +270,4 @@ Changes:
 [PR #105]: https://github.com/chenxiaolong/Custota/pull/105
 [PR #106]: https://github.com/chenxiaolong/Custota/pull/106
 [PR #107]: https://github.com/chenxiaolong/Custota/pull/107
+[PR #109]: https://github.com/chenxiaolong/Custota/pull/109
