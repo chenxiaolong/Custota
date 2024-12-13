@@ -242,12 +242,16 @@ Although it's never possible for a `payload.bin` signed by an untrusted key to b
 The actual csig file is a DER-encoded CMS signature containing the JSON structure above in its encapsulated data. To display the encapsulated data, run:
 
 ```bash
+custota-tool show-csig -i <csig file> -r
+# Or with openssl:
 openssl cms -verify -in <csig file> -inform DER -binary -noverify
 ```
 
 To verify the csig's signature against a specific certificate, run:
 
 ```bash
+custota-tool show-csig -i <csig file> -c <cert file> -r
+# Or with openssl:
 openssl cms -verify -in <csig file> -inform DER -binary -CAfile <cert file>
 ```
 

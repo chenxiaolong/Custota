@@ -7,7 +7,7 @@ use std::{
     borrow::Cow,
     collections::{BTreeSet, HashMap, HashSet},
     ffi::{OsStr, OsString},
-    fmt::Write as _,
+    fmt::{self, Write as _},
     fs::{self, File, OpenOptions},
     io::{self, BufReader, BufWriter, Read, Seek, SeekFrom, Write},
     path::{Path, PathBuf},
@@ -32,15 +32,20 @@ use cms::{
     builder::{SignedDataBuilder, SignerInfoBuilder},
     cert::{CertificateChoices, IssuerAndSerialNumber},
     content_info::ContentInfo,
-    signed_data::{EncapsulatedContentInfo, SignerIdentifier},
+    signed_data::{EncapsulatedContentInfo, SignedData, SignerIdentifier},
 };
+use const_oid::ObjectIdentifier;
 use ring::digest::Digest;
-use rsa::{pkcs1v15::SigningKey, RsaPrivateKey};
+use rsa::{
+    pkcs1v15::{Signature, SigningKey, VerifyingKey},
+    signature::Verifier,
+    RsaPrivateKey,
+};
 use serde::{Deserialize, Serialize};
 use serde_repr::{Deserialize_repr, Serialize_repr};
-use sha2::Sha256;
+use sha2::{Sha256, Sha512};
 use x509_cert::{
-    der::{asn1::OctetStringRef, Any, Encode, Tag},
+    der::{asn1::OctetStringRef, Any, Decode, Encode, Tag},
     spki::AlgorithmIdentifierOwned,
     Certificate,
 };
@@ -56,8 +61,16 @@ struct PropertyFile {
     digest: Option<String>,
 }
 
-#[derive(Clone, Debug, Deserialize, Serialize)]
+#[derive(Clone, Deserialize, Serialize)]
 struct VbmetaDigest(#[serde(with = "hex")] [u8; 32]);
+
+impl fmt::Debug for VbmetaDigest {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_tuple("VbmetaDigest")
+            .field(&hex::encode(self.0))
+            .finish()
+    }
+}
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
 struct CsigInfo {
@@ -108,6 +121,24 @@ enum CsigVersion {
     Version1 = 1,
     #[value(name = "2")]
     Version2 = 2,
+}
+
+/// View the contents of a csig file.
+#[derive(Debug, Parser)]
+struct ShowCsig {
+    /// Input path for csig file.
+    #[arg(short, long, value_parser)]
+    input: PathBuf,
+
+    /// Path to certificate for verifying csig.
+    #[arg(short, long, value_parser)]
+    cert: Option<PathBuf>,
+
+    /// Show the raw JSON contents of csig data.
+    ///
+    /// This is useful when programmatically parsing the output.
+    #[arg(short, long)]
+    raw: bool,
 }
 
 /// Generate a csig file for an OTA zip.
@@ -202,6 +233,7 @@ struct GenerateCertModule {
 #[allow(clippy::enum_variant_names)]
 #[derive(Debug, Subcommand)]
 enum Command {
+    ShowCsig(ShowCsig),
     GenCsig(GenerateCsig),
     GenUpdateInfo(GenerateUpdateInfo),
     GenCertModule(GenerateCertModule),
@@ -230,6 +262,140 @@ fn hash_section(
     let (_, context) = hashing_reader.finish();
 
     Ok(context.finish())
+}
+
+/// Verify the CMS signature against the specified data. Only SHA256 and SHA512
+/// are supported for both the signed attributes digest and the content digest.
+fn verify_cms_signature(
+    signed_data: &SignedData,
+    econtent_type: ObjectIdentifier,
+    econtent_data: &[u8],
+    cert: &Certificate,
+) -> Result<()> {
+    let public_key = crypto::get_public_key(cert)?;
+
+    for signer_info in signed_data.signer_infos.0.iter() {
+        let signature = Signature::try_from(signer_info.signature.as_bytes())?;
+        let Some(signed_attrs) = &signer_info.signed_attrs else {
+            continue;
+        };
+        let signed_attrs_der = signed_attrs.to_der()?;
+
+        let (ring_algo, result) = match signer_info.digest_alg.oid {
+            const_oid::db::rfc5912::ID_SHA_256 => (
+                &ring::digest::SHA256,
+                VerifyingKey::<Sha256>::new(public_key.clone())
+                    .verify(&signed_attrs_der, &signature),
+            ),
+            const_oid::db::rfc5912::ID_SHA_512 => (
+                &ring::digest::SHA512,
+                VerifyingKey::<Sha512>::new(public_key.clone())
+                    .verify(&signed_attrs_der, &signature),
+            ),
+            _ => continue,
+        };
+
+        if result.is_err() {
+            continue;
+        }
+
+        // At this point, the signature of the signed attributes is verified and
+        // we know we're looking at the correct signer info. All further issues
+        // are treated as errors.
+
+        let econtent_type_attr = signed_attrs
+            .iter()
+            .find(|a| a.oid == const_oid::db::rfc5911::ID_CONTENT_TYPE)
+            .ok_or_else(|| {
+                anyhow!(
+                    "Signed attribute not found: {}",
+                    const_oid::db::rfc5911::ID_CONTENT_TYPE,
+                )
+            })?;
+
+        if econtent_type_attr.values.len() != 1 {
+            bail!("Expected exactly one signed attribute value: {econtent_type_attr:?}");
+        }
+
+        let econtent_type_expected = econtent_type_attr
+            .values
+            .get(0)
+            .unwrap()
+            .decode_as::<ObjectIdentifier>()?;
+
+        if econtent_type != econtent_type_expected {
+            bail!("Content type does not match signed attribute: {econtent_type} != {econtent_type_expected}");
+        }
+
+        let econtent_digest_attr = signed_attrs
+            .iter()
+            .find(|a| a.oid == const_oid::db::rfc5911::ID_MESSAGE_DIGEST)
+            .ok_or_else(|| {
+                anyhow!(
+                    "Signed attribute not found: {}",
+                    const_oid::db::rfc5911::ID_MESSAGE_DIGEST,
+                )
+            })?;
+
+        if econtent_digest_attr.values.len() != 1 {
+            bail!("Expected exactly one signed attribute value: {econtent_digest_attr:?}");
+        }
+
+        let econtent_digest_expected = econtent_digest_attr
+            .values
+            .get(0)
+            .unwrap()
+            .decode_as::<OctetStringRef>()?;
+
+        let econtent_digest = ring::digest::digest(ring_algo, econtent_data);
+
+        if econtent_digest.as_ref() != econtent_digest_expected.as_bytes() {
+            bail!(
+                "Content digest does not match signed attribute: {} != {}",
+                hex::encode(econtent_digest),
+                hex::encode(econtent_digest_expected),
+            );
+        }
+
+        return Ok(());
+    }
+
+    bail!("None of the CMS signatures match the specified certificate");
+}
+
+/// Return the encapsulated content in a CMS signature, optionally verifying the
+/// signature first.
+fn get_cms_inline(ci: &ContentInfo, cert: Option<&Certificate>) -> Result<Vec<u8>> {
+    if ci.content_type != const_oid::db::rfc5911::ID_SIGNED_DATA {
+        bail!(
+            "Invalid content type: {} != {}",
+            ci.content_type,
+            const_oid::db::rfc5911::ID_SIGNED_DATA,
+        );
+    }
+
+    let signed_data = ci.content.decode_as::<SignedData>()?;
+
+    let econtent_type = signed_data.encap_content_info.econtent_type;
+    if econtent_type != const_oid::db::rfc5911::ID_DATA {
+        bail!(
+            "Invalid encapsulated content type: {econtent_type} != {}",
+            const_oid::db::rfc5911::ID_DATA,
+        );
+    }
+
+    let Some(econtent) = &signed_data.encap_content_info.econtent else {
+        bail!("CMS signature has no encapsulated content");
+    };
+    let econtent_data = econtent.decode_as::<OctetStringRef>()?;
+
+    if let Some(cert) = cert {
+        verify_cms_signature(&signed_data, econtent_type, econtent_data.as_bytes(), cert)?;
+    } else {
+        eprintln!("Skipping signature verification");
+    }
+
+    Ok(econtent_data.as_bytes().to_vec())
 }
 
 /// Create a CMS signature with the specified encapsulated content.
@@ -303,6 +469,33 @@ fn compute_vbmeta_digest(
     )?;
 
     avbroot::cli::avb::compute_digest(&temp_dir, "vbmeta", cancel_signal)
+}
+
+fn subcommand_show_csig(args: &ShowCsig) -> Result<()> {
+    let signing_cert = args
+        .cert
+        .as_ref()
+        .map(|p| {
+            crypto::read_pem_cert_file(p)
+                .with_context(|| anyhow!("Failed to load certificate: {p:?}"))
+        })
+        .transpose()?;
+
+    let csig_raw =
+        fs::read(&args.input).with_context(|| format!("Failed to read file: {:?}", args.input))?;
+    let csig_ci = ContentInfo::from_der(&csig_raw)
+        .with_context(|| format!("Failed to parse CMS data: {:?}", args.input))?;
+
+    let csig_json = get_cms_inline(&csig_ci, signing_cert.as_ref())?;
+
+    if args.raw {
+        io::stdout().write_all(&csig_json)?;
+    } else {
+        let csig: CsigInfo = serde_json::from_slice(&csig_json)?;
+        println!("{csig:#?}");
+    }
+
+    Ok(())
 }
 
 fn subcommand_gen_csig(args: &GenerateCsig, cancel_signal: &AtomicBool) -> Result<()> {
@@ -623,6 +816,7 @@ fn main() -> Result<()> {
     let args = Cli::parse();
 
     match args.command {
+        Command::ShowCsig(args) => subcommand_show_csig(&args),
         Command::GenCsig(args) => subcommand_gen_csig(&args, &cancel_signal),
         Command::GenUpdateInfo(args) => subcommand_gen_update_info(&args),
         Command::GenCertModule(args) => subcommand_gen_cert_module(&args),
