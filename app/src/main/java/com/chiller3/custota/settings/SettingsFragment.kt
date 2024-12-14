@@ -60,7 +60,9 @@ class SettingsFragment : PreferenceFragmentCompat(), Preference.OnPreferenceClic
     private lateinit var prefCheckForUpdates: Preference
     private lateinit var prefOtaSource: LongClickablePreference
     private lateinit var prefAndroidVersion: Preference
+    private lateinit var prefSecurityPatchLevel: Preference
     private lateinit var prefFingerprint: Preference
+    private lateinit var prefVbmetaDigest: Preference
     private lateinit var prefBootSlot: Preference
     private lateinit var prefBootloaderStatus: Preference
     private lateinit var prefNoCertificates: Preference
@@ -137,8 +139,14 @@ class SettingsFragment : PreferenceFragmentCompat(), Preference.OnPreferenceClic
         prefAndroidVersion = findPreference(Preferences.PREF_ANDROID_VERSION)!!
         prefAndroidVersion.summary = Build.VERSION.RELEASE
 
+        prefSecurityPatchLevel = findPreference(Preferences.PREF_SECURITY_PATCH_LEVEL)!!
+        prefSecurityPatchLevel.summary = SystemPropertiesProxy.get(UpdaterThread.PROP_SECURITY_PATCH)
+
         prefFingerprint = findPreference(Preferences.PREF_FINGERPRINT)!!
         prefFingerprint.summary = Build.FINGERPRINT
+
+        prefVbmetaDigest = findPreference(Preferences.PREF_VBMETA_DIGEST)!!
+        prefVbmetaDigest.summary = SystemPropertiesProxy.get(UpdaterThread.PROP_VBMETA_DIGEST)
 
         prefBootSlot = findPreference(Preferences.PREF_BOOT_SLOT)!!
         prefBootSlot.summary = SystemPropertiesProxy.get("ro.boot.slot_suffix")

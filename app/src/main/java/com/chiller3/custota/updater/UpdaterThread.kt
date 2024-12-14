@@ -907,8 +907,8 @@ class UpdaterThread(
 
         private const val TIMEOUT_MS = 30_000
 
-        private const val PROP_SECURITY_PATCH = "ro.build.version.security_patch"
-        private const val PROP_VBMETA_DIGEST = "ro.boot.vbmeta.digest"
+        const val PROP_SECURITY_PATCH = "ro.build.version.security_patch"
+        const val PROP_VBMETA_DIGEST = "ro.boot.vbmeta.digest"
 
         private val jsonFormat = Json { ignoreUnknownKeys = true }
 

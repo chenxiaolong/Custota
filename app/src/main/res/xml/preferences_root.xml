@@ -73,9 +73,21 @@
             app:iconSpaceReserved="false" />
 
         <Preference
+            app:key="security_patch_level"
+            app:persistent="false"
+            app:title="@string/pref_security_patch_level_name"
+            app:iconSpaceReserved="false" />
+
+        <Preference
             app:key="fingerprint"
             app:persistent="false"
             app:title="@string/pref_fingerprint_name"
+            app:iconSpaceReserved="false" />
+
+        <Preference
+            app:key="vbmeta_digest"
+            app:persistent="false"
+            app:title="@string/pref_vbmeta_digest_name"
             app:iconSpaceReserved="false" />
 
         <Preference

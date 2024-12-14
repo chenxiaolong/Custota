@@ -36,7 +36,9 @@
 
     <!-- OS information preferences -->
     <string name="pref_android_version_name">Android version</string>
+    <string name="pref_security_patch_level_name">Security patch level</string>
     <string name="pref_fingerprint_name">Fingerprint</string>
+    <string name="pref_vbmeta_digest_name">vbmeta digest</string>
     <string name="pref_boot_slot_name">Boot slot</string>
     <string name="pref_bootloader_status_name">Bootloader status</string>
     <string name="pref_bootloader_status_unknown">Unknown</string>
