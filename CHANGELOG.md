@@ -13,9 +13,9 @@
   * Note that generating an incremental OTA is out of scope for Custota (and avbroot). They'll have to be generated using other tools. ([avbroot-inc-ota](https://github.com/chenxiaolong/avbroot-inc-ota) is one such tool, though it is tedious to build and requires compiling AOSP from source.)
 * Add new `custota show-csig` subcommand for showing the contents of csig files ([PR #109])
 * Switch to using a proper logging library in `custota-tool` ([PR #110])
-* Update dependencies ([PR #111])
 * Add OS security patch level and vbmeta digest to the list of OS information presented in the UI ([PR #113])
 * Cancel periodic background job entirely when automatic update checks are disabled to avoid waking up the device for a no-op ([PR #114])
+* Update dependencies ([PR #111], [PR #115])
 
 ### Version 5.3
 
@@ -281,3 +281,5 @@ Changes:
 [PR #111]: https://github.com/chenxiaolong/Custota/pull/111
 [PR #112]: https://github.com/chenxiaolong/Custota/pull/112
 [PR #113]: https://github.com/chenxiaolong/Custota/pull/113
+[PR #114]: https://github.com/chenxiaolong/Custota/pull/114
+[PR #115]: https://github.com/chenxiaolong/Custota/pull/115
