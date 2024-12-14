@@ -7,7 +7,7 @@
     to update the actual links at the bottom of the file.
 -->
 
-### Unreleased
+### Version 5.4
 
 * Add support for incremental OTAs ([PR #112])
   * Note that generating an incremental OTA is out of scope for Custota (and avbroot). They'll have to be generated using other tools. ([avbroot-inc-ota](https://github.com/chenxiaolong/avbroot-inc-ota) is one such tool, though it is tedious to build and requires compiling AOSP from source.)
