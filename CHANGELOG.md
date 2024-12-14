@@ -14,6 +14,7 @@
 * Add new `custota show-csig` subcommand for showing the contents of csig files ([PR #109])
 * Switch to using a proper logging library in `custota-tool` ([PR #110])
 * Update dependencies ([PR #111])
+* Add OS security patch level and vbmeta digest to the list of OS information presented in the UI ([PR #113])
 
 ### Version 5.3
 
@@ -278,3 +279,4 @@ Changes:
 [PR #110]: https://github.com/chenxiaolong/Custota/pull/110
 [PR #111]: https://github.com/chenxiaolong/Custota/pull/111
 [PR #112]: https://github.com/chenxiaolong/Custota/pull/112
+[PR #113]: https://github.com/chenxiaolong/Custota/pull/113
