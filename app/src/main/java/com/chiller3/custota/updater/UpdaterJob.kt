@@ -22,15 +22,10 @@ class UpdaterJob: JobService() {
         val prefs = Preferences(this)
         val isPeriodic = params.jobId == ID_PERIODIC
 
-        if (isPeriodic) {
-            if (!prefs.automaticCheck) {
-                Log.i(TAG, "Automatic update checks are disabled")
-                return false
-            } else if (skipNextRun) {
-                Log.i(TAG, "Skipped this run of the periodic job")
-                skipNextRun = false
-                return false
-            }
+        if (isPeriodic && skipNextRun) {
+            Log.i(TAG, "Skipped this run of the periodic job")
+            skipNextRun = false
+            return false
         }
 
         val actionIndex = params.extras.getInt(EXTRA_ACTION, -1)
@@ -159,9 +154,7 @@ class UpdaterJob: JobService() {
             append("}")
         }
 
-        private fun scheduleIfUnchanged(context: Context, jobInfo: JobInfo) {
-            val jobScheduler = context.getSystemService(JobScheduler::class.java)
-
+        private fun scheduleIfUnchanged(jobScheduler: JobScheduler, jobInfo: JobInfo) {
             val oldJobInfo = jobScheduler.getPendingJob(jobInfo.id)
 
             // JobInfo.equals() is unreliable (and the comments in its implementation say so), so
@@ -188,12 +181,14 @@ class UpdaterJob: JobService() {
         }
 
         fun scheduleImmediate(context: Context, action: UpdaterThread.Action) {
+            val jobScheduler = context.getSystemService(JobScheduler::class.java)
             val jobInfo = createJobBuilder(context, ID_IMMEDIATE, action).build()
 
-            scheduleIfUnchanged(context, jobInfo)
+            scheduleIfUnchanged(jobScheduler, jobInfo)
         }
 
         fun schedulePeriodic(context: Context, skipFirstRun: Boolean) {
+            val jobScheduler = context.getSystemService(JobScheduler::class.java)
             val prefs = Preferences(context)
 
             val action = if (prefs.automaticInstall) {
@@ -207,9 +202,15 @@ class UpdaterJob: JobService() {
                 .setPeriodic(PERIODIC_INTERVAL_MS)
                 .build()
 
+            if (!prefs.automaticCheck) {
+                Log.d(TAG, "Cancelling job: ${jobInfo.toLongString()}")
+                jobScheduler.cancel(ID_PERIODIC)
+                return
+            }
+
             skipNextRun = skipFirstRun
 
-            scheduleIfUnchanged(context, jobInfo)
+            scheduleIfUnchanged(jobScheduler, jobInfo)
         }
     }
 }
