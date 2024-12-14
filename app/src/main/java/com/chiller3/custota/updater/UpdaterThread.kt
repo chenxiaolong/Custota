@@ -513,9 +513,16 @@ class UpdaterThread(
             throw IOException("Failed to download update info", e)
         }
 
-        val otaUri = resolveUri(updateInfoUri, updateInfo.full.locationOta, false)
+        val vbmetaDigest = SystemPropertiesProxy.get(PROP_VBMETA_DIGEST)
+        Log.d(TAG, "Current vbmeta digest: $vbmetaDigest")
+
+        val locationInfo = updateInfo.incremental[vbmetaDigest] ?: updateInfo.full
+        val isIncremental = locationInfo !== updateInfo.full
+        Log.d(TAG, "OTA is incremental: $isIncremental")
+
+        val otaUri = resolveUri(updateInfoUri, locationInfo.locationOta, false)
         Log.d(TAG, "OTA URI: $otaUri")
-        val csigUri = resolveUri(updateInfoUri, updateInfo.full.locationCsig, false)
+        val csigUri = resolveUri(updateInfoUri, locationInfo.locationCsig, false)
         Log.d(TAG, "csig URI: $csigUri")
 
         val csigInfo = downloadAndCheckCsig(csigUri)
@@ -527,15 +534,12 @@ class UpdaterThread(
             throw ValidationException("Metadata postcondition lists multiple fingerprints")
         }
         val fingerprint = metadata.postcondition.getBuild(0)
-        var updateAvailable = fingerprint != Build.FINGERPRINT
+        var updateAvailable = isIncremental || fingerprint != Build.FINGERPRINT
 
         // We allow "upgrading" to the same version if the vbmeta digest differs. This happens, for
         // example, if a newer version of Magisk was used when patching an OTA with the same OS
         // version as what is currently running.
         if (!updateAvailable && csigInfo.vbmetaDigest != null) {
-            val vbmetaDigest = SystemPropertiesProxy.get(PROP_VBMETA_DIGEST)
-
-            Log.d(TAG, "Current vbmeta digest: $vbmetaDigest")
             Log.d(TAG, "OTA vbmeta digest: ${csigInfo.vbmetaDigest}")
             updateAvailable = csigInfo.vbmetaDigest != vbmetaDigest
         }
@@ -714,6 +718,12 @@ class UpdaterThread(
                         return
                     }
 
+                    // We immediately switch to the update state here instead of waiting until
+                    // update_engine begins installation. For incremental OTAs, the payload metadata
+                    // check for verifying source partition digests can take a while and the status
+                    // should not be "checking for updates".
+                    listener.onUpdateProgress(this, ProgressType.UPDATE, 0, 0)
+
                     startInstallation(
                         checkUpdateResult.otaUri,
                         checkUpdateResult.csigInfo,
@@ -788,9 +798,7 @@ class UpdaterThread(
         val vbmetaDigest: String? = null,
     ) {
         init {
-            if (version == 2) {
-                require(vbmetaDigest != null) { "vbmeta_digest must be present in csig version 2" }
-            } else {
+            if (version == 1) {
                 require(vbmetaDigest == null) { "vbmeta_digest is not supported in csig version 1" }
             }
         }

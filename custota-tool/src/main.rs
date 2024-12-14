@@ -36,6 +36,7 @@ use cms::{
     signed_data::{EncapsulatedContentInfo, SignedData, SignerIdentifier},
 };
 use const_oid::ObjectIdentifier;
+use hex::FromHexError;
 use ring::digest::Digest;
 use rsa::{
     pkcs1v15::{Signature, SigningKey, VerifyingKey},
@@ -71,6 +72,22 @@ impl fmt::Debug for VbmetaDigest {
         f.debug_tuple("VbmetaDigest")
             .field(&hex::encode(self.0))
             .finish()
+    }
+}
+
+impl fmt::Display for VbmetaDigest {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.write_str(&hex::encode(self.0))
+    }
+}
+
+impl FromStr for VbmetaDigest {
+    type Err = FromHexError;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        let mut result = Self([0u8; 32]);
+        hex::decode_to_slice(s, &mut result.0)?;
+        Ok(result)
     }
 }
 
@@ -216,6 +233,10 @@ struct GenerateUpdateInfo {
     /// Path to update info file.
     #[arg(short, long, value_parser)]
     file: PathBuf,
+
+    /// Source vbmeta digest for an incremental OTA.
+    #[arg(short, long, value_name = "SHA256", value_parser)]
+    inc_vbmeta_digest: Option<VbmetaDigest>,
 }
 
 /// Generate a module for system CA certificates.
@@ -634,17 +655,23 @@ fn subcommand_gen_csig(args: &GenerateCsig, cancel_signal: &AtomicBool) -> Resul
     let vbmeta_digest = match args.csig_version {
         CsigVersion::Version1 => None,
         CsigVersion::Version2 => {
-            let digest = compute_vbmeta_digest(
-                raw_reader,
-                pf_payload_offset,
-                pf_payload_size,
-                &header,
-                cancel_signal,
-            )?;
+            if header.is_full_ota() {
+                let digest = compute_vbmeta_digest(
+                    raw_reader,
+                    pf_payload_offset,
+                    pf_payload_size,
+                    &header,
+                    cancel_signal,
+                )?;
 
-            info!("vbmeta digest: {}", hex::encode(digest));
+                info!("vbmeta digest: {}", hex::encode(digest));
 
-            Some(VbmetaDigest(digest))
+                Some(VbmetaDigest(digest))
+            } else {
+                info!("Skipping vbmeta digest for incremental OTA");
+
+                None
+            }
         }
     };
 
@@ -711,10 +738,19 @@ fn subcommand_gen_update_info(args: &GenerateUpdateInfo) -> Result<()> {
     };
 
     update_info.version = 2;
-    update_info.full = Some(LocationInfo {
+
+    let location_info = LocationInfo {
         location_ota: args.location.0.clone(),
         location_csig: csig_location.into_owned(),
-    });
+    };
+
+    if let Some(vbmeta_digest) = &args.inc_vbmeta_digest {
+        update_info
+            .incremental
+            .insert(vbmeta_digest.to_string(), location_info);
+    } else {
+        update_info.full = Some(location_info);
+    }
 
     file.seek(SeekFrom::Start(0))?;
     file.set_len(0)?;

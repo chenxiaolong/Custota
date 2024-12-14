@@ -23,8 +23,6 @@ Custota is installed via a Magisk/KernelSU module so that it can run as a system
 
 * The device must support A/B updates.
   * This notably excludes all Samsung devices.
-* Incremental updates are not supported.
-  * It would take minimal work to add support, but there's currently no tooling to generate an incremental OTA from two full OTAs.
 * Pre-downloading an update to install later is not supported.
   * Custota runs `update_engine` in streaming mode, which downloads and installs OTAs at the same time.
 * The stock OS' Settings app on Pixel devices always launches the builtin OTA updater.
@@ -108,6 +106,49 @@ To generate the csig and update info files:
     By default, the csig location is set to `<location>.csig`. This can be changed with the `-c`/`--csig-location` option.
 
     If needed, this file can be easily edited by hand.
+
+### Incremental OTAs
+
+Generating incremental OTAs is out of scope for this project, but if they are generated some other way, Custota can use them. The process is a bit more tedious and requires the following two components:
+
+* The csig file for the full OTA for the source OS version
+* The incremental OTA that upgrades the source OS version to the target OS version
+
+With those components available, follow these steps to generate a csig file for the incremental OTA and update the update info JSON file accordingly:
+
+1. Generate a csig file for the incremental OTA. This is the same command as for generating csig files for full OTAs.
+
+    ```bash
+    custota-tool \
+        gen-csig \
+        --input <incremental OTA>.zip \
+        --key path/to/ota.key \
+        --cert path/to/ota.crt
+    ```
+
+2. Get the vbmeta digest of the source full OTA from its csig file:
+
+    ```bash
+    custota-tool show-csig -i <source full OTA>.zip.csig
+    ```
+
+    To do this programmatically, use `-r` and parse the JSON output. For example:
+
+    ```
+    custota-tool show-csig -i <source full OTA>.zip.csig -r | jq -r .vbmeta_digest
+    ```
+
+3. Take the existing update info JSON file (which should already have the full OTA location) and update it with the incremental OTA information. Replace `<source vbmeta digest>` with the digest from the previous step.
+
+    ```bash
+    ./custota-tool \
+        gen-update-info \
+        --file <device codename>.json \
+        --location <incremental OTA>.zip \
+        --inc-vbmeta-digest <source vbmeta digest>
+    ```
+
+When checking for updates, Custota will look for an incremental OTA matching the vbmeta digest of the currently running OS. If an incremental OTA does not exist, it will use the full OTA instead.
 
 ### HTTPS
 
@@ -231,6 +272,7 @@ The csig file contains a signed JSON message of the form:
         },
         // ...
     ],
+    // Only present for full OTAs, not incremental OTAs.
     "vbmeta_digest": "61a7175e883636fb6a4a18139746f7d3ffbf7f5a53e9a4ced6f560a9820ccdb4"
 }
 ```
@@ -262,9 +304,23 @@ The update info file is a JSON file of the form:
 ```jsonc
 {
     "version": 2,
+    // Location of the latest full OTA.
     "full": {
-        "location_ota": "ota.zip",
-        "location_csig": "ota.zip.csig"
+        "location_ota": "full_ota.zip",
+        "location_csig": "full_ota.zip.csig"
+    },
+    // Location of incremental OTAs. The key is the vbmeta digest of the
+    // currently installed OS that the incremental update applies to. When
+    // checking for updates, if none of these match, the full OTA will be used.
+    "incremental": {
+        "0123456701234567012345670123456701234567012345670123456701234567": {
+            "location_ota": "incremental_ota_1.zip",
+            "location_csig": "incremental_ota_1.zip.csig"
+        },
+        "89abcdef89abcdef89abcdef89abcdef89abcdef89abcdef89abcdef89abcdef": {
+            "location_ota": "incremental_ota_2.zip",
+            "location_csig": "incremental_ota_2.zip.csig"
+        }
     }
 }
 ```
