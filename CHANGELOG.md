@@ -10,6 +10,7 @@
 ### Unreleased
 
 * Add new `custota show-csig` subcommand for showing the contents of csig files ([PR #109])
+* Switch to using a proper logging library in `custota-tool` ([PR #110])
 * Update dependencies ([PR #111])
 
 ### Version 5.3
@@ -272,4 +273,5 @@ Changes:
 [PR #106]: https://github.com/chenxiaolong/Custota/pull/106
 [PR #107]: https://github.com/chenxiaolong/Custota/pull/107
 [PR #109]: https://github.com/chenxiaolong/Custota/pull/109
+[PR #110]: https://github.com/chenxiaolong/Custota/pull/110
 [PR #111]: https://github.com/chenxiaolong/Custota/pull/111
