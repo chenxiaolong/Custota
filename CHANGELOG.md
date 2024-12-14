@@ -15,6 +15,7 @@
 * Switch to using a proper logging library in `custota-tool` ([PR #110])
 * Update dependencies ([PR #111])
 * Add OS security patch level and vbmeta digest to the list of OS information presented in the UI ([PR #113])
+* Cancel periodic background job entirely when automatic update checks are disabled to avoid waking up the device for a no-op ([PR #114])
 
 ### Version 5.3
 
