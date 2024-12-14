@@ -9,6 +9,8 @@
 
 ### Unreleased
 
+* Add support for incremental OTAs ([PR #112])
+  * Note that generating an incremental OTA is out of scope for Custota (and avbroot). They'll have to be generated using other tools. ([avbroot-inc-ota](https://github.com/chenxiaolong/avbroot-inc-ota) is one such tool, though it is tedious to build and requires compiling AOSP from source.)
 * Add new `custota show-csig` subcommand for showing the contents of csig files ([PR #109])
 * Switch to using a proper logging library in `custota-tool` ([PR #110])
 * Update dependencies ([PR #111])
@@ -275,3 +277,4 @@ Changes:
 [PR #109]: https://github.com/chenxiaolong/Custota/pull/109
 [PR #110]: https://github.com/chenxiaolong/Custota/pull/110
 [PR #111]: https://github.com/chenxiaolong/Custota/pull/111
+[PR #112]: https://github.com/chenxiaolong/Custota/pull/112
