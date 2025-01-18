@@ -55,6 +55,16 @@ find /data/system/package_cache -name "${app_id}-*" -exec ls -ldZ {} \+
 
 run_cli_apk com.chiller3.custota.standalone.ClearPackageManagerCachesKt
 
+# On some devices, the UID for the app seems to get reassigned. If this happens,
+# nothing will clear out the old JobScheduler job and it still runs, despite it
+# not showing up in `dumpsys jobscheduler`. This can cause obscure crashes if
+# the old job launches UpdaterJob with unexpected parameters. Work around this
+# by forcibly deleting jobs with a matching package name, but invalid UID.
+
+header Clear bad JobScheduler data
+
+run_cli_apk com.chiller3.custota.standalone.ClearBadJobSchedulerDataKt
+
 # Bind mount the appropriate CA stores so that update_engine will use the
 # regular system CA store.
 
