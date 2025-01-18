@@ -11,6 +11,7 @@
 
 * Clear invalid JobScheduler XML files on boot ([Issue #116], [PR #117])
   * This is a workaround to prevent crashes if Android happens to reassign Custota's app UID.
+* Update dependencies ([PR #118])
 
 ### Version 5.4
 
@@ -290,3 +291,4 @@ Changes:
 [PR #114]: https://github.com/chenxiaolong/Custota/pull/114
 [PR #115]: https://github.com/chenxiaolong/Custota/pull/115
 [PR #117]: https://github.com/chenxiaolong/Custota/pull/117
+[PR #118]: https://github.com/chenxiaolong/Custota/pull/118
