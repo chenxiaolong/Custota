@@ -9,6 +9,9 @@
 
 ### Unreleased
 
+* Clear invalid JobScheduler XML files on boot ([Issue #116], [PR #117])
+  * This is a workaround to prevent crashes if Android happens to reassign Custota's app UID.
+
 ### Version 5.4
 
 * Add support for incremental OTAs ([PR #112])
@@ -213,6 +216,7 @@ Changes:
 [Issue #87]: https://github.com/chenxiaolong/Custota/issues/87
 [Issue #94]: https://github.com/chenxiaolong/Custota/issues/94
 [Issue #104]: https://github.com/chenxiaolong/Custota/issues/104
+[Issue #116]: https://github.com/chenxiaolong/Custota/issues/116
 [PR #1]: https://github.com/chenxiaolong/Custota/pull/1
 [PR #2]: https://github.com/chenxiaolong/Custota/pull/2
 [PR #6]: https://github.com/chenxiaolong/Custota/pull/6
@@ -285,3 +289,4 @@ Changes:
 [PR #113]: https://github.com/chenxiaolong/Custota/pull/113
 [PR #114]: https://github.com/chenxiaolong/Custota/pull/114
 [PR #115]: https://github.com/chenxiaolong/Custota/pull/115
+[PR #117]: https://github.com/chenxiaolong/Custota/pull/117
