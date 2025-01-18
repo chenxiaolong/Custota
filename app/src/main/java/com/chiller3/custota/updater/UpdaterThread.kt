@@ -228,7 +228,7 @@ class UpdaterThread(
             openUrl(URL(uri.toString())).inputStream
         }
 
-        val updateInfo: UpdateInfo = stream.use { jsonFormat.decodeFromStream(it) }
+        val updateInfo: UpdateInfo = stream.use { JSON_FORMAT.decodeFromStream(it) }
         Log.d(TAG, "Update info: $updateInfo")
 
         if (updateInfo.version != 2) {
@@ -387,7 +387,7 @@ class UpdaterThread(
         Log.d(TAG, "csig is signed by: $csigCert")
 
         val csigInfoRaw = String(csigCms.signedContent.content as ByteArray)
-        val csigInfo: CsigInfo = jsonFormat.decodeFromString(csigInfoRaw)
+        val csigInfo: CsigInfo = JSON_FORMAT.decodeFromString(csigInfoRaw)
         Log.d(TAG, "csig info: $csigInfo")
 
         // The only difference in version 2 is the introduction of the vbmeta_digest field.
@@ -910,7 +910,7 @@ class UpdaterThread(
         const val PROP_SECURITY_PATCH = "ro.build.version.security_patch"
         const val PROP_VBMETA_DIGEST = "ro.boot.vbmeta.digest"
 
-        private val jsonFormat = Json { ignoreUnknownKeys = true }
+        private val JSON_FORMAT = Json { ignoreUnknownKeys = true }
 
         /**
          * Get the OS security patch level.

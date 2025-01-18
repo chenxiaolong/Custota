@@ -838,8 +838,8 @@ fn subcommand_gen_cert_module(args: &GenerateCertModule) -> Result<()> {
 
     for (hash, cert) in certs {
         let name = format!("cacerts/{hash:08x}.0");
-        zip_writer.start_file(name, options)?;
-        crypto::write_pem_cert(&mut zip_writer, &cert)?;
+        zip_writer.start_file(&name, options)?;
+        crypto::write_pem_cert(Path::new(&name), &mut zip_writer, &cert)?;
     }
 
     zip_writer.finish()?.flush()?;
