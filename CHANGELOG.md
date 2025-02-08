@@ -9,6 +9,8 @@
 
 ### Unreleased
 
+* Don't require network access for background jobs if the OTA installation source is a local directory ([PR #120])
+
 ### Version 5.5
 
 * Clear invalid JobScheduler XML files on boot ([Issue #116], [PR #117])
@@ -294,3 +296,4 @@ Changes:
 [PR #115]: https://github.com/chenxiaolong/Custota/pull/115
 [PR #117]: https://github.com/chenxiaolong/Custota/pull/117
 [PR #118]: https://github.com/chenxiaolong/Custota/pull/118
+[PR #120]: https://github.com/chenxiaolong/Custota/pull/120
