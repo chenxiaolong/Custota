@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: 2023-2024 Andrew Gunnerson
+ * SPDX-FileCopyrightText: 2023-2025 Andrew Gunnerson
  * SPDX-License-Identifier: GPL-3.0-only
  */
 
@@ -587,7 +587,9 @@ class UpdaterThread(
         Log.i(TAG, "Passing payload information to update_engine")
 
         val engineProperties = HashMap(payloadProperties).apply {
-            put("NETWORK_ID", network!!.networkHandle.toString())
+            network?.networkHandle?.let {
+                put("NETWORK_ID", it.toString())
+            }
             put("USER_AGENT", USER_AGENT_UPDATE_ENGINE)
 
             if (authorization != null) {

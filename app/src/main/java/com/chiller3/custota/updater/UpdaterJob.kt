@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: 2023-2024 Andrew Gunnerson
+ * SPDX-FileCopyrightText: 2023-2025 Andrew Gunnerson
  * SPDX-License-Identifier: GPL-3.0-only
  */
 
@@ -16,6 +16,7 @@ import android.net.NetworkCapabilities
 import android.os.PersistableBundle
 import android.util.Log
 import com.chiller3.custota.Preferences
+import com.chiller3.custota.extension.isGuaranteedLocalFile
 
 class UpdaterJob: JobService() {
     override fun onStartJob(params: JobParameters): Boolean {
@@ -32,7 +33,7 @@ class UpdaterJob: JobService() {
         val action = UpdaterThread.Action.entries[actionIndex]
 
         var network = params.network
-        if (action.requiresNetwork && network == null) {
+        if (prefs.otaSource?.isGuaranteedLocalFile != true && action.requiresNetwork && network == null) {
             // Ever since the Android 15 betas, Android sometimes invokes this job with a null
             // Network instance, even though the network requirement is set and a sufficient network
             // is available. We'll try to work around this by manually querying the active network.
@@ -93,12 +94,13 @@ class UpdaterJob: JobService() {
         ): JobInfo.Builder {
             val prefs = Preferences(context)
 
-            val networkType = if (action.performsLargeDownloads && prefs.requireUnmetered) {
-                JobInfo.NETWORK_TYPE_UNMETERED
-            } else if (action.requiresNetwork) {
-                JobInfo.NETWORK_TYPE_ANY
-            } else {
-                JobInfo.NETWORK_TYPE_NONE
+            var networkType = JobInfo.NETWORK_TYPE_NONE
+            if (prefs.otaSource?.isGuaranteedLocalFile != true) {
+                if (action.performsLargeDownloads && prefs.requireUnmetered) {
+                    networkType = JobInfo.NETWORK_TYPE_UNMETERED
+                } else if (action.requiresNetwork) {
+                    networkType = JobInfo.NETWORK_TYPE_ANY
+                }
             }
 
             val requiresBatteryNotLow = action.usesSignificantBattery && prefs.requireBatteryNotLow

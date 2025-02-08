@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: 2022-2024 Andrew Gunnerson
+ * SPDX-FileCopyrightText: 2022-2025 Andrew Gunnerson
  * SPDX-License-Identifier: GPL-3.0-only
  * Based on BCR code.
  */
@@ -26,6 +26,7 @@ import androidx.lifecycle.repeatOnLifecycle
 import androidx.preference.Preference
 import androidx.preference.PreferenceCategory
 import androidx.preference.PreferenceFragmentCompat
+import androidx.preference.SwitchPreferenceCompat
 import androidx.preference.get
 import androidx.preference.size
 import androidx.recyclerview.widget.RecyclerView
@@ -35,6 +36,7 @@ import com.chiller3.custota.Preferences
 import com.chiller3.custota.R
 import com.chiller3.custota.dialog.OtaSourceDialogFragment
 import com.chiller3.custota.extension.formattedString
+import com.chiller3.custota.extension.isGuaranteedLocalFile
 import com.chiller3.custota.updater.OtaPaths
 import com.chiller3.custota.updater.UpdaterJob
 import com.chiller3.custota.updater.UpdaterThread
@@ -59,6 +61,7 @@ class SettingsFragment : PreferenceFragmentCompat(), Preference.OnPreferenceClic
     private lateinit var categoryDebug: PreferenceCategory
     private lateinit var prefCheckForUpdates: Preference
     private lateinit var prefOtaSource: LongClickablePreference
+    private lateinit var prefUnmeteredOnly: SwitchPreferenceCompat
     private lateinit var prefAndroidVersion: Preference
     private lateinit var prefSecurityPatchLevel: Preference
     private lateinit var prefFingerprint: Preference
@@ -135,6 +138,8 @@ class SettingsFragment : PreferenceFragmentCompat(), Preference.OnPreferenceClic
         prefOtaSource = findPreference(Preferences.PREF_OTA_SOURCE)!!
         prefOtaSource.onPreferenceClickListener = this
         prefOtaSource.onPreferenceLongClickListener = this
+
+        prefUnmeteredOnly = findPreference(Preferences.PREF_UNMETERED_ONLY)!!
 
         prefAndroidVersion = findPreference(Preferences.PREF_ANDROID_VERSION)!!
         prefAndroidVersion.summary = Build.VERSION.RELEASE
@@ -217,6 +222,8 @@ class SettingsFragment : PreferenceFragmentCompat(), Preference.OnPreferenceClic
     private fun refreshOtaSource() {
         prefOtaSource.summary = prefs.otaSource?.formattedString
             ?: getString(R.string.pref_ota_source_none)
+
+        prefUnmeteredOnly.isVisible = prefs.otaSource?.isGuaranteedLocalFile != true
     }
 
     private fun refreshVersion() {
@@ -349,6 +356,7 @@ class SettingsFragment : PreferenceFragmentCompat(), Preference.OnPreferenceClic
             Preferences.PREF_OTA_SOURCE -> {
                 refreshCheckForUpdates()
                 refreshOtaSource()
+                UpdaterJob.schedulePeriodic(requireContext(), true)
             }
             Preferences.PREF_AUTOMATIC_CHECK,
             Preferences.PREF_AUTOMATIC_INSTALL,

@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: 2022-2023 Andrew Gunnerson
+ * SPDX-FileCopyrightText: 2022-2025 Andrew Gunnerson
  * SPDX-License-Identifier: GPL-3.0-only
  * Based on BCR code.
  */
@@ -9,14 +9,20 @@ package com.chiller3.custota.extension
 import android.content.ContentResolver
 import android.net.Uri
 
-private const val DOCUMENTSUI_AUTHORITY = "com.android.externalstorage.documents"
+private const val EXTERNAL_STORAGE_AUTHORITY = "com.android.externalstorage.documents"
+
+private val LOCAL_PROVIDERS = arrayOf(
+    EXTERNAL_STORAGE_AUTHORITY,
+    "com.android.providers.downloads.documents",
+    "com.android.providers.media.documents",
+)
 
 val Uri.formattedString: String
     get() = when (scheme) {
         ContentResolver.SCHEME_FILE -> path!!
         ContentResolver.SCHEME_CONTENT -> {
             val prefix = when (authority) {
-                DOCUMENTSUI_AUTHORITY -> ""
+                EXTERNAL_STORAGE_AUTHORITY -> ""
                 // Include the authority to reduce ambiguity when this isn't a SAF URI provided by
                 // Android's local filesystem document provider
                 else -> "[$authority] "
@@ -35,3 +41,6 @@ val Uri.formattedString: String
         }
         else -> toString()
     }
+
+val Uri.isGuaranteedLocalFile: Boolean
+    get() = scheme == ContentResolver.SCHEME_CONTENT && LOCAL_PROVIDERS.contains(authority)
