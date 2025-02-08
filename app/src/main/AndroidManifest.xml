@@ -38,6 +38,12 @@
         android:networkSecurityConfig="@xml/network_security_config"
         tools:ignore="UnusedAttribute">
 
+        <activity
+            android:name=".updater.UpdaterLauncherActivity"
+            android:exported="false"
+            android:taskAffinity=""
+            android:theme="@style/android:Theme.NoDisplay" />
+
         <service
             android:name=".updater.UpdaterJob"
             android:exported="false"
