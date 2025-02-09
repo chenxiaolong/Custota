@@ -11,6 +11,7 @@
 
 * Don't require network access for background jobs if the OTA installation source is a local directory ([PR #120])
 * Add launcher shortcut to quickly check for updates ([PR #121])
+* Update dependencies ([PR #122])
 
 ### Version 5.5
 
@@ -299,3 +300,4 @@ Changes:
 [PR #118]: https://github.com/chenxiaolong/Custota/pull/118
 [PR #120]: https://github.com/chenxiaolong/Custota/pull/120
 [PR #121]: https://github.com/chenxiaolong/Custota/pull/121
+[PR #122]: https://github.com/chenxiaolong/Custota/pull/122
