@@ -479,6 +479,15 @@ class UpdaterThread(
         }
     }
 
+    /** Download dm-verity care map from [OtaPaths.OTA_PACKAGE_DIR]. */
+    private fun deleteCareMap(): Boolean {
+        val file = File(OtaPaths.OTA_PACKAGE_DIR, OtaPaths.CARE_MAP_NAME)
+
+        return file.delete().also {
+            Log.d(TAG, "Delete $file result: $it")
+        }
+    }
+
     /**
      * Download the dm-verity care map to [OtaPaths.OTA_PACKAGE_DIR].
      *
@@ -487,6 +496,10 @@ class UpdaterThread(
     @SuppressLint("SetWorldReadable")
     private fun downloadCareMap(uri: Uri, pf: PropertyFile): File {
         val file = File(OtaPaths.OTA_PACKAGE_DIR, OtaPaths.CARE_MAP_NAME)
+
+        // If Custota is reinstalled before the file is cleaned up, it will be owned by a different
+        // UID and cannot be written to.
+        file.delete()
 
         try {
             file.outputStream().use { out ->
@@ -740,6 +753,8 @@ class UpdaterThread(
 
                 if (UpdateEngineError.isUpdateSucceeded(error)) {
                     if (status == UpdateEngineStatus.CLEANUP_PREVIOUS_UPDATE) {
+                        deleteCareMap()
+
                         Log.d(TAG, "Successfully cleaned up upgrade")
                         listener.onUpdateResult(this, UpdateCleanedUp)
                     } else {
@@ -747,6 +762,8 @@ class UpdaterThread(
                         listener.onUpdateResult(this, UpdateSucceeded)
                     }
                 } else if (error == UpdateEngineError.USER_CANCELED) {
+                    deleteCareMap()
+
                     Log.w(TAG, "User cancelled upgrade")
                     listener.onUpdateResult(this, UpdateCancelled)
                 } else {
@@ -754,6 +771,8 @@ class UpdaterThread(
                 }
             }
         } catch (e: Exception) {
+            deleteCareMap()
+
             Log.e(TAG, "Failed to install update", e)
             listener.onUpdateResult(this, UpdateFailed(e.toSingleLineString()))
         } finally {
