@@ -9,6 +9,8 @@
 
 ### Unreleased
 
+* Avoid one time installation failure if Custota gets reinstalled after an OTA installation has been attempted ([PR #125])
+
 ### Version 5.6
 
 * Don't require network access for background jobs if the OTA installation source is a local directory ([PR #120])
@@ -303,3 +305,4 @@ Changes:
 [PR #120]: https://github.com/chenxiaolong/Custota/pull/120
 [PR #121]: https://github.com/chenxiaolong/Custota/pull/121
 [PR #122]: https://github.com/chenxiaolong/Custota/pull/122
+[PR #125]: https://github.com/chenxiaolong/Custota/pull/125
