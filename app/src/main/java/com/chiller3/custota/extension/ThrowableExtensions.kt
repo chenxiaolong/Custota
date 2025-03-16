@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: 2023 Andrew Gunnerson
+ * SPDX-FileCopyrightText: 2023-2025 Andrew Gunnerson
  * SPDX-License-Identifier: GPL-3.0-only
  */
 
@@ -27,4 +27,18 @@ fun Throwable.toSingleLineString() = buildString {
 
         current = current.cause
     }
+}
+
+fun <T> Throwable.findCause(cls: Class<T>): T? {
+    var current: Throwable? = this
+
+    while (current != null) {
+        if (cls.isInstance(current)) {
+            return cls.cast(current)
+        }
+
+        current = current.cause
+    }
+
+    return null
 }

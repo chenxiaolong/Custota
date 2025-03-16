@@ -18,10 +18,13 @@ import android.os.IUpdateEngineCallback
 import android.os.Parcelable
 import android.os.PowerManager
 import android.ota.OtaPackageMetadata.OtaMetadata
+import android.system.ErrnoException
+import android.system.OsConstants
 import android.util.Log
 import androidx.documentfile.provider.DocumentFile
 import com.chiller3.custota.BuildConfig
 import com.chiller3.custota.Preferences
+import com.chiller3.custota.extension.findCause
 import com.chiller3.custota.extension.findNestedFile
 import com.chiller3.custota.extension.toSingleLineString
 import com.chiller3.custota.wrapper.ServiceManagerProxy
@@ -120,6 +123,14 @@ class UpdaterThread(
         }
     }
 
+    private enum class NetworkPinningState {
+        NOT_ATTEMPTED,
+        ALLOWED,
+        DENIED,
+    }
+
+    private var networkPinningState = NetworkPinningState.NOT_ATTEMPTED
+
     init {
         updateEngine.bind(engineCallback)
         engineIsBound = true
@@ -204,12 +215,19 @@ class UpdaterThread(
         }
     }
 
-    private fun openUrl(url: URL): HttpURLConnection {
+    private fun openUrlOnce(url: URL, canPin: Boolean): HttpURLConnection {
         if (network == null) {
             throw IllegalStateException("Network is required, but no network object available")
         }
 
-        val c = network.openConnection(url) as HttpURLConnection
+        val c = if (canPin) {
+            Log.i(TAG, "Using pinned network: $network")
+            network.openConnection(url) as HttpURLConnection
+        } else {
+            Log.i(TAG, "Not using pinned network")
+            url.openConnection() as HttpURLConnection
+        }
+
         c.connectTimeout = TIMEOUT_MS
         c.readTimeout = TIMEOUT_MS
         c.setRequestProperty("User-Agent", USER_AGENT)
@@ -219,13 +237,50 @@ class UpdaterThread(
         return c
     }
 
+    /**
+     * Open a connection to the URL and pass the connection to the block.
+     *
+     * If the block throws an exception indicating the Android's Network API is broken and the user
+     * allows disabling network pinning, then block is called again with a new connection that does
+     * not use network pinning. The network pinning state is cached for future calls.
+     */
+    private fun <R> openUrl(url: URL, block: (HttpURLConnection) -> R): R =
+        when (networkPinningState) {
+            NetworkPinningState.NOT_ATTEMPTED -> {
+                // If we get any other exception, we can still assume that the API works.
+                var newState = NetworkPinningState.ALLOWED
+
+                try {
+                    block(openUrlOnce(url, true))
+                } catch (e: IOException) {
+                    if (e.findCause(ErrnoException::class.java)?.errno == OsConstants.EPERM) {
+                        Log.w(TAG, "Network pinning is broken", e)
+
+                        if (prefs.pinNetworkId) {
+                            throw BrokenNetworkApiException("Blocked from using Network API", e)
+                        }
+
+                        Log.i(TAG, "Disabling network pinning is permitted by user")
+                        newState = NetworkPinningState.DENIED
+                        block(openUrlOnce(url, false))
+                    } else {
+                        throw e
+                    }
+                } finally {
+                    networkPinningState = newState
+                }
+            }
+            NetworkPinningState.ALLOWED -> block(openUrlOnce(url, true))
+            NetworkPinningState.DENIED -> block(openUrlOnce(url, false))
+        }
+
     /** Fetch and parse update info JSON file. */
     private fun fetchUpdateInfo(uri: Uri): UpdateInfo {
         val stream = if (uri.scheme == ContentResolver.SCHEME_CONTENT) {
             context.contentResolver.openInputStream(uri)
                 ?: throw IOException("Failed to open: $uri")
         } else {
-            openUrl(URL(uri.toString())).inputStream
+            openUrl(URL(uri.toString())) { it.inputStream }
         }
 
         val updateInfo: UpdateInfo = stream.use { JSON_FORMAT.decodeFromStream(it) }
@@ -253,9 +308,12 @@ class UpdaterThread(
         } else {
             val range = "${pf.offset}-${pf.offset + pf.size - 1}"
 
-            val connection = openUrl(URL(uri.toString()))
-            connection.setRequestProperty("Range", "bytes=$range")
-            connection.connect()
+            val connection = openUrl(URL(uri.toString())) {
+                it.apply {
+                    setRequestProperty("Range", "bytes=$range")
+                    connect()
+                }
+            }
 
             if (connection.responseCode / 100 != 2) {
                 throw IOException("Got ${connection.responseCode} (${connection.responseMessage}) for $uri")
@@ -371,7 +429,7 @@ class UpdaterThread(
             context.contentResolver.openInputStream(uri)
                 ?: throw IOException("Failed to open: $uri")
         } else {
-            openUrl(URL(uri.toString())).inputStream
+            openUrl(URL(uri.toString())) { it.inputStream }
         }
 
         val csigRaw = stream.use { it.readBytes() }
@@ -600,14 +658,24 @@ class UpdaterThread(
         Log.i(TAG, "Passing payload information to update_engine")
 
         val engineProperties = HashMap(payloadProperties).apply {
-            network?.networkHandle?.let {
-                put("NETWORK_ID", it.toString())
-            }
-            put("USER_AGENT", USER_AGENT_UPDATE_ENGINE)
+            if (otaUri.scheme != ContentResolver.SCHEME_CONTENT) {
+                when (networkPinningState) {
+                    NetworkPinningState.NOT_ATTEMPTED -> throw IllegalStateException(
+                        "Another network connection should have already been attempted once",
+                    )
+                    NetworkPinningState.ALLOWED -> {
+                        Log.i(TAG, "Passing network to update_engine: $network")
+                        put("NETWORK_ID", network!!.networkHandle.toString())
+                    }
+                    NetworkPinningState.DENIED -> Log.i(TAG, "Not passing network to update_engine")
+                }
 
-            if (authorization != null) {
-                Log.i(TAG, "Passing authorization header to update_engine")
-                put("AUTHORIZATION", authorization)
+                put("USER_AGENT", USER_AGENT_UPDATE_ENGINE)
+
+                if (authorization != null) {
+                    Log.i(TAG, "Passing authorization header to update_engine")
+                    put("AUTHORIZATION", authorization)
+                }
             }
 
             if (prefs.skipPostInstall) {
@@ -774,7 +842,12 @@ class UpdaterThread(
             deleteCareMap()
 
             Log.e(TAG, "Failed to install update", e)
-            listener.onUpdateResult(this, UpdateFailed(e.toSingleLineString()))
+
+            if (e.findCause(BrokenNetworkApiException::class.java) != null) {
+                listener.onUpdateResult(this, BrokenNetworkApi)
+            } else {
+                listener.onUpdateResult(this, UpdateFailed(e.toSingleLineString()))
+            }
         } finally {
             wakeLock.release()
             unbind()
@@ -791,6 +864,9 @@ class UpdaterThread(
         : Exception(msg, cause)
 
     class ValidationException(msg: String, cause: Throwable? = null)
+        : Exception(msg, cause)
+
+    class BrokenNetworkApiException(msg: String, cause: Throwable? = null)
         : Exception(msg, cause)
 
     private data class CheckUpdateResult(
@@ -862,46 +938,28 @@ class UpdaterThread(
             get() = this == INSTALL
     }
 
-    sealed interface Result {
-        val isError : Boolean
-    }
+    sealed interface Result
 
-    data object NothingToMonitor : Result {
-        override val isError = false
-    }
+    data object NothingToMonitor : Result
 
-    data class UpdateAvailable(val fingerprint: String) : Result {
-        override val isError = false
-    }
+    data class UpdateAvailable(val fingerprint: String) : Result
 
-    data object UpdateUnnecessary : Result {
-        override val isError = false
-    }
+    data object UpdateUnnecessary : Result
 
-    data object UpdateSucceeded : Result {
-        override val isError = false
-    }
+    data object UpdateSucceeded : Result
 
-    data object UpdateCleanedUp : Result {
-        override val isError = false
-    }
+    data object UpdateCleanedUp : Result
 
     /** Update succeeded in a previous updater run. */
-    data object UpdateNeedReboot : Result {
-        override val isError = false
-    }
+    data object UpdateNeedReboot : Result
 
-    data object UpdateReverted : Result {
-        override val isError = false
-    }
+    data object UpdateReverted : Result
 
-    data object UpdateCancelled : Result {
-        override val isError = true
-    }
+    data object UpdateCancelled : Result
 
-    data class UpdateFailed(val errorMsg: String) : Result {
-        override val isError = true
-    }
+    data class UpdateFailed(val errorMsg: String) : Result
+
+    data object BrokenNetworkApi : Result
 
     enum class ProgressType {
         CHECK,

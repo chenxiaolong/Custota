@@ -158,5 +158,12 @@
             app:title="@string/pref_install_csig_cert_name"
             app:summary="@string/pref_install_csig_cert_desc"
             app:iconSpaceReserved="false" />
+
+        <SwitchPreferenceCompat
+            app:key="pin_network_id"
+            app:defaultValue="true"
+            app:title="@string/pref_pin_network_id_name"
+            app:summary="@string/pref_pin_network_id_desc"
+            app:iconSpaceReserved="false" />
     </PreferenceCategory>
 </PreferenceScreen>

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-    SPDX-FileCopyrightText: 2023-2024 Andrew Gunnerson
+    SPDX-FileCopyrightText: 2023-2025 Andrew Gunnerson
     SPDX-License-Identifier: GPL-3.0-only
 -->
 <resources>
@@ -65,6 +65,8 @@
     <string name="pref_revert_completed_desc">This is only possible after an update completes, but before rebooting. This is meant for debugging purposes only.</string>
     <string name="pref_install_csig_cert_name">Install csig certificate</string>
     <string name="pref_install_csig_cert_desc">The certificate is only used for verifying <tt>.csig</tt> files. This is not necessary when the certificate exists in the system\'s <tt>otacerts.zip</tt>. Long press the certificate to remove it.</string>
+    <string name="pref_pin_network_id_name">Pin to specific network ID</string>
+    <string name="pref_pin_network_id_desc">This guarantees that traffic will not leak to an unexpected (eg. metered) network. When this is disabled, the unmetered network option will have no effect if the network changes during the download. Disabling this is necessary when using WireGuard\'s kernel mode because it breaks Android\'s network APIs.</string>
 
     <!-- Dialogs -->
     <string name="dialog_ota_source_title">@string/pref_ota_source_name</string>
@@ -100,6 +102,8 @@
     <string name="notification_update_ota_cancelled">OTA update process was cancelled</string>
     <string name="notification_update_ota_reverted">Successfully reverted OTA update</string>
     <string name="notification_update_ota_failed">Failed to install OTA update</string>
+    <string name="notification_broken_network_api_title">Cannot use network pinning</string>
+    <string name="notification_broken_network_api_message">Custota was blocked from pinning network connections to a specific network ID. To work around this, see the \"%s\" option after enabling debug mode by long-pressing Custota\'s version number.</string>
     <string name="notification_action_install">Install</string>
     <string name="notification_action_pause">Pause</string>
     <string name="notification_action_resume">Resume</string>

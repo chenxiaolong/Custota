@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: 2023-2024 Andrew Gunnerson
+ * SPDX-FileCopyrightText: 2023-2025 Andrew Gunnerson
  * SPDX-License-Identifier: GPL-3.0-only
  */
 
@@ -43,6 +43,7 @@ class Preferences(private val context: Context) {
         const val PREF_ALLOW_REINSTALL = "allow_reinstall"
         const val PREF_REVERT_COMPLETED = "revert_completed"
         const val PREF_INSTALL_CSIG_CERT = "install_csig_cert"
+        const val PREF_PIN_NETWORK_ID = "pin_network_id"
 
         // Not associated with a UI preference
         private const val PREF_DEBUG_MODE = "debug_mode"
@@ -152,6 +153,11 @@ class Preferences(private val context: Context) {
 
             prefs.edit { putStringSet(PREF_CSIG_CERTS, encoded) }
         }
+
+    /** Whether to pin all connections to a specific network ID. */
+    var pinNetworkId: Boolean
+        get() = prefs.getBoolean(PREF_PIN_NETWORK_ID, true)
+        set(enabled) = prefs.edit { putBoolean(PREF_PIN_NETWORK_ID, enabled) }
 
     /** Migrate legacy preferences to current preferences. */
     fun migrate() {

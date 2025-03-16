@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: 2023-2024 Andrew Gunnerson
+ * SPDX-FileCopyrightText: 2023-2025 Andrew Gunnerson
  * SPDX-License-Identifier: GPL-3.0-only
  */
 
@@ -281,6 +281,18 @@ class UpdaterService : Service(), UpdaterThread.UpdaterThreadListener {
                 onlyAlertOnce = false
                 titleResId = R.string.notification_update_ota_failed
                 message = result.errorMsg
+                showInstall = false
+                showRetry = true
+                showReboot = false
+            }
+            UpdaterThread.BrokenNetworkApi -> {
+                channel = Notifications.CHANNEL_ID_FAILURE
+                onlyAlertOnce = false
+                titleResId = R.string.notification_broken_network_api_title
+                message = getString(
+                    R.string.notification_broken_network_api_message,
+                    getString(R.string.pref_pin_network_id_name),
+                )
                 showInstall = false
                 showRetry = true
                 showReboot = false
