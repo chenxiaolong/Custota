@@ -10,6 +10,7 @@
 ### Unreleased
 
 * Avoid one time installation failure if Custota gets reinstalled after an OTA installation has been attempted ([PR #125])
+* Update dependencies ([PR #127])
 
 ### Version 5.6
 
@@ -306,3 +307,4 @@ Changes:
 [PR #121]: https://github.com/chenxiaolong/Custota/pull/121
 [PR #122]: https://github.com/chenxiaolong/Custota/pull/122
 [PR #125]: https://github.com/chenxiaolong/Custota/pull/125
+[PR #127]: https://github.com/chenxiaolong/Custota/pull/127
