@@ -10,6 +10,7 @@
 ### Unreleased
 
 * Avoid one time installation failure if Custota gets reinstalled after an OTA installation has been attempted ([PR #125])
+* Allow turning off forced network pinning for compatibility with WireGuard's kernel mode ([Issue #39], [PR #126])
 * Update dependencies ([PR #127])
 
 ### Version 5.6
@@ -217,6 +218,7 @@ Changes:
 [Issue #25]: https://github.com/chenxiaolong/Custota/issues/25
 [Issue #29]: https://github.com/chenxiaolong/Custota/issues/29
 [Issue #38]: https://github.com/chenxiaolong/Custota/issues/38
+[Issue #39]: https://github.com/chenxiaolong/Custota/issues/39
 [Issue #40]: https://github.com/chenxiaolong/Custota/issues/40
 [Issue #42]: https://github.com/chenxiaolong/Custota/issues/42
 [Issue #47]: https://github.com/chenxiaolong/Custota/issues/47
@@ -307,4 +309,5 @@ Changes:
 [PR #121]: https://github.com/chenxiaolong/Custota/pull/121
 [PR #122]: https://github.com/chenxiaolong/Custota/pull/122
 [PR #125]: https://github.com/chenxiaolong/Custota/pull/125
+[PR #126]: https://github.com/chenxiaolong/Custota/pull/126
 [PR #127]: https://github.com/chenxiaolong/Custota/pull/127
