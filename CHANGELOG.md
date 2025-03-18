@@ -7,7 +7,7 @@
     to update the actual links at the bottom of the file.
 -->
 
-### Unreleased
+### Version 5.7
 
 * Avoid one time installation failure if Custota gets reinstalled after an OTA installation has been attempted ([PR #125])
 * Allow turning off forced network pinning for compatibility with WireGuard's kernel mode ([Issue #39], [PR #126])
