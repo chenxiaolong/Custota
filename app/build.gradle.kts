@@ -1,9 +1,11 @@
 /*
- * SPDX-FileCopyrightText: 2022-2024 Andrew Gunnerson
+ * SPDX-FileCopyrightText: 2022-2025 Andrew Gunnerson
  * SPDX-License-Identifier: GPL-3.0-only
- * Based on BCR code.
  */
 
+import com.android.build.gradle.BaseExtension
+import com.android.build.gradle.internal.dsl.SdkComponentsImpl
+import com.android.build.gradle.internal.services.DslServices
 import com.google.protobuf.gradle.proto
 import org.eclipse.jgit.api.ArchiveCommand
 import org.eclipse.jgit.api.Git
@@ -128,15 +130,14 @@ android {
         targetSdk = 35
         versionCode = gitVersionCode
         versionName = gitVersionName
-        resourceConfigurations.addAll(listOf(
-            "en",
-            "vi",
-        ))
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
         buildConfigField("String", "PROJECT_URL_AT_COMMIT",
             "\"${projectUrl}/tree/${gitVersionTriple.third.name}\"")
+    }
+    androidResources {
+        generateLocaleConfig = true
     }
     sourceSets {
         getByName("main") {
@@ -299,6 +300,19 @@ for ((target, abi) in listOf(
 
     custotaSelinuxTasks[abi] = custotaSelinux
 }
+
+// AGP is currently set up so that the NDK auto-installation only happens when the C++ functionality
+// is enabled. We want that behavior even though we're only using the NDK for building Rust code.
+val sdkComponents = androidComponents.sdkComponents as SdkComponentsImpl
+val dslServices = BaseExtension::class.java
+    .getDeclaredField("dslServices")
+    .apply { isAccessible = true }
+    .get(android) as DslServices
+val ndkHandler = dslServices.sdkComponents.get().versionedNdkHandler(
+    sdkComponents.ndkVersion.get(),
+    sdkComponents.ndkPath.takeIf { it.isPresent }?.get(),
+)
+ndkHandler.getNdkPlatform(downloadOkay = true)
 
 android.applicationVariants.all {
     val variant = this

@@ -16,17 +16,11 @@ allow = [
     "bzip2-1.0.6",
     "GPL-3.0",
     "ISC",
-    "LGPL-2.1",
+    "LGPL-3.0",
     "MIT",
     "OpenSSL",
     "Unicode-3.0",
-]
-
-[[licenses.clarify]]
-name = "ring"
-expression = "MIT AND ISC AND OpenSSL"
-license-files = [
-    { path = "LICENSE", hash = 0xbd0eed23 },
+    "Zlib",
 ]
 
 [bans]
@@ -37,6 +31,15 @@ deny = [
     { name = "serde_derive", version = ">=1.0.172,<1.0.184" },
 ]
 
+[bans.build]
+executables = "deny"
+include-dependencies = true
+include-workspace = true
+bypass = [
+    # Only used in tests.
+    { name = "libloading", allow-globs = ["tests/*.dll"] }
+]
+
 [sources]
 unknown-registry = "deny"
 unknown-git = "deny"
@@ -44,5 +47,4 @@ allow-git = [
     "https://github.com/chenxiaolong/avbroot",
     "https://github.com/chenxiaolong/sepatch",
     "https://github.com/chenxiaolong/zip",
-    "https://github.com/trifectatechfoundation/bzip2-rs",
 ]

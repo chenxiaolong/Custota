@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: 2023-2024 Andrew Gunnerson
+ * SPDX-FileCopyrightText: 2023-2025 Andrew Gunnerson
  * SPDX-License-Identifier: GPL-3.0-only
  */
 
@@ -21,11 +21,12 @@ use std::{
 use anyhow::{anyhow, bail, Context, Result};
 use avbroot::{
     cli::args::LogFormat,
-    crypto::{self, PassphraseSource, RsaSigningKey},
+    crypto::{self, PassphraseSource, RsaSigningKey, SignatureAlgorithm},
     format::{ota, payload::PayloadHeader},
     protobuf::build::tools::releasetools::ota_metadata::OtaType,
     stream::{self, HashingReader, PSeekFile},
 };
+use aws_lc_rs::digest::Digest;
 use cap_std::ambient_authority;
 use cap_tempfile::TempDir;
 use clap::{Parser, Subcommand, ValueEnum};
@@ -37,7 +38,6 @@ use cms::{
 };
 use const_oid::ObjectIdentifier;
 use hex::FromHexError;
-use ring::digest::Digest;
 use rsa::{
     pkcs1v15::{Signature, SigningKey, VerifyingKey},
     signature::Verifier,
@@ -285,8 +285,10 @@ fn hash_section(
 ) -> Result<Digest> {
     reader.seek(SeekFrom::Start(offset))?;
 
-    let mut hashing_reader =
-        HashingReader::new(reader, ring::digest::Context::new(&ring::digest::SHA256));
+    let mut hashing_reader = HashingReader::new(
+        reader,
+        aws_lc_rs::digest::Context::new(&aws_lc_rs::digest::SHA256),
+    );
 
     stream::copy_n(&mut hashing_reader, io::sink(), size, cancel_signal)?;
 
@@ -312,14 +314,14 @@ fn verify_cms_signature(
         };
         let signed_attrs_der = signed_attrs.to_der()?;
 
-        let (ring_algo, result) = match signer_info.digest_alg.oid {
+        let (sig_algo, result) = match signer_info.digest_alg.oid {
             const_oid::db::rfc5912::ID_SHA_256 => (
-                &ring::digest::SHA256,
+                SignatureAlgorithm::Sha256WithRsa,
                 VerifyingKey::<Sha256>::new(public_key.clone())
                     .verify(&signed_attrs_der, &signature),
             ),
             const_oid::db::rfc5912::ID_SHA_512 => (
-                &ring::digest::SHA512,
+                SignatureAlgorithm::Sha512WithRsa,
                 VerifyingKey::<Sha512>::new(public_key.clone())
                     .verify(&signed_attrs_der, &signature),
             ),
@@ -378,9 +380,9 @@ fn verify_cms_signature(
             .unwrap()
             .decode_as::<OctetStringRef>()?;
 
-        let econtent_digest = ring::digest::digest(ring_algo, econtent_data);
+        let econtent_digest = sig_algo.hash(econtent_data);
 
-        if econtent_digest.as_ref() != econtent_digest_expected.as_bytes() {
+        if econtent_digest != econtent_digest_expected.as_bytes() {
             bail!(
                 "Content digest does not match signed attribute: {} != {}",
                 hex::encode(econtent_digest),
