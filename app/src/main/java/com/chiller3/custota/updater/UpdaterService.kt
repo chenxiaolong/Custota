@@ -228,7 +228,7 @@ class UpdaterService : Service(), UpdaterThread.UpdaterThreadListener {
                 // Only bug the user once while the notification is still shown
                 onlyAlertOnce = true
                 titleResId = R.string.notification_update_ota_available
-                message = result.fingerprint
+                message = result.fingerprints.joinToString("\n")
                 showInstall = true
                 showRetry = false
                 showReboot = false

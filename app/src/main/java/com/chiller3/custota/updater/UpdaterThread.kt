@@ -601,11 +601,11 @@ class UpdaterThread(
         val pfMetadata = csigInfo.getOrThrow(OtaPaths.METADATA_NAME)
         val metadata = fetchAndCheckMetadata(otaUri, pfMetadata, csigInfo)
 
-        if (metadata.postcondition.buildCount != 1) {
-            throw ValidationException("Metadata postcondition lists multiple fingerprints")
+        if (metadata.postcondition.buildList.isEmpty()) {
+            throw ValidationException("Metadata postcondition lists no fingerprints")
         }
-        val fingerprint = metadata.postcondition.getBuild(0)
-        var updateAvailable = isIncremental || fingerprint != Build.FINGERPRINT
+        val fingerprints = metadata.postcondition.buildList
+        var updateAvailable = isIncremental || !fingerprints.contains(Build.FINGERPRINT)
 
         // We allow "upgrading" to the same version if the vbmeta digest differs. This happens, for
         // example, if a newer version of Magisk was used when patching an OTA with the same OS
@@ -626,7 +626,7 @@ class UpdaterThread(
 
         return CheckUpdateResult(
             updateAvailable,
-            fingerprint,
+            fingerprints,
             otaUri,
             csigInfo,
         )
@@ -797,7 +797,7 @@ class UpdaterThread(
                     } else if (action == Action.CHECK) {
                         // Just alert that an update is available.
                         listener.onUpdateResult(this,
-                            UpdateAvailable(checkUpdateResult.fingerprint))
+                            UpdateAvailable(checkUpdateResult.fingerprints))
                         return
                     }
 
@@ -871,7 +871,7 @@ class UpdaterThread(
 
     private data class CheckUpdateResult(
         val updateAvailable: Boolean,
-        val fingerprint: String,
+        val fingerprints: List<String>,
         val otaUri: Uri,
         val csigInfo: CsigInfo,
     )
@@ -942,7 +942,7 @@ class UpdaterThread(
 
     data object NothingToMonitor : Result
 
-    data class UpdateAvailable(val fingerprint: String) : Result
+    data class UpdateAvailable(val fingerprints: List<String>) : Result
 
     data object UpdateUnnecessary : Result
 

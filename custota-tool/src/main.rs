@@ -609,13 +609,16 @@ fn subcommand_gen_csig(args: &GenerateCsig, cancel_signal: &AtomicBool) -> Resul
         .postcondition
         .as_ref()
         .ok_or_else(|| anyhow!("Postconditions are missing"))?;
-    let fingerprint = postcondition
-        .build
-        .first()
-        .ok_or_else(|| anyhow!("Postconditions do not list a fingerprint"))?;
+
+    if postcondition.build.is_empty() {
+        bail!("Postconditions do not list any fingerprints");
+    }
 
     info!("Device name: {device_name}");
-    info!("Fingerprint: {fingerprint}");
+    info!("Fingerprints:");
+    for fingerprint in &postcondition.build {
+        info!("- {fingerprint}");
+    }
     info!("Security patch: {}", postcondition.security_patch_level);
 
     let pfs_raw = metadata
