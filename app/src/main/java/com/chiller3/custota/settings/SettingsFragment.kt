@@ -50,6 +50,7 @@ import java.security.cert.X509Certificate
 import java.security.interfaces.DSAPublicKey
 import java.security.interfaces.ECPublicKey
 import java.security.interfaces.RSAPublicKey
+import androidx.core.net.toUri
 
 
 class SettingsFragment : PreferenceFragmentCompat(), Preference.OnPreferenceClickListener,
@@ -293,7 +294,7 @@ class SettingsFragment : PreferenceFragmentCompat(), Preference.OnPreferenceClic
                 return true
             }
             prefVersion -> {
-                val uri = Uri.parse(BuildConfig.PROJECT_URL_AT_COMMIT)
+                val uri = BuildConfig.PROJECT_URL_AT_COMMIT.toUri()
                 startActivity(Intent(Intent.ACTION_VIEW, uri))
                 return true
             }

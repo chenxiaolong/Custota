@@ -13,12 +13,12 @@ use std::{
     path::{Path, PathBuf},
     str::FromStr,
     sync::{
-        atomic::{AtomicBool, Ordering},
         Arc,
+        atomic::{AtomicBool, Ordering},
     },
 };
 
-use anyhow::{anyhow, bail, Context, Result};
+use anyhow::{Context, Result, anyhow, bail};
 use avbroot::{
     cli::args::LogFormat,
     crypto::{self, PassphraseSource, RsaSigningKey, SignatureAlgorithm},
@@ -26,7 +26,6 @@ use avbroot::{
     protobuf::build::tools::releasetools::ota_metadata::OtaType,
     stream::{self, HashingReader, PSeekFile},
 };
-use aws_lc_rs::digest::Digest;
 use cap_std::ambient_authority;
 use cap_tempfile::TempDir;
 use clap::{Parser, Subcommand, ValueEnum};
@@ -38,21 +37,22 @@ use cms::{
 };
 use const_oid::ObjectIdentifier;
 use hex::FromHexError;
+use ring::digest::Digest;
 use rsa::{
+    RsaPrivateKey,
     pkcs1v15::{Signature, SigningKey, VerifyingKey},
     signature::Verifier,
-    RsaPrivateKey,
 };
 use serde::{Deserialize, Serialize};
 use serde_repr::{Deserialize_repr, Serialize_repr};
 use sha2::{Sha256, Sha512};
-use tracing::{info, warn, Level};
+use tracing::{Level, info, warn};
 use x509_cert::{
-    der::{asn1::OctetStringRef, Any, Decode, Encode, Tag},
-    spki::AlgorithmIdentifierOwned,
     Certificate,
+    der::{Any, Decode, Encode, Tag, asn1::OctetStringRef},
+    spki::AlgorithmIdentifierOwned,
 };
-use zip::{write::FileOptions, ZipWriter};
+use zip::{ZipWriter, write::FileOptions};
 
 const CSIG_EXT: &str = ".csig";
 
@@ -285,10 +285,8 @@ fn hash_section(
 ) -> Result<Digest> {
     reader.seek(SeekFrom::Start(offset))?;
 
-    let mut hashing_reader = HashingReader::new(
-        reader,
-        aws_lc_rs::digest::Context::new(&aws_lc_rs::digest::SHA256),
-    );
+    let mut hashing_reader =
+        HashingReader::new(reader, ring::digest::Context::new(&ring::digest::SHA256));
 
     stream::copy_n(&mut hashing_reader, io::sink(), size, cancel_signal)?;
 
@@ -357,7 +355,9 @@ fn verify_cms_signature(
             .decode_as::<ObjectIdentifier>()?;
 
         if econtent_type != econtent_type_expected {
-            bail!("Content type does not match signed attribute: {econtent_type} != {econtent_type_expected}");
+            bail!(
+                "Content type does not match signed attribute: {econtent_type} != {econtent_type_expected}"
+            );
         }
 
         let econtent_digest_attr = signed_attrs
@@ -571,16 +571,19 @@ fn subcommand_gen_csig(args: &GenerateCsig, cancel_signal: &AtomicBool) -> Resul
     let mut reader = BufReader::new(file);
 
     info!("Verifying OTA signature...");
-    let embedded_cert = ota::verify_ota(&mut reader, cancel_signal)?;
+    let ota_sig = ota::parse_ota_sig(&mut reader).context("Failed to parse OTA signature")?;
+    ota_sig
+        .verify_ota(&mut reader, cancel_signal)
+        .context("Failed to verify OTA against embedded certificate")?;
 
     let (metadata, ota_cert, header, _) = ota::parse_zip_ota_info(&mut reader)
         .with_context(|| anyhow!("Failed to parse OTA info from zip"))?;
-    if embedded_cert != ota_cert {
+    if ota_cert != ota_sig.cert {
         bail!(
-            "CMS embedded certificate does not match {}",
+            "{} does not match CMS embedded certificate",
             ota::PATH_OTACERT,
         );
-    } else if embedded_cert != *verify_cert {
+    } else if ota_sig.cert != *verify_cert {
         bail!("OTA has a valid signature, but was not signed with: {verify_cert_path:?}");
     }
 

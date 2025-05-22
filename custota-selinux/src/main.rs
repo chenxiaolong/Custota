@@ -7,7 +7,7 @@ use std::{
     path::{Path, PathBuf},
 };
 
-use anyhow::{anyhow, bail, Context, Result};
+use anyhow::{Context, Result, anyhow, bail};
 use clap::{Args, Parser};
 
 use sepatch::{PolicyDb, RuleAction};

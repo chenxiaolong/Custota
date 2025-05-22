@@ -48,6 +48,7 @@ import java.security.MessageDigest
 import java.util.concurrent.locks.ReentrantLock
 import kotlin.concurrent.withLock
 import kotlin.math.roundToInt
+import androidx.core.net.toUri
 
 class UpdaterThread(
     private val context: Context,
@@ -184,7 +185,7 @@ class UpdaterThread(
      */
     private fun resolveUri(base: Uri, str: String, forceBaseAsDir: Boolean): Uri {
         if (base.scheme == ContentResolver.SCHEME_CONTENT) {
-            val strUriRaw = Uri.parse(str)
+            val strUriRaw = str.toUri()
             if (strUriRaw.scheme == "http" || strUriRaw.scheme == "https") {
                 // Allow local update info to redirect to an absolute URL since that has been the
                 // documented behavior
@@ -206,7 +207,7 @@ class UpdaterThread(
                 raw += '/'
             }
 
-            val resolved = Uri.parse(URI(raw).resolve(str).toString())
+            val resolved = URI(raw).resolve(str).toString().toUri()
             if (resolved.scheme != "http" && resolved.scheme != "https") {
                 throw IllegalStateException("$str resolves to unsupported protocol")
             }

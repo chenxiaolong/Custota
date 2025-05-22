@@ -18,9 +18,15 @@ allow = [
     "ISC",
     "LGPL-3.0",
     "MIT",
-    "OpenSSL",
     "Unicode-3.0",
     "Zlib",
+]
+
+[[licenses.clarify]]
+name = "ring"
+expression = "MIT AND ISC AND OpenSSL"
+license-files = [
+    { path = "LICENSE", hash = 0xbd0eed23 },
 ]
 
 [bans]

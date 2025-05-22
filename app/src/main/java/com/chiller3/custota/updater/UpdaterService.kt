@@ -5,7 +5,6 @@
 
 package com.chiller3.custota.updater
 
-import android.app.NotificationManager
 import android.app.Service
 import android.content.Context
 import android.content.Intent
@@ -28,7 +27,6 @@ import com.chiller3.custota.extension.toSingleLineString
 class UpdaterService : Service(), UpdaterThread.UpdaterThreadListener {
     private val handler = Handler(Looper.getMainLooper())
     private lateinit var prefs: Preferences
-    private lateinit var notificationManager: NotificationManager
     private lateinit var notifications: Notifications
 
     private var updaterThread: UpdaterThread? = null
@@ -40,7 +38,6 @@ class UpdaterService : Service(), UpdaterThread.UpdaterThreadListener {
         super.onCreate()
 
         prefs = Preferences(this)
-        notificationManager = getSystemService(NotificationManager::class.java)
         notifications = Notifications(this)
     }
 

@@ -25,6 +25,7 @@ import com.chiller3.custota.settings.OpenPersistentDocumentTree
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import java.net.MalformedURLException
 import java.net.URL
+import androidx.core.net.toUri
 
 class OtaSourceDialogFragment : DialogFragment() {
     companion object {
@@ -68,7 +69,7 @@ class OtaSourceDialogFragment : DialogFragment() {
                     binding.urlLayout.isErrorEnabled = false
                 } else {
                     // The URL round trip is used for validation because Uri allows any input
-                    val newUri = Uri.parse(URL(it.toString()).toString())
+                    val newUri = URL(it.toString()).toString().toUri()
 
                     if (newUri.scheme == "http" || newUri.scheme == "https") {
                         uriRemote = newUri

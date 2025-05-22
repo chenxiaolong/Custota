@@ -16,6 +16,7 @@ import androidx.preference.PreferenceManager
 import java.io.ByteArrayInputStream
 import java.security.cert.CertificateFactory
 import java.security.cert.X509Certificate
+import androidx.core.net.toUri
 
 class Preferences(private val context: Context) {
     companion object {
@@ -61,7 +62,7 @@ class Preferences(private val context: Context) {
 
     /** Base URI to fetch OTA updates. This is either an HTTP/HTTPS URL or a SAF URI. */
     var otaSource: Uri?
-        get() = prefs.getString(PREF_OTA_SOURCE, null)?.let { Uri.parse(it) }
+        get() = prefs.getString(PREF_OTA_SOURCE, null)?.toUri()
         set(uri) {
             val oldUri = otaSource
             if (oldUri == uri) {
@@ -162,7 +163,7 @@ class Preferences(private val context: Context) {
     /** Migrate legacy preferences to current preferences. */
     fun migrate() {
         if (prefs.contains(PREF_OTA_SERVER_URL)) {
-            otaSource = prefs.getString(PREF_OTA_SERVER_URL, null)?.let { Uri.parse(it) }
+            otaSource = prefs.getString(PREF_OTA_SERVER_URL, null)?.toUri()
             prefs.edit { remove(PREF_OTA_SERVER_URL) }
         }
     }

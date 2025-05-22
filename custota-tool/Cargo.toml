@@ -7,7 +7,7 @@ publish.workspace = true
 
 [dependencies]
 anyhow = "1.0.75"
-aws-lc-rs = { version = "1.0.0", default-features = false, features = ["aws-lc-sys"] }
+ring = "0.17.14"
 cap-std = "3.0.0"
 cap-tempfile = "3.0.0"
 clap = { version = "4.4.1", features = ["derive"] }
@@ -28,7 +28,7 @@ x509-cert = "0.2.4"
 
 [dependencies.avbroot]
 git = "https://github.com/chenxiaolong/avbroot"
-tag = "v3.13.0"
+tag = "v3.16.1"
 
 # https://github.com/zip-rs/zip/pull/383
 [dependencies.zip]
