@@ -9,6 +9,8 @@
 
 ### Unreleased
 
+* Add support for OTAs that list multiple fingerprints in the postconditions metadata ([Issue #129], [PR #130])
+
 ### Version 5.7
 
 * Avoid one time installation failure if Custota gets reinstalled after an OTA installation has been attempted ([PR #125])
@@ -233,6 +235,7 @@ Changes:
 [Issue #94]: https://github.com/chenxiaolong/Custota/issues/94
 [Issue #104]: https://github.com/chenxiaolong/Custota/issues/104
 [Issue #116]: https://github.com/chenxiaolong/Custota/issues/116
+[Issue #129]: https://github.com/chenxiaolong/Custota/issues/129
 [PR #1]: https://github.com/chenxiaolong/Custota/pull/1
 [PR #2]: https://github.com/chenxiaolong/Custota/pull/2
 [PR #6]: https://github.com/chenxiaolong/Custota/pull/6
@@ -313,3 +316,4 @@ Changes:
 [PR #125]: https://github.com/chenxiaolong/Custota/pull/125
 [PR #126]: https://github.com/chenxiaolong/Custota/pull/126
 [PR #127]: https://github.com/chenxiaolong/Custota/pull/127
+[PR #130]: https://github.com/chenxiaolong/Custota/pull/130
