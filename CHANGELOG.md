@@ -10,6 +10,7 @@
 ### Unreleased
 
 * Add support for OTAs that list multiple fingerprints in the postconditions metadata ([Issue #129], [PR #130])
+* Update dependencies ([PR #131])
 
 ### Version 5.7
 
@@ -317,3 +318,4 @@ Changes:
 [PR #126]: https://github.com/chenxiaolong/Custota/pull/126
 [PR #127]: https://github.com/chenxiaolong/Custota/pull/127
 [PR #130]: https://github.com/chenxiaolong/Custota/pull/130
+[PR #131]: https://github.com/chenxiaolong/Custota/pull/131
