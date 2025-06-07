@@ -9,6 +9,8 @@
 
 ### Unreleased
 
+* Show notification for post-reboot OTA cleanup phase even if Custota has no server configured ([PR #133])
+
 ### Version 5.8
 
 * Add support for OTAs that list multiple fingerprints in the postconditions metadata ([Issue #129], [PR #130])
@@ -321,3 +323,4 @@ Changes:
 [PR #127]: https://github.com/chenxiaolong/Custota/pull/127
 [PR #130]: https://github.com/chenxiaolong/Custota/pull/130
 [PR #131]: https://github.com/chenxiaolong/Custota/pull/131
+[PR #133]: https://github.com/chenxiaolong/Custota/pull/133
