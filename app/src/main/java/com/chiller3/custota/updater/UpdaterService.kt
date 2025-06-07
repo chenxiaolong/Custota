@@ -54,11 +54,7 @@ class UpdaterService : Service(), UpdaterThread.UpdaterThreadListener {
                     // returns.
                     updateForegroundNotification(false)
 
-                    if (prefs.otaSource != null) {
-                        startUpdate(intent)
-                    } else {
-                        Log.w(TAG, "Not starting thread because no URL is configured")
-                    }
+                    startUpdate(intent)
                 }
                 ACTION_PAUSE, ACTION_RESUME -> {
                     updaterThread?.isPaused = action == ACTION_PAUSE
@@ -86,8 +82,6 @@ class UpdaterService : Service(), UpdaterThread.UpdaterThreadListener {
 
     private fun startUpdate(intent: Intent) {
         if (updaterThread == null) {
-            Log.d(TAG, "Creating new updater thread")
-
             // IntentCompat is required due to an Android 13 bug that's only fixed in 14+
             // https://issuetracker.google.com/issues/274185314
             val network = IntentCompat.getParcelableExtra(
@@ -95,6 +89,13 @@ class UpdaterService : Service(), UpdaterThread.UpdaterThreadListener {
             val action = IntentCompat.getParcelableExtra(
                 intent, EXTRA_ACTION, UpdaterThread.Action::class.java)!!
             val silent = intent.getBooleanExtra(EXTRA_SILENT, false)
+
+            if (prefs.otaSource == null && action != UpdaterThread.Action.MONITOR) {
+                Log.w(TAG, "Not starting thread because no URL is configured")
+                return
+            }
+
+            Log.d(TAG, "Creating new updater thread")
 
             // Clear all stale alert notifications when initiated by the user. For the periodic job,
             // we want to leave the existing notification visible so that it can be updated with the
