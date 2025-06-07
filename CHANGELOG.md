@@ -7,9 +7,10 @@
     to update the actual links at the bottom of the file.
 -->
 
-### Unreleased
+### Version 5.9
 
 * Show notification for post-reboot OTA cleanup phase even if Custota has no server configured ([PR #133])
+* Update dependencies ([PR #134])
 
 ### Version 5.8
 
@@ -324,3 +325,4 @@ Changes:
 [PR #130]: https://github.com/chenxiaolong/Custota/pull/130
 [PR #131]: https://github.com/chenxiaolong/Custota/pull/131
 [PR #133]: https://github.com/chenxiaolong/Custota/pull/133
+[PR #134]: https://github.com/chenxiaolong/Custota/pull/134
