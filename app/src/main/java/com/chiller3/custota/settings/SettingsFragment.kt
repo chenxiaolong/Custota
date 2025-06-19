@@ -8,7 +8,6 @@ package com.chiller3.custota.settings
 
 import android.content.Intent
 import android.content.SharedPreferences
-import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.os.Environment
@@ -16,6 +15,7 @@ import android.provider.DocumentsContract
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.core.net.toUri
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.updatePadding
@@ -50,7 +50,6 @@ import java.security.cert.X509Certificate
 import java.security.interfaces.DSAPublicKey
 import java.security.interfaces.ECPublicKey
 import java.security.interfaces.RSAPublicKey
-import androidx.core.net.toUri
 
 
 class SettingsFragment : PreferenceFragmentCompat(), Preference.OnPreferenceClickListener,
