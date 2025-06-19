@@ -9,6 +9,8 @@
 
 ### Unreleased
 
+* Update dependencies and target API 36 ([PR #135])
+
 ### Version 5.9
 
 * Show notification for post-reboot OTA cleanup phase even if Custota has no server configured ([PR #133])
@@ -328,3 +330,4 @@ Changes:
 [PR #131]: https://github.com/chenxiaolong/Custota/pull/131
 [PR #133]: https://github.com/chenxiaolong/Custota/pull/133
 [PR #134]: https://github.com/chenxiaolong/Custota/pull/134
+[PR #135]: https://github.com/chenxiaolong/Custota/pull/135
