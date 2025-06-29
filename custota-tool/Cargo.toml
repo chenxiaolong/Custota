@@ -1,6 +1,5 @@
 [package]
 name = "custota-tool"
-version.workspace = true
 license.workspace = true
 edition.workspace = true
 publish.workspace = true
@@ -36,6 +35,9 @@ git = "https://github.com/chenxiaolong/zip"
 rev = "989101f9384b9e94e36e6e9e0f51908fdf98bde6"
 default-features = false
 features = ["deflate"]
+
+[build-dependencies]
+anyhow = "1.0.75"
 
 [features]
 static = ["avbroot/static"]

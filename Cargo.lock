@@ -525,7 +525,7 @@ dependencies = [
 
 [[package]]
 name = "custota-selinux"
-version = "0.1.0"
+version = "0.0.0"
 dependencies = [
  "anyhow",
  "clap",
@@ -534,7 +534,7 @@ dependencies = [
 
 [[package]]
 name = "custota-tool"
-version = "0.1.0"
+version = "0.0.0"
 dependencies = [
  "anyhow",
  "avbroot",

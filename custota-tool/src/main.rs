@@ -263,6 +263,7 @@ enum Command {
 }
 
 #[derive(Debug, Parser)]
+#[command(version = env!("GIT_VERSION"))]
 struct Cli {
     #[command(subcommand)]
     command: Command,
