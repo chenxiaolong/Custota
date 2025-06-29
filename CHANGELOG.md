@@ -9,6 +9,8 @@
 
 ### Unreleased
 
+* Update dependencies ([PR #138])
+
 ### Version 5.10
 
 * Update dependencies and target API 36 ([PR #135])
@@ -333,3 +335,4 @@ Changes:
 [PR #133]: https://github.com/chenxiaolong/Custota/pull/133
 [PR #134]: https://github.com/chenxiaolong/Custota/pull/134
 [PR #135]: https://github.com/chenxiaolong/Custota/pull/135
+[PR #138]: https://github.com/chenxiaolong/Custota/pull/138
