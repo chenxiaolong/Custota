@@ -7,7 +7,7 @@
     to update the actual links at the bottom of the file.
 -->
 
-### Unreleased
+### Version 5.11
 
 * Update dependencies ([PR #138])
 * Add `-V`/`--version` flag to custota-tool ([Issue #136], [PR #137])
