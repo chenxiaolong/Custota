@@ -10,6 +10,7 @@
 ### Unreleased
 
 * Update dependencies ([PR #138])
+* Add `-V`/`--version` flag to custota-tool ([Issue #136], [PR #137])
 
 ### Version 5.10
 
@@ -250,6 +251,7 @@ Changes:
 [Issue #104]: https://github.com/chenxiaolong/Custota/issues/104
 [Issue #116]: https://github.com/chenxiaolong/Custota/issues/116
 [Issue #129]: https://github.com/chenxiaolong/Custota/issues/129
+[Issue #136]: https://github.com/chenxiaolong/Custota/issues/136
 [PR #1]: https://github.com/chenxiaolong/Custota/pull/1
 [PR #2]: https://github.com/chenxiaolong/Custota/pull/2
 [PR #6]: https://github.com/chenxiaolong/Custota/pull/6
@@ -335,4 +337,5 @@ Changes:
 [PR #133]: https://github.com/chenxiaolong/Custota/pull/133
 [PR #134]: https://github.com/chenxiaolong/Custota/pull/134
 [PR #135]: https://github.com/chenxiaolong/Custota/pull/135
+[PR #137]: https://github.com/chenxiaolong/Custota/pull/137
 [PR #138]: https://github.com/chenxiaolong/Custota/pull/138
