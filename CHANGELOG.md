@@ -9,6 +9,9 @@
 
 ### Unreleased
 
+* Add support for direct boot ([PR #140])
+  * Automatic update checks and update installs can now run before the device is initially unlocked following a reboot
+
 ### Version 5.11
 
 * Update dependencies ([PR #138])
@@ -341,3 +344,4 @@ Changes:
 [PR #135]: https://github.com/chenxiaolong/Custota/pull/135
 [PR #137]: https://github.com/chenxiaolong/Custota/pull/137
 [PR #138]: https://github.com/chenxiaolong/Custota/pull/138
+[PR #140]: https://github.com/chenxiaolong/Custota/pull/140
