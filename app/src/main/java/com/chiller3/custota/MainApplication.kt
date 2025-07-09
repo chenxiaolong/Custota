@@ -8,6 +8,7 @@ package com.chiller3.custota
 
 import android.app.Application
 import android.content.Intent
+import android.os.UserManager
 import android.util.Log
 import androidx.core.content.pm.ShortcutInfoCompat
 import androidx.core.content.pm.ShortcutManagerCompat
@@ -25,15 +26,17 @@ class MainApplication : Application() {
 
         Thread.setDefaultUncaughtExceptionHandler { t, e ->
             try {
-                val logcatFile = File(getExternalFilesDir(null), "crash.log")
+                getExternalFilesDir(null)?.let { externalFilesDir ->
+                    val logcatFile = File(externalFilesDir, "crash.log")
 
-                Log.e(TAG, "Saving logcat to $logcatFile due to uncaught exception in $t", e)
+                    Log.e(TAG, "Saving logcat to $logcatFile due to uncaught exception in $t", e)
 
-                ProcessBuilder("logcat", "-d", "*:V")
-                    .redirectOutput(logcatFile)
-                    .redirectErrorStream(true)
-                    .start()
-                    .waitFor()
+                    ProcessBuilder("logcat", "-d", "*:V")
+                        .redirectOutput(logcatFile)
+                        .redirectErrorStream(true)
+                        .start()
+                        .waitFor()
+                }
             } finally {
                 oldCrashHandler?.uncaughtException(t, e)
             }
@@ -41,6 +44,9 @@ class MainApplication : Application() {
 
         // Enable Material You colors
         DynamicColors.applyToActivitiesIfAvailable(this)
+
+        // Move preferences to device-protected storage for direct boot support.
+        Preferences.migrateToDeviceProtectedStorage(this)
 
         Preferences(this).migrate()
 
@@ -56,6 +62,15 @@ class MainApplication : Application() {
     //   manifest and custom resource definitions are evaluated to @ref/<resource ID>.
     // * When anything breaks, the shortcuts are just silently missing with no error reporting.
     private fun updateShortcuts() {
+        val userManager = getSystemService(UserManager::class.java)
+        if (!userManager.isUserUnlocked) {
+            // We currently don't trigger anything when the user unlocks the device. It'll happen
+            // eventually when the app is unloaded from memory and the user reopens it or the
+            // scheduled job runs.
+            Log.w(TAG, "Cannot update dynamic shortcuts until unlocked")
+            return
+        }
+
         val icon = IconCompat.createWithResource(this, R.mipmap.ic_launcher)
         val intent = Intent(this, UpdaterLauncherActivity::class.java).apply {
             // Action is required, but value doesn't matter.

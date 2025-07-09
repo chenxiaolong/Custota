@@ -43,4 +43,8 @@ val Uri.formattedString: String
     }
 
 val Uri.isGuaranteedLocalFile: Boolean
-    get() = scheme == ContentResolver.SCHEME_CONTENT && LOCAL_PROVIDERS.contains(authority)
+    get() = (scheme == ContentResolver.SCHEME_CONTENT && LOCAL_PROVIDERS.contains(authority))
+            || scheme == ContentResolver.SCHEME_FILE
+
+val Uri.isGuaranteedNetworkUri: Boolean
+    get() = scheme != ContentResolver.SCHEME_CONTENT && scheme != ContentResolver.SCHEME_FILE

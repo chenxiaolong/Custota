@@ -12,13 +12,13 @@ import android.net.Uri
 import android.util.Base64
 import android.util.Log
 import androidx.core.content.edit
+import androidx.core.net.toUri
 import androidx.preference.PreferenceManager
 import java.io.ByteArrayInputStream
 import java.security.cert.CertificateFactory
 import java.security.cert.X509Certificate
-import androidx.core.net.toUri
 
-class Preferences(private val context: Context) {
+class Preferences(initialContext: Context) {
     companion object {
         private val TAG = Preferences::class.java.simpleName
 
@@ -49,11 +49,46 @@ class Preferences(private val context: Context) {
         // Not associated with a UI preference
         private const val PREF_DEBUG_MODE = "debug_mode"
         private const val PREF_CSIG_CERTS = "csig_certs"
+        private const val PREF_ALREADY_MIGRATED = "already_migrated"
 
         // Legacy preferences
         private const val PREF_OTA_SERVER_URL = "ota_server_url"
+
+        fun migrateToDeviceProtectedStorage(context: Context) {
+            if (context.isDeviceProtectedStorage) {
+                Log.w(TAG, "Cannot migrate preferences in BFU state")
+                return
+            }
+
+            val deviceContext = context.createDeviceProtectedStorageContext()
+            var devicePrefs = PreferenceManager.getDefaultSharedPreferences(deviceContext)
+
+            if (devicePrefs.getBoolean(PREF_ALREADY_MIGRATED, false)) {
+                Log.i(TAG, "Already migrated preferences to device protected storage")
+                return
+            }
+
+            Log.i(TAG, "Migrating preferences to device protected storage")
+
+            // getDefaultSharedPreferencesName() is not public, but realistically, Android can't
+            // ever change the default shared preferences name without breaking nearly every app.
+            val sharedPreferencesName = context.packageName + "_preferences"
+
+            // This returns true if the shared preferences didn't exist.
+            if (!deviceContext.moveSharedPreferencesFrom(context, sharedPreferencesName)) {
+                Log.e(TAG, "Failed to migrate preferences to device protected storage")
+            }
+
+            devicePrefs = PreferenceManager.getDefaultSharedPreferences(deviceContext)
+            devicePrefs.edit { putBoolean(PREF_ALREADY_MIGRATED, true) }
+        }
     }
 
+    private val context = if (initialContext.isDeviceProtectedStorage) {
+        initialContext
+    } else {
+        initialContext.createDeviceProtectedStorageContext()
+    }
     private val prefs = PreferenceManager.getDefaultSharedPreferences(context)
 
     var isDebugMode: Boolean

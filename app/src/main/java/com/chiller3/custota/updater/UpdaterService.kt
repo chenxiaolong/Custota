@@ -16,12 +16,14 @@ import android.os.IBinder
 import android.os.Looper
 import android.os.Parcelable
 import android.os.PowerManager
+import android.os.UserManager
 import android.util.Log
 import androidx.annotation.UiThread
 import androidx.core.content.IntentCompat
 import com.chiller3.custota.Notifications
 import com.chiller3.custota.Preferences
 import com.chiller3.custota.R
+import com.chiller3.custota.extension.isGuaranteedNetworkUri
 import com.chiller3.custota.extension.toSingleLineString
 
 class UpdaterService : Service(), UpdaterThread.UpdaterThreadListener {
@@ -90,9 +92,18 @@ class UpdaterService : Service(), UpdaterThread.UpdaterThreadListener {
                 intent, EXTRA_ACTION, UpdaterThread.Action::class.java)!!
             val silent = intent.getBooleanExtra(EXTRA_SILENT, false)
 
-            if (prefs.otaSource == null && action != UpdaterThread.Action.MONITOR) {
-                Log.w(TAG, "Not starting thread because no URL is configured")
-                return
+            if (action != UpdaterThread.Action.MONITOR) {
+                val otaSource = prefs.otaSource
+                if (otaSource == null) {
+                    Log.w(TAG, "Not starting thread because no URL is configured")
+                    return
+                }
+
+                val userManager = getSystemService(UserManager::class.java)
+                if (!userManager.isUserUnlocked && !otaSource.isGuaranteedNetworkUri) {
+                    Log.w(TAG, "Not starting thread due to direct boot and potentially non-network URI")
+                    return
+                }
             }
 
             Log.d(TAG, "Creating new updater thread")
@@ -120,6 +131,8 @@ class UpdaterService : Service(), UpdaterThread.UpdaterThreadListener {
                     R.drawable.ic_notifications,
                     e.toSingleLineString(),
                     emptyList(),
+                    // Do not leak information about errors while locked in case of direct boot.
+                    false,
                 )
 
                 tryStop()
@@ -323,6 +336,8 @@ class UpdaterService : Service(), UpdaterThread.UpdaterThreadListener {
             R.drawable.ic_notifications,
             message,
             actionResIds.zip(actionIntents),
+            // Do not leak information about errors while locked in case of direct boot.
+            showInstall || showReboot,
         )
     }
 

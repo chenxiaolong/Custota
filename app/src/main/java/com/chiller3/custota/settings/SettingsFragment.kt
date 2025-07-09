@@ -123,9 +123,10 @@ class SettingsFragment : PreferenceFragmentCompat(), Preference.OnPreferenceClic
     }
 
     override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
-        setPreferencesFromResource(R.xml.preferences_root, rootKey)
-
         val context = requireContext()
+
+        preferenceManager.setStorageDeviceProtected()
+        setPreferencesFromResource(R.xml.preferences_root, rootKey)
 
         prefs = Preferences(context)
 

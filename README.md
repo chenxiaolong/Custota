@@ -18,6 +18,7 @@ Custota is installed via a Magisk/KernelSU module so that it can run as a system
 * Supports skipping optional post-install scripts to speed up updates
 * Never communicates with any server besides the configured OTA server
 * OTA updates safely continue running even if the app crashes or is uninstalled during the operation
+* Supports Direct Boot, allowing updates to install before the device is initially unlocked
 
 ## Limitations
 
@@ -46,9 +47,9 @@ Custota is installed via a Magisk/KernelSU module so that it can run as a system
 
 7. That's it!
 
-Once the OTA server URL is configured, Custota will automatically check for updates periodically. The checks can be turned off completely or extended to automatically install the updates as well.
+Once the OTA server URL is configured, Custota will automatically check for updates periodically. The checks can be turned off completely or extended to automatically install the updates as well. To reduce battery usage, the timing of the periodic update checks is controlled by Android. They run at most once every 6 hours.
 
-To reduce battery usage, the timing of the periodic update checks is controlled by Android. They run at most once every 6 hours.
+If OTAs are installed from an OTA server (instead of a local directory), then automatic checks and automatic installs will work even before the device is initially unlocked following a reboot.
 
 ## OTA server
 

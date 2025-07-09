@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: 2022-2023 Andrew Gunnerson
+ * SPDX-FileCopyrightText: 2022-2025 Andrew Gunnerson
  * SPDX-License-Identifier: GPL-3.0-only
  * Based on BCR code.
  */
@@ -159,6 +159,7 @@ class Notifications(
         @DrawableRes icon: Int,
         errorMsg: String?,
         actions: List<Pair<Int, Intent>>,
+        showOnLockScreen: Boolean,
     ) {
         val notification = Notification.Builder(context, channel).run {
             val text = buildString {
@@ -175,6 +176,9 @@ class Notifications(
             }
             setSmallIcon(icon)
             setOnlyAlertOnce(onlyAlertOnce)
+            if (showOnLockScreen) {
+                setVisibility(Notification.VISIBILITY_PUBLIC)
+            }
 
             for ((actionTextResId, actionIntent) in actions) {
                 val actionPendingIntent = PendingIntent.getService(

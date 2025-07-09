@@ -63,7 +63,7 @@ class UpdaterThread(
     // NOTE: This is not implemented.
     private val authorization: String? = null
 
-    private lateinit var logcatProcess: Process
+    private var logcatProcess: Process? = null
 
     // If we crash and restart while paused, the user will need to pause and unpause to resume
     // because update_engine does not report the pause state.
@@ -709,12 +709,17 @@ class UpdaterThread(
     }
 
     private fun startLogcat() {
-        assert(!this::logcatProcess.isInitialized) { "logcat already started" }
+        assert(logcatProcess == null) { "logcat already started" }
+
+        val externalFilesDir = context.getExternalFilesDir(null)
+        if (externalFilesDir == null) {
+            Log.w(TAG, "External files directory is null (direct boot?)")
+            return
+        }
 
         Log.d(TAG, "Starting log file (${BuildConfig.VERSION_NAME})")
 
-        val logcatFile = File(context.getExternalFilesDir(null),
-            "${action.name.lowercase()}.log")
+        val logcatFile = File(externalFilesDir, "${action.name.lowercase()}.log")
         logcatProcess = ProcessBuilder("logcat", "*:V")
             // This is better than -f because the logcat implementation calls fflush() when the
             // output stream is stdout.
@@ -724,7 +729,11 @@ class UpdaterThread(
     }
 
     private fun stopLogcat() {
-        assert(this::logcatProcess.isInitialized) { "logcat not started" }
+        val logcatProcess = logcatProcess
+        if (logcatProcess == null) {
+            Log.i(TAG, "logcat not started")
+            return
+        }
 
         try {
             Log.d(TAG, "Stopping log file")
