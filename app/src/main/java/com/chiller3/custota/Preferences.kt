@@ -9,12 +9,14 @@ import android.content.ContentResolver
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
+import android.os.UserManager
 import android.util.Base64
 import android.util.Log
 import androidx.core.content.edit
 import androidx.core.net.toUri
 import androidx.preference.PreferenceManager
 import java.io.ByteArrayInputStream
+import java.io.File
 import java.security.cert.CertificateFactory
 import java.security.cert.X509Certificate
 
@@ -54,34 +56,57 @@ class Preferences(initialContext: Context) {
         // Legacy preferences
         private const val PREF_OTA_SERVER_URL = "ota_server_url"
 
-        fun migrateToDeviceProtectedStorage(context: Context) {
-            if (context.isDeviceProtectedStorage) {
-                Log.w(TAG, "Cannot migrate preferences in BFU state")
-                return
+        private fun migrateToDeviceProtectedStorage(context: Context) {
+            synchronized(this) {
+                if (context.isDeviceProtectedStorage) {
+                    Log.w(TAG, "Cannot migrate without credential-protected storage context")
+                    return
+                }
+
+                val userManager = context.getSystemService(UserManager::class.java)
+                if (!userManager.isUserUnlocked) {
+                    Log.w(TAG, "Cannot migrate preferences in BFU state")
+                    return
+                }
+
+                val deviceContext = context.createDeviceProtectedStorageContext()
+                var devicePrefs = PreferenceManager.getDefaultSharedPreferences(deviceContext)
+
+                // getDefaultSharedPreferencesName() is not public, but realistically, Android can't
+                // ever change the default shared preferences name without breaking nearly every app.
+                val sharedPreferencesName = context.packageName + "_preferences"
+
+                if (devicePrefs.getBoolean(PREF_ALREADY_MIGRATED, false)) {
+                    val oldPrefsFile =
+                        File(File(context.dataDir, "shared_prefs"), "$sharedPreferencesName.xml")
+                    if (!oldPrefsFile.exists()) {
+                        Log.i(TAG, "Already migrated preferences to device protected storage")
+                        return
+                    } else if (devicePrefs.getString(PREF_OTA_SOURCE, null) != null) {
+                        Log.i(TAG, "User already reconfigured app following botched migration")
+                        context.deleteSharedPreferences(sharedPreferencesName)
+                        return
+                    } else {
+                        Log.i(TAG, "Reattempting migration after regression")
+                    }
+                }
+
+                Log.i(TAG, "Migrating preferences to device-protected storage")
+
+                // This returns true if the shared preferences didn't exist.
+                if (!deviceContext.moveSharedPreferencesFrom(context, sharedPreferencesName)) {
+                    Log.e(TAG, "Failed to migrate preferences to device protected storage")
+                    return
+                }
+
+                devicePrefs = PreferenceManager.getDefaultSharedPreferences(deviceContext)
+                devicePrefs.edit { putBoolean(PREF_ALREADY_MIGRATED, true) }
             }
-
-            val deviceContext = context.createDeviceProtectedStorageContext()
-            var devicePrefs = PreferenceManager.getDefaultSharedPreferences(deviceContext)
-
-            if (devicePrefs.getBoolean(PREF_ALREADY_MIGRATED, false)) {
-                Log.i(TAG, "Already migrated preferences to device protected storage")
-                return
-            }
-
-            Log.i(TAG, "Migrating preferences to device protected storage")
-
-            // getDefaultSharedPreferencesName() is not public, but realistically, Android can't
-            // ever change the default shared preferences name without breaking nearly every app.
-            val sharedPreferencesName = context.packageName + "_preferences"
-
-            // This returns true if the shared preferences didn't exist.
-            if (!deviceContext.moveSharedPreferencesFrom(context, sharedPreferencesName)) {
-                Log.e(TAG, "Failed to migrate preferences to device protected storage")
-            }
-
-            devicePrefs = PreferenceManager.getDefaultSharedPreferences(deviceContext)
-            devicePrefs.edit { putBoolean(PREF_ALREADY_MIGRATED, true) }
         }
+    }
+
+    init {
+        migrateToDeviceProtectedStorage(initialContext)
     }
 
     private val context = if (initialContext.isDeviceProtectedStorage) {
@@ -90,6 +115,10 @@ class Preferences(initialContext: Context) {
         initialContext.createDeviceProtectedStorageContext()
     }
     private val prefs = PreferenceManager.getDefaultSharedPreferences(context)
+
+    init {
+        migrate()
+    }
 
     var isDebugMode: Boolean
         get() = prefs.getBoolean(PREF_DEBUG_MODE, false)
@@ -196,7 +225,7 @@ class Preferences(initialContext: Context) {
         set(enabled) = prefs.edit { putBoolean(PREF_PIN_NETWORK_ID, enabled) }
 
     /** Migrate legacy preferences to current preferences. */
-    fun migrate() {
+    private fun migrate() {
         if (prefs.contains(PREF_OTA_SERVER_URL)) {
             otaSource = prefs.getString(PREF_OTA_SERVER_URL, null)?.toUri()
             prefs.edit { remove(PREF_OTA_SERVER_URL) }

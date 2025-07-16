@@ -125,10 +125,11 @@ class SettingsFragment : PreferenceFragmentCompat(), Preference.OnPreferenceClic
     override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
         val context = requireContext()
 
+        // This Preferences instance is constructed first to ensure migrations are run, just in case
+        // we happen to run before PostUnlockInitReceiver.
+        prefs = Preferences(context)
         preferenceManager.setStorageDeviceProtected()
         setPreferencesFromResource(R.xml.preferences_root, rootKey)
-
-        prefs = Preferences(context)
 
         categoryCertificates = findPreference(Preferences.CATEGORY_CERTIFICATES)!!
         categoryDebug = findPreference(Preferences.CATEGORY_DEBUG)!!
