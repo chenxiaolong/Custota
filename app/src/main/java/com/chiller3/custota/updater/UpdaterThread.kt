@@ -81,7 +81,6 @@ class UpdaterThread(
             }
         }
 
-    private var engineIsBound = false
     private val engineStatusLock = ReentrantLock()
     private val engineStatusCondition = engineStatusLock.newCondition()
     private var engineStatus = -1
@@ -89,14 +88,29 @@ class UpdaterThread(
     private val engineErrorCondition = engineErrorLock.newCondition()
     private var engineError = -1
 
-    private val engineCallback = object : IUpdateEngineCallback.Stub() {
+    private enum class EngineWatchType {
+        GENERIC,
+        MERGE,
+    }
+
+    private inner class EngineCallback(private val watchType: EngineWatchType) :
+        IUpdateEngineCallback.Stub() {
         override fun onStatusUpdate(status: Int, percentage: Float) {
             val statusMsg = UpdateEngineStatus.toString(status)
-            Log.d(TAG, "onStatusUpdate($statusMsg, ${percentage * 100}%)")
+            Log.d(TAG, "$watchType :: onStatusUpdate($statusMsg, ${percentage * 100}%)")
 
-            engineStatusLock.withLock {
-                engineStatus = status
-                engineStatusCondition.signalAll()
+            when (watchType) {
+                EngineWatchType.GENERIC -> {
+                    engineStatusLock.withLock {
+                        engineStatus = status
+                        engineStatusCondition.signalAll()
+                    }
+                }
+                EngineWatchType.MERGE -> {
+                    // The merge callback is purely for progress monitoring. We don't make any
+                    // decisions based on the status here. Completion updates happen in the generic
+                    // callback for merges anyway.
+                }
             }
 
             val max = 100
@@ -106,6 +120,7 @@ class UpdaterThread(
                 UpdateEngineStatus.DOWNLOADING -> ProgressType.UPDATE
                 UpdateEngineStatus.VERIFYING -> ProgressType.VERIFY
                 UpdateEngineStatus.FINALIZING -> ProgressType.FINALIZE
+                // This does not include intermediate progress updates for EngineWatchType.GENERIC.
                 UpdateEngineStatus.CLEANUP_PREVIOUS_UPDATE -> ProgressType.CLEANUP
                 else -> null
             }?.let {
@@ -115,14 +130,25 @@ class UpdaterThread(
 
         override fun onPayloadApplicationComplete(errorCode: Int) {
             val errorMsg = UpdateEngineError.toString(errorCode)
-            Log.d(TAG, "onPayloadApplicationComplete($errorMsg)")
+            Log.d(TAG, "$watchType :: onPayloadApplicationComplete($errorMsg)")
 
-            engineErrorLock.withLock {
-                engineError = errorCode
-                engineErrorCondition.signalAll()
+            when (watchType) {
+                EngineWatchType.GENERIC -> {
+                    engineErrorLock.withLock {
+                        engineError = errorCode
+                        engineErrorCondition.signalAll()
+                    }
+                }
+                EngineWatchType.MERGE -> {
+                    // Merge callbacks are one-shot.
+                    mergeCallback = null
+                }
             }
         }
     }
+
+    private var genericCallback: EngineCallback? = null
+    private var mergeCallback: EngineCallback? = null
 
     private enum class NetworkPinningState {
         NOT_ATTEMPTED,
@@ -133,8 +159,17 @@ class UpdaterThread(
     private var networkPinningState = NetworkPinningState.NOT_ATTEMPTED
 
     init {
-        updateEngine.bind(engineCallback)
-        engineIsBound = true
+        EngineCallback(EngineWatchType.GENERIC).let {
+            updateEngine.bind(it)
+            genericCallback = it
+        }
+
+        // This cannot be unbound. The callback is removed from update_engine only when the merge
+        // operation finishes or the binder client process dies.
+        EngineCallback(EngineWatchType.MERGE).let {
+            updateEngine.cleanupSuccessfulUpdate(it)
+            mergeCallback = it
+        }
     }
 
     protected fun finalize() {
@@ -144,9 +179,12 @@ class UpdaterThread(
 
     private fun unbind() {
         synchronized(this) {
-            if (engineIsBound) {
-                updateEngine.unbind(engineCallback)
-                engineIsBound = false
+            genericCallback?.let {
+                updateEngine.unbind(it)
+            }
+
+            mergeCallback?.let {
+                throw IllegalStateException("Unbinding while merge is ongoing")
             }
         }
     }

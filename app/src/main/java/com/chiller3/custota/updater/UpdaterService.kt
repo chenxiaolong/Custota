@@ -208,6 +208,10 @@ class UpdaterService : Service(), UpdaterThread.UpdaterThreadListener {
             state?.current,
             state?.max,
             showImmediately,
+            // Show progress on the lock screen only if there are no buttons for influencing the
+            // behavior of the current operation. This allows the progress bar for the post-reboot
+            // merge operation to show up while the device is BFU.
+            actionResIds.isEmpty(),
         )
 
         val type = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {

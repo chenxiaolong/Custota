@@ -89,6 +89,7 @@ class Notifications(
         progressCurrent: Int?,
         progressMax: Int?,
         showImmediately: Boolean,
+        showOnLockScreen: Boolean,
     ): Notification {
         require((progressCurrent == null) == (progressMax == null)) {
             "Must specify both current and max progress or neither"
@@ -109,6 +110,9 @@ class Notifications(
             setContentIntent(pendingIntent)
             setOngoing(true)
             setOnlyAlertOnce(true)
+            if (showOnLockScreen) {
+                setVisibility(Notification.VISIBILITY_PUBLIC)
+            }
 
             if (progressCurrent != null && progressMax != null) {
                 // We also show an indeterminate progress bar when the current progress is 0 because
