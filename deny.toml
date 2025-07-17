@@ -52,5 +52,5 @@ unknown-git = "deny"
 allow-git = [
     "https://github.com/chenxiaolong/avbroot",
     "https://github.com/chenxiaolong/sepatch",
-    "https://github.com/chenxiaolong/zip",
+    "https://github.com/chenxiaolong/zip2",
 ]

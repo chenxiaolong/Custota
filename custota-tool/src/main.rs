@@ -52,7 +52,7 @@ use x509_cert::{
     der::{Any, Decode, Encode, Tag, asn1::OctetStringRef},
     spki::AlgorithmIdentifierOwned,
 };
-use zip::{ZipWriter, write::FileOptions};
+use zip::{DateTime, ZipWriter, write::SimpleFileOptions};
 
 const CSIG_EXT: &str = ".csig";
 
@@ -810,7 +810,7 @@ fn subcommand_gen_cert_module(args: &GenerateCertModule) -> Result<()> {
         .with_context(|| format!("Failed to open for writing: {:?}", args.output))?;
     let buf_writer = BufWriter::new(raw_writer);
     let mut zip_writer = ZipWriter::new(buf_writer);
-    let options = FileOptions::default();
+    let options = SimpleFileOptions::default().last_modified_time(DateTime::default());
 
     let mut description = "Certs: ".to_owned();
     for (i, (hash, _)) in certs.iter().enumerate() {
