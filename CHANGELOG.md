@@ -12,6 +12,7 @@
 * Fix major regression from version 5.12 where settings did not get migrated properly and got reset ([PR #141])
   * **Updating to this version will automatically restore the old settings without any manual intervention.**
   * If noticed your settings get reset in 5.12 and already reconfigured the app, your new settings will not be touched.
+* Show exact progress bar (instead of indeterminate progress bar) for the post-reboot cleanup operation ([PR #142])
 
 ### Version 5.12
 
@@ -352,3 +353,4 @@ Changes:
 [PR #138]: https://github.com/chenxiaolong/Custota/pull/138
 [PR #140]: https://github.com/chenxiaolong/Custota/pull/140
 [PR #141]: https://github.com/chenxiaolong/Custota/pull/141
+[PR #142]: https://github.com/chenxiaolong/Custota/pull/142
