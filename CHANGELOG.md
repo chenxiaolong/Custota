@@ -9,6 +9,10 @@
 
 ### Unreleased
 
+* Fix major regression from version 5.12 where settings did not get migrated properly and got reset ([PR #141])
+  * **Updating to this version will automatically restore the old settings without any manual intervention.**
+  * If noticed your settings get reset in 5.12 and already reconfigured the app, your new settings will not be touched.
+
 ### Version 5.12
 
 * Add support for direct boot ([PR #140])
@@ -347,3 +351,4 @@ Changes:
 [PR #137]: https://github.com/chenxiaolong/Custota/pull/137
 [PR #138]: https://github.com/chenxiaolong/Custota/pull/138
 [PR #140]: https://github.com/chenxiaolong/Custota/pull/140
+[PR #141]: https://github.com/chenxiaolong/Custota/pull/141
