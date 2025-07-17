@@ -7,7 +7,7 @@
     to update the actual links at the bottom of the file.
 -->
 
-### Unreleased
+### Version 5.13
 
 * Fix major regression from version 5.12 where settings did not get migrated properly and got reset ([PR #141])
   * **Updating to this version will automatically restore the old settings without any manual intervention.**
