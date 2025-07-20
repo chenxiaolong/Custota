@@ -11,6 +11,7 @@
 
 * Fix possible crash in some scenarios ([PR #144])
   * This was just an annoyance that didn't block actual operations.
+* Work around Android r8 miscompilation bug that caused all errors to show as network pinning errors ([PR #145])
 
 ### Version 5.13
 
@@ -362,3 +363,4 @@ Changes:
 [PR #142]: https://github.com/chenxiaolong/Custota/pull/142
 [PR #143]: https://github.com/chenxiaolong/Custota/pull/143
 [PR #144]: https://github.com/chenxiaolong/Custota/pull/144
+[PR #145]: https://github.com/chenxiaolong/Custota/pull/145
