@@ -7,7 +7,7 @@
     to update the actual links at the bottom of the file.
 -->
 
-### Unreleased
+### Version 5.14
 
 * Fix possible crash in some scenarios ([PR #144])
   * This was just an annoyance that didn't block actual operations.
