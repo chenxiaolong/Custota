@@ -9,6 +9,9 @@
 
 ### Unreleased
 
+* Fix possible crash in some scenarios ([PR #144])
+  * This was just an annoyance that didn't block actual operations.
+
 ### Version 5.13
 
 * Fix major regression from version 5.12 where settings did not get migrated properly and got reset ([PR #141])
@@ -358,3 +361,4 @@ Changes:
 [PR #141]: https://github.com/chenxiaolong/Custota/pull/141
 [PR #142]: https://github.com/chenxiaolong/Custota/pull/142
 [PR #143]: https://github.com/chenxiaolong/Custota/pull/143
+[PR #144]: https://github.com/chenxiaolong/Custota/pull/144
