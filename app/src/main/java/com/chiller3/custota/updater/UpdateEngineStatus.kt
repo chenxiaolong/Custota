@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: 2023-2024 Andrew Gunnerson
+ * SPDX-FileCopyrightText: 2023-2025 Andrew Gunnerson
  * SPDX-License-Identifier: GPL-3.0-only
  */
 
@@ -36,11 +36,17 @@ object UpdateEngineStatus {
         UpdateEngineStatus::CLEANUP_PREVIOUS_UPDATE.name,
     )
 
+    /** Status codes that indicate completion of an operation (successful or otherwise). */
+    private val COMPLETION_STATUSES: Set<Int> = hashSetOf(
+        IDLE,
+        UPDATED_NEED_REBOOT,
+        CLEANUP_PREVIOUS_UPDATE,
+    )
+
     init {
         assert(STRINGS.size == DISABLED + 1)
     }
 
-    @JvmStatic
     fun toString(status: Int): String {
         val text = if (status in STRINGS.indices) {
             STRINGS[status]
@@ -50,4 +56,6 @@ object UpdateEngineStatus {
 
         return "$status/$text"
     }
+
+    fun isCompleted(status: Int) = status in COMPLETION_STATUSES
 }

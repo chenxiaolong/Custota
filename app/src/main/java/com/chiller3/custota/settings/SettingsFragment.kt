@@ -62,6 +62,7 @@ class SettingsFragment : PreferenceFragmentCompat(), Preference.OnPreferenceClic
     private lateinit var prefCheckForUpdates: Preference
     private lateinit var prefOtaSource: LongClickablePreference
     private lateinit var prefUnmeteredOnly: SwitchPreferenceCompat
+    private lateinit var prefTriggerPostInstall: SwitchPreferenceCompat
     private lateinit var prefAndroidVersion: Preference
     private lateinit var prefSecurityPatchLevel: Preference
     private lateinit var prefFingerprint: Preference
@@ -143,6 +144,8 @@ class SettingsFragment : PreferenceFragmentCompat(), Preference.OnPreferenceClic
 
         prefUnmeteredOnly = findPreference(Preferences.PREF_UNMETERED_ONLY)!!
 
+        prefTriggerPostInstall = findPreference(Preferences.PREF_TRIGGER_POSTINSTALL)!!
+
         prefAndroidVersion = findPreference(Preferences.PREF_ANDROID_VERSION)!!
         prefAndroidVersion.summary = Build.VERSION.RELEASE
 
@@ -180,6 +183,7 @@ class SettingsFragment : PreferenceFragmentCompat(), Preference.OnPreferenceClic
 
         refreshCheckForUpdates()
         refreshOtaSource()
+        refreshPostInstall()
         refreshVersion()
         refreshDebugPrefs()
 
@@ -226,6 +230,11 @@ class SettingsFragment : PreferenceFragmentCompat(), Preference.OnPreferenceClic
             ?: getString(R.string.pref_ota_source_none)
 
         prefUnmeteredOnly.isVisible = prefs.otaSource?.isGuaranteedLocalFile != true
+    }
+
+    private fun refreshPostInstall() {
+        prefTriggerPostInstall.isVisible = Build.VERSION.SDK_INT >= Build.VERSION_CODES.BAKLAVA
+        prefTriggerPostInstall.isEnabled = !prefs.skipPostInstall
     }
 
     private fun refreshVersion() {
@@ -365,6 +374,9 @@ class SettingsFragment : PreferenceFragmentCompat(), Preference.OnPreferenceClic
             Preferences.PREF_UNMETERED_ONLY,
             Preferences.PREF_BATTERY_NOT_LOW -> {
                 UpdaterJob.schedulePeriodic(requireContext(), true)
+            }
+            Preferences.PREF_SKIP_POSTINSTALL -> {
+                refreshPostInstall()
             }
         }
     }

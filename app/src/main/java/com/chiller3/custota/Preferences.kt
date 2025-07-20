@@ -34,6 +34,7 @@ class Preferences(initialContext: Context) {
         const val PREF_UNMETERED_ONLY = "unmetered_only"
         const val PREF_BATTERY_NOT_LOW = "battery_not_low"
         const val PREF_SKIP_POSTINSTALL = "skip_postinstall"
+        const val PREF_TRIGGER_POSTINSTALL = "trigger_postinstall"
         const val PREF_ANDROID_VERSION = "android_version"
         const val PREF_SECURITY_PATCH_LEVEL = "security_patch_level"
         const val PREF_FINGERPRINT = "fingerprint"
@@ -186,6 +187,11 @@ class Preferences(initialContext: Context) {
     var skipPostInstall: Boolean
         get() = prefs.getBoolean(PREF_SKIP_POSTINSTALL, false)
         set(enabled) = prefs.edit { putBoolean(PREF_SKIP_POSTINSTALL, enabled) }
+
+    /** Whether to immediately trigger post-install scripts in the OTA. */
+    var triggerPostInstall: Boolean
+        get() = prefs.getBoolean(PREF_TRIGGER_POSTINSTALL, true)
+        set(enabled) = prefs.edit { putBoolean(PREF_TRIGGER_POSTINSTALL, enabled) }
 
     /** Whether to treat an equal fingerprint as an update. */
     var allowReinstall: Boolean

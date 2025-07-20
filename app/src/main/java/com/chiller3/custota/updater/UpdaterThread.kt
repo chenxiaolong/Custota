@@ -21,6 +21,7 @@ import android.ota.OtaPackageMetadata.OtaMetadata
 import android.system.ErrnoException
 import android.system.OsConstants
 import android.util.Log
+import androidx.annotation.GuardedBy
 import androidx.documentfile.provider.DocumentFile
 import com.chiller3.custota.BuildConfig
 import com.chiller3.custota.Preferences
@@ -60,6 +61,9 @@ class UpdaterThread(
         ServiceManagerProxy.getServiceOrThrow("android.os.UpdateEngineService"))
 
     private val prefs = Preferences(context)
+    // Save this value since we need its value multiple times that are spaced apart.
+    private val skipPostInstall = prefs.skipPostInstall
+
     // NOTE: This is not implemented.
     private val authorization: String? = null
 
@@ -83,9 +87,11 @@ class UpdaterThread(
 
     private val engineStatusLock = ReentrantLock()
     private val engineStatusCondition = engineStatusLock.newCondition()
+    @GuardedBy("engineErrorLock")
     private var engineStatus = -1
     private val engineErrorLock = ReentrantLock()
     private val engineErrorCondition = engineErrorLock.newCondition()
+    @GuardedBy("engineErrorLock")
     private var engineError = -1
 
     private enum class EngineWatchType {
@@ -196,7 +202,7 @@ class UpdaterThread(
         }
     }
 
-    private fun waitForStatus(block: (Int) -> Boolean): Int {
+    private fun waitForStatus(block: (Int) -> Boolean = { it != -1 }): Int {
         engineStatusLock.withLock {
             while (!block(engineStatus)) {
                 engineStatusCondition.await()
@@ -205,12 +211,16 @@ class UpdaterThread(
         }
     }
 
-    private fun waitForError(block: (Int) -> Boolean): Int {
+    private fun waitForError(reset: Boolean, block: (Int) -> Boolean = { it != -1 }): Int {
         engineErrorLock.withLock {
             while (!block(engineError)) {
                 engineErrorCondition.await()
             }
-            return engineError
+            val error = engineError
+            if (reset) {
+                engineError = -1
+            }
+            return error
         }
     }
 
@@ -724,7 +734,7 @@ class UpdaterThread(
                 }
             }
 
-            if (prefs.skipPostInstall) {
+            if (skipPostInstall) {
                 put("RUN_POST_INSTALL", "0")
             }
         }
@@ -806,19 +816,19 @@ class UpdaterThread(
             Log.d(TAG, "Action: $action")
 
             Log.d(TAG, "Waiting for initial engine status")
-            val status = waitForStatus { it != -1 }
-            val statusStr = UpdateEngineStatus.toString(status)
-            Log.d(TAG, "Initial status: $statusStr")
+            val initialStatus = waitForStatus()
+            val initialStatusStr = UpdateEngineStatus.toString(initialStatus)
+            Log.d(TAG, "Initial status: $initialStatusStr")
 
             if (action == Action.REVERT) {
-                if (status == UpdateEngineStatus.UPDATED_NEED_REBOOT) {
+                if (initialStatus == UpdateEngineStatus.UPDATED_NEED_REBOOT) {
                     Log.d(TAG, "Reverting new update because engine is pending reboot")
                     updateEngine.resetStatus()
                 } else {
-                    throw IllegalStateException("Cannot revert while in state: $statusStr")
+                    throw IllegalStateException("Cannot revert while in state: $initialStatusStr")
                 }
 
-                val newStatus = waitForStatus { it != UpdateEngineStatus.UPDATED_NEED_REBOOT }
+                val newStatus = waitForStatus { it != initialStatus }
                 val newStatusStr = UpdateEngineStatus.toString(newStatus)
                 Log.d(TAG, "New status after revert: $newStatusStr")
 
@@ -827,12 +837,13 @@ class UpdaterThread(
                 } else {
                     listener.onUpdateResult(this, UpdateFailed(newStatusStr))
                 }
-            } else if (status == UpdateEngineStatus.UPDATED_NEED_REBOOT) {
+            } else if (initialStatus == UpdateEngineStatus.UPDATED_NEED_REBOOT) {
                 // Resend success notification to remind the user to reboot. We can't perform any
-                // further operations besides reverting.
+                // further operations besides reverting. For simplicity, we don't trigger Android
+                // 16's async post-install scripts again.
                 listener.onUpdateResult(this, UpdateNeedReboot)
             } else {
-                if (status == UpdateEngineStatus.IDLE) {
+                if (initialStatus == UpdateEngineStatus.IDLE) {
                     if (action == Action.MONITOR) {
                         // Nothing to do.
                         listener.onUpdateResult(this, NothingToMonitor)
@@ -870,12 +881,39 @@ class UpdaterThread(
                     Log.w(TAG, "Monitoring existing update because engine is not idle")
                 }
 
-                val error = waitForError { it != -1 }
-                val errorStr = UpdateEngineError.toString(error)
+                // We reset the error code after retrieving it because we might need to perform a
+                // second operation for the post-install scripts.
+                var error = waitForError(true)
+                var errorStr = UpdateEngineError.toString(error)
                 Log.d(TAG, "Update engine result: $errorStr")
 
+                // The status may be updated after the error code is, so wait for a completion
+                // condition.
+                val newStatus = waitForStatus { UpdateEngineStatus.isCompleted(it) }
+                val newStatusStr = UpdateEngineStatus.toString(newStatus)
+                Log.d(TAG, "Update engine status: $newStatusStr")
+
+                // Android 16 introduced support for asynchronous post-install dexopt. We can
+                // trigger the process immediately instead of waiting for the device to be charging
+                // and idle if the user requests it. While the process is running, the status will
+                // reset to FINALIZING. The process is idempotent.
+                val triggerPostInstall = Build.VERSION.SDK_INT >= Build.VERSION_CODES.BAKLAVA
+                        && UpdateEngineError.isUpdateSucceeded(error)
+                        && newStatus == UpdateEngineStatus.UPDATED_NEED_REBOOT
+                        && !skipPostInstall
+                        && prefs.triggerPostInstall
+                if (triggerPostInstall) {
+                    Log.i(TAG, "Triggering post-install immediately")
+                    updateEngine.triggerPostinstall("system")
+
+                    error = waitForError(true)
+                    errorStr = UpdateEngineError.toString(error)
+                    Log.d(TAG, "Update engine result: $errorStr")
+                }
+
                 if (UpdateEngineError.isUpdateSucceeded(error)) {
-                    if (status == UpdateEngineStatus.CLEANUP_PREVIOUS_UPDATE) {
+                    if (initialStatus == UpdateEngineStatus.CLEANUP_PREVIOUS_UPDATE) {
+                        // We check the initial status here because the new status will be IDLE.
                         deleteCareMap()
 
                         Log.d(TAG, "Successfully cleaned up upgrade")

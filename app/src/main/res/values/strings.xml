@@ -33,6 +33,8 @@
     <string name="pref_battery_not_low_desc">Only allow updates to be installed if the battery level is not critical.</string>
     <string name="pref_skip_postinstall_name">Skip optional post-install scripts</string>
     <string name="pref_skip_postinstall_desc">Skip running post-install operations that are marked as optional in the OTA. This usually skips the dexopt operation, which precompiles app bytecode for faster loading.</string>
+    <string name="pref_trigger_postinstall_name">Run post-install scripts immediately</string>
+    <string name="pref_trigger_postinstall_desc">If enabled, the post-install scripts will run immediately after an OTA is installed. Otherwise, they run when the device is charging and idle. It is not possible to display the status of the operation, but it is safe to reboot before it completes.</string>
 
     <!-- OS information preferences -->
     <string name="pref_android_version_name">Android version</string>
