@@ -167,8 +167,15 @@ class UpdaterThread(
         // This cannot be unbound. The callback is removed from update_engine only when the merge
         // operation finishes or the binder client process dies.
         EngineCallback(EngineWatchType.MERGE).let {
-            updateEngine.cleanupSuccessfulUpdate(it)
+            // We set mergeCallback first because calling cleanupSuccessfulUpdate() may result in a
+            // synchronous call to onPayloadApplicationComplete(), which clears the callback.
             mergeCallback = it
+            try {
+                updateEngine.cleanupSuccessfulUpdate(it)
+            } catch (e: Exception) {
+                mergeCallback = null
+                throw e
+            }
         }
     }
 
