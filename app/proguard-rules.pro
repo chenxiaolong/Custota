@@ -50,3 +50,9 @@
 -keep class com.chiller3.custota.standalone.* {
     *;
 }
+
+# These exception classes have no source-level differences, but are absolutely different
+# semantically. r8 wants to deduplicate them, which is just wrong.
+-keep class com.chiller3.custota.updater.UpdaterThread$*Exception {
+    *;
+}
