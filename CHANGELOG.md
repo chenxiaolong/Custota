@@ -9,6 +9,8 @@
 
 ### Unreleased
 
+* Update dependencies and switch to rawzip for zip file handling in custota-tool ([PR #150])
+
 ### Version 5.14
 
 * Fix possible crash in some scenarios ([PR #144])
@@ -366,3 +368,4 @@ Changes:
 [PR #143]: https://github.com/chenxiaolong/Custota/pull/143
 [PR #144]: https://github.com/chenxiaolong/Custota/pull/144
 [PR #145]: https://github.com/chenxiaolong/Custota/pull/145
+[PR #150]: https://github.com/chenxiaolong/Custota/pull/150
