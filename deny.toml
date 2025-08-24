@@ -14,9 +14,9 @@ allow = [
     "Apache-2.0 WITH LLVM-exception",
     "BSD-3-Clause",
     "bzip2-1.0.6",
-    "GPL-3.0",
+    "GPL-3.0-only",
     "ISC",
-    "LGPL-3.0",
+    "LGPL-2.1-or-later",
     "MIT",
     "Unicode-3.0",
     "Zlib",
@@ -43,7 +43,7 @@ include-dependencies = true
 include-workspace = true
 bypass = [
     # Only used in tests.
-    { name = "libloading", allow-globs = ["tests/*.dll"] }
+    { name = "libloading", allow-globs = ["tests/nagisa*.dll"] },
 ]
 
 [sources]
@@ -52,5 +52,5 @@ unknown-git = "deny"
 allow-git = [
     "https://github.com/chenxiaolong/avbroot",
     "https://github.com/chenxiaolong/sepatch",
-    "https://github.com/chenxiaolong/zip2",
+    "https://github.com/chenxiaolong/system-properties",
 ]

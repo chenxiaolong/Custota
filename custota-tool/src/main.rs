@@ -22,12 +22,10 @@ use anyhow::{Context, Result, anyhow, bail};
 use avbroot::{
     cli::args::LogFormat,
     crypto::{self, PassphraseSource, RsaSigningKey, SignatureAlgorithm},
-    format::{ota, payload::PayloadHeader},
+    format::{ota, payload::PayloadHeader, zip},
     protobuf::build::tools::releasetools::ota_metadata::OtaType,
-    stream::{self, HashingReader, PSeekFile},
+    stream::{self, HashingReader},
 };
-use cap_std::ambient_authority;
-use cap_tempfile::TempDir;
 use clap::{Parser, Subcommand, ValueEnum};
 use cms::{
     builder::{SignedDataBuilder, SignerInfoBuilder},
@@ -37,6 +35,7 @@ use cms::{
 };
 use const_oid::ObjectIdentifier;
 use hex::FromHexError;
+use rawzip::{CompressionMethod, ZipArchiveWriter};
 use ring::digest::Digest;
 use rsa::{
     RsaPrivateKey,
@@ -46,13 +45,13 @@ use rsa::{
 use serde::{Deserialize, Serialize};
 use serde_repr::{Deserialize_repr, Serialize_repr};
 use sha2::{Sha256, Sha512};
+use tempfile::TempDir;
 use tracing::{Level, info, warn};
 use x509_cert::{
     Certificate,
     der::{Any, Decode, Encode, Tag, asn1::OctetStringRef},
     spki::AlgorithmIdentifierOwned,
 };
-use zip::{DateTime, ZipWriter, write::SimpleFileOptions};
 
 const CSIG_EXT: &str = ".csig";
 
@@ -474,7 +473,7 @@ fn sign_cms_inline(key: &RsaPrivateKey, cert: &Certificate, data: &[u8]) -> Resu
 }
 
 fn compute_vbmeta_digest(
-    raw_reader: PSeekFile,
+    raw_reader: File,
     offset: u64,
     size: u64,
     header: &PayloadHeader,
@@ -482,8 +481,7 @@ fn compute_vbmeta_digest(
 ) -> Result<[u8; 32]> {
     info!("Computing vbmeta digest...");
 
-    let authority = ambient_authority();
-    let temp_dir = TempDir::new(authority).context("Failed to create temporary directory")?;
+    let temp_dir = TempDir::new().context("Failed to create temporary directory")?;
     let unique_images = header
         .manifest
         .partitions
@@ -494,7 +492,7 @@ fn compute_vbmeta_digest(
 
     avbroot::cli::ota::extract_payload(
         &raw_reader,
-        &temp_dir,
+        temp_dir.path(),
         offset,
         size,
         header,
@@ -502,7 +500,7 @@ fn compute_vbmeta_digest(
         cancel_signal,
     )?;
 
-    avbroot::cli::avb::compute_digest(&temp_dir, "vbmeta", cancel_signal)
+    avbroot::cli::avb::compute_digest(temp_dir.path(), "vbmeta", cancel_signal)
 }
 
 fn subcommand_show_csig(args: &ShowCsig) -> Result<()> {
@@ -566,10 +564,9 @@ fn subcommand_gen_csig(args: &GenerateCsig, cancel_signal: &AtomicBool) -> Resul
         None => (&args.cert, Cow::Borrowed(&signing_cert)),
     };
 
-    let file = File::open(&args.input)
-        .map(PSeekFile::new)
+    let mut reader = File::open(&args.input)
+        .map(BufReader::new)
         .with_context(|| anyhow!("Failed to open for reading: {:?}", args.input))?;
-    let mut reader = BufReader::new(file);
 
     info!("Verifying OTA signature...");
     let ota_sig = ota::parse_ota_sig(&mut reader).context("Failed to parse OTA signature")?;
@@ -635,7 +632,7 @@ fn subcommand_gen_csig(args: &GenerateCsig, cancel_signal: &AtomicBool) -> Resul
 
     let (pf_payload_offset, pf_payload_size) = pfs
         .iter()
-        .find(|pf| pf.name == ota::PATH_PAYLOAD)
+        .find(|pf| pf.name() == ota::PATH_PAYLOAD)
         .ok_or_else(|| anyhow!("Missing property files entry: {}", ota::PATH_PAYLOAD))
         .map(|pf| (pf.offset, pf.size))?;
 
@@ -652,7 +649,7 @@ fn subcommand_gen_csig(args: &GenerateCsig, cancel_signal: &AtomicBool) -> Resul
         .into_iter()
         .map(|pf| {
             hash_section(&mut reader, pf.offset, pf.size, cancel_signal).map(|d| PropertyFile {
-                name: pf.name,
+                name: pf.name().to_owned(),
                 offset: pf.offset,
                 size: pf.size,
                 digest: Some(hex::encode(d)),
@@ -806,11 +803,10 @@ fn subcommand_gen_cert_module(args: &GenerateCertModule) -> Result<()> {
         certs.push((subject_hash, cert));
     }
 
-    let raw_writer = File::create(&args.output)
+    let mut archive = File::create(&args.output)
+        .map(BufWriter::new)
+        .map(ZipArchiveWriter::new)
         .with_context(|| format!("Failed to open for writing: {:?}", args.output))?;
-    let buf_writer = BufWriter::new(raw_writer);
-    let mut zip_writer = ZipWriter::new(buf_writer);
-    let options = SimpleFileOptions::default().last_modified_time(DateTime::default());
 
     let mut description = "Certs: ".to_owned();
     for (i, (hash, _)) in certs.iter().enumerate() {
@@ -821,37 +817,67 @@ fn subcommand_gen_cert_module(args: &GenerateCertModule) -> Result<()> {
     }
     description.push('\n');
 
-    zip_writer.start_file("module.prop", options)?;
-    zip_writer.write_all(include_bytes!("../system-ca-certs/module.prop"))?;
-    zip_writer.write_all(description.as_bytes())?;
+    fn add_file(
+        zip_writer: &mut ZipArchiveWriter<impl Write>,
+        name: &str,
+        data_fn: impl Fn(&mut dyn Write) -> Result<()>,
+    ) -> Result<()> {
+        let compression_method = CompressionMethod::Deflate;
 
-    zip_writer.start_file("post-fs-data.sh", options)?;
-    zip_writer.write_all(include_bytes!("../system-ca-certs/post-fs-data.sh"))?;
+        let (entry_writer, data_config) = zip_writer
+            .new_file(name)
+            .compression_method(compression_method)
+            .start()?;
+        let compressed_writer = zip::compressed_writer(entry_writer, compression_method)?;
+        let mut data_writer = data_config.wrap(compressed_writer);
 
-    for dir in [
-        "META-INF",
-        "META-INF/com",
-        "META-INF/com/google",
-        "META-INF/com/google/android",
-    ] {
-        zip_writer.add_directory(dir, options)?;
+        data_fn(&mut data_writer)?;
+
+        data_writer
+            .finish()
+            .and_then(|(w, d)| w.finish()?.finish(d))?;
+
+        Ok(())
     }
 
-    zip_writer.start_file("META-INF/com/google/android/update-binary", options)?;
-    zip_writer.write_all(include_bytes!("../system-ca-certs/update-binary"))?;
+    add_file(&mut archive, "module.prop", |w| {
+        w.write_all(include_bytes!("../system-ca-certs/module.prop"))?;
+        w.write_all(description.as_bytes())?;
+        Ok(())
+    })?;
 
-    zip_writer.start_file("META-INF/com/google/android/updater-script", options)?;
-    zip_writer.write_all(include_bytes!("../system-ca-certs/updater-script"))?;
+    add_file(&mut archive, "post-fs-data.sh", |w| {
+        w.write_all(include_bytes!("../system-ca-certs/post-fs-data.sh"))?;
+        Ok(())
+    })?;
 
-    zip_writer.add_directory("cacerts", options)?;
+    add_file(
+        &mut archive,
+        "META-INF/com/google/android/update-binary",
+        |w| {
+            w.write_all(include_bytes!("../system-ca-certs/update-binary"))?;
+            Ok(())
+        },
+    )?;
+
+    add_file(
+        &mut archive,
+        "META-INF/com/google/android/updater-script",
+        |w| {
+            w.write_all(include_bytes!("../system-ca-certs/updater-script"))?;
+            Ok(())
+        },
+    )?;
 
     for (hash, cert) in certs {
         let name = format!("cacerts/{hash:08x}.0");
-        zip_writer.start_file(&name, options)?;
-        crypto::write_pem_cert(Path::new(&name), &mut zip_writer, &cert)?;
+        add_file(&mut archive, &name, |w| {
+            crypto::write_pem_cert(Path::new(&name), w, &cert)?;
+            Ok(())
+        })?;
     }
 
-    zip_writer.finish()?.flush()?;
+    archive.finish()?.flush()?;
 
     Ok(())
 }

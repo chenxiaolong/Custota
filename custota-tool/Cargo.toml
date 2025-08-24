@@ -7,8 +7,6 @@ publish.workspace = true
 [dependencies]
 anyhow = "1.0.75"
 ring = "0.17.14"
-cap-std = "3.0.0"
-cap-tempfile = "3.0.0"
 clap = { version = "4.4.1", features = ["derive"] }
 cms = { version = "0.2.2", features = ["std", "builder"] }
 # This cannot be upgraded to 0.10 until the other RustCrypto libraries are
@@ -17,6 +15,7 @@ const-oid = "0.9.5"
 ctrlc = "3.4.5"
 hex = "0.4.3"
 md5 = "0.8.0"
+rawzip = "0.4.0"
 rsa = { version = "0.9.2", features = ["sha2"] }
 serde = { version = "1.0.188", features = ["derive"] }
 serde_json = "1.0.105"
@@ -24,19 +23,11 @@ serde_repr = "0.1.19"
 sha2 = { version = "0.10.7", features = ["std"] }
 tracing = "0.1.41"
 x509-cert = "0.2.4"
+tempfile = "3.20.0"
 
 [dependencies.avbroot]
 git = "https://github.com/chenxiaolong/avbroot"
-tag = "v3.17.2"
-
-[dependencies.zip]
-git = "https://github.com/chenxiaolong/zip2"
-rev = "59685f4dadbfee8cb3ea74c8fbb402b60d8137e8"
-default-features = false
-features = ["deflate"]
+tag = "v3.21.0"
 
 [build-dependencies]
 anyhow = "1.0.75"
-
-[features]
-static = ["avbroot/static"]

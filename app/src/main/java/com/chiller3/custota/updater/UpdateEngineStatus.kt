@@ -6,7 +6,6 @@
 package com.chiller3.custota.updater
 
 /** Must match AOSP's system/update_engine/client_library/include/update_engine/update_status.h. */
-@Suppress("MemberVisibilityCanBePrivate")
 object UpdateEngineStatus {
     const val IDLE = 0
     const val CHECKING_FOR_UPDATE = 1

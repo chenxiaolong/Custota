@@ -6,7 +6,6 @@
 package com.chiller3.custota.updater
 
 /** Must match AOSP's system/update_engine/common/error_code.h. */
-@Suppress("MemberVisibilityCanBePrivate")
 object UpdateEngineError {
     const val SUCCESS = 0
     const val ERROR = 1
