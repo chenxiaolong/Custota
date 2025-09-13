@@ -188,6 +188,10 @@ android {
             excludes.add("META-INF/versions/9/OSGI-INF/MANIFEST.MF")
         }
     }
+    dependenciesInfo {
+        includeInApk = false
+        includeInBundle = false
+    }
 }
 
 kotlin {
