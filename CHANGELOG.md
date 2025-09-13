@@ -9,6 +9,8 @@
 
 ### Unreleased
 
+* Update dependencies ([PR #152])
+
 ### Version 5.15
 
 * Update dependencies and switch to rawzip for zip file handling in custota-tool ([PR #150])
@@ -371,3 +373,4 @@ Changes:
 [PR #144]: https://github.com/chenxiaolong/Custota/pull/144
 [PR #145]: https://github.com/chenxiaolong/Custota/pull/145
 [PR #150]: https://github.com/chenxiaolong/Custota/pull/150
+[PR #152]: https://github.com/chenxiaolong/Custota/pull/152
