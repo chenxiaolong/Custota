@@ -9,6 +9,7 @@
 
 ### Unreleased
 
+* Remove dependency info block from APK ([PR #151])
 * Update dependencies ([PR #152])
 
 ### Version 5.15
@@ -373,4 +374,5 @@ Changes:
 [PR #144]: https://github.com/chenxiaolong/Custota/pull/144
 [PR #145]: https://github.com/chenxiaolong/Custota/pull/145
 [PR #150]: https://github.com/chenxiaolong/Custota/pull/150
+[PR #151]: https://github.com/chenxiaolong/Custota/pull/151
 [PR #152]: https://github.com/chenxiaolong/Custota/pull/152
