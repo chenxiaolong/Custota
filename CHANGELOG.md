@@ -10,6 +10,7 @@
 ### Unreleased
 
 * Fix regression from version 5.16 where OTA and CSIG files could not be found when using a local directory ([Issue #155], [PR #156])
+* Update dependencies ([PR #157])
 
 ### Version 5.16
 
@@ -382,3 +383,4 @@ Changes:
 [PR #151]: https://github.com/chenxiaolong/Custota/pull/151
 [PR #152]: https://github.com/chenxiaolong/Custota/pull/152
 [PR #156]: https://github.com/chenxiaolong/Custota/pull/156
+[PR #157]: https://github.com/chenxiaolong/Custota/pull/157
