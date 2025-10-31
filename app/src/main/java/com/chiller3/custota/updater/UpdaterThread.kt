@@ -221,35 +221,29 @@ class UpdaterThread(
     /**
      * Compute [str] relative to [base].
      *
-     * For local SAF URIs, [str] must be a (potentially nested) child of [base] or an absolute
-     * HTTP(S) URI. For HTTP(S) URIs, [str] can be a relative path, absolute path, or absolute
-     * HTTP(S) URI.
+     * [base] must refer to a directory. For HTTP(S) URIs, a trailing slash is appended if there
+     * isn't one already.
      *
-     * For HTTP(S) URIs, if [forceBaseAsDir] is true, then [base] is treated as a directory even if
-     * it doesn't end in a trailing slash.
+     * For local SAF URIs, [str] must be a (potentially nested) child of [base]. For HTTP(S) URIs,
+     * [str] can be a relative path, absolute path, or absolute HTTP(S) URI.
      */
-    private fun resolveUri(base: Uri, str: String, forceBaseAsDir: Boolean): Uri {
+    private fun resolveUri(base: Uri, str: String): Uri {
         if (base.scheme == ContentResolver.SCHEME_CONTENT) {
-            val strUriRaw = str.toUri()
-            if (strUriRaw.scheme == "http" || strUriRaw.scheme == "https") {
-                // Allow local update info to redirect to an absolute URL since that has been the
-                // documented behavior
-                return strUriRaw
-            }
-
             val file = DocumentFile.fromTreeUri(context, base)
-                ?: throw IOException("Failed to open: $base")
+                ?: throw IOException("Failed to open tree from: $base")
             // This is safe because SAF does not allow '..'
             val components = str.split('/')
 
             val child = file.findNestedFile(components)
-                ?: throw IOException("Failed to find $str inside $base")
+                ?: throw IOException("Failed to find $str inside ${file.uri}")
 
             return child.uri
         } else {
-            var raw = base.toString()
-            if (forceBaseAsDir && !raw.endsWith('/')) {
-                raw += '/'
+            val raw = buildString {
+                append(base)
+                if (!endsWith('/')) {
+                    append('/')
+                }
             }
 
             val resolved = URI(raw).resolve(str).toString().toUri()
@@ -621,7 +615,7 @@ class UpdaterThread(
     /** Synchronously check for updates. */
     private fun checkForUpdates(): CheckUpdateResult {
         val baseUri = prefs.otaSource ?: throw IllegalStateException("No URI configured")
-        val updateInfoUri = resolveUri(baseUri, "${Build.DEVICE}.json", true)
+        val updateInfoUri = resolveUri(baseUri, "${Build.DEVICE}.json")
         Log.d(TAG, "Update info URI: $updateInfoUri")
 
         val updateInfo = try {
@@ -637,9 +631,9 @@ class UpdaterThread(
         val isIncremental = locationInfo !== updateInfo.full
         Log.d(TAG, "OTA is incremental: $isIncremental")
 
-        val otaUri = resolveUri(updateInfoUri, locationInfo.locationOta, false)
+        val otaUri = resolveUri(baseUri, locationInfo.locationOta)
         Log.d(TAG, "OTA URI: $otaUri")
-        val csigUri = resolveUri(updateInfoUri, locationInfo.locationCsig, false)
+        val csigUri = resolveUri(baseUri, locationInfo.locationCsig)
         Log.d(TAG, "csig URI: $csigUri")
 
         val csigInfo = downloadAndCheckCsig(csigUri)
