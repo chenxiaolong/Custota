@@ -7,7 +7,7 @@
     to update the actual links at the bottom of the file.
 -->
 
-### Unreleased
+### Version 5.17
 
 * Fix regression from version 5.16 where OTA and CSIG files could not be found when using a local directory ([Issue #155], [PR #156])
 * Update dependencies ([PR #157])
