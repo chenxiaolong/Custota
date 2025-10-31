@@ -9,6 +9,8 @@
 
 ### Unreleased
 
+* Fix regression from version 5.16 where OTA and CSIG files could not be found when using a local directory ([Issue #155], [PR #156])
+
 ### Version 5.16
 
 * Remove dependency info block from APK ([PR #151])
@@ -282,6 +284,7 @@ Changes:
 [Issue #116]: https://github.com/chenxiaolong/Custota/issues/116
 [Issue #129]: https://github.com/chenxiaolong/Custota/issues/129
 [Issue #136]: https://github.com/chenxiaolong/Custota/issues/136
+[Issue #155]: https://github.com/chenxiaolong/Custota/issues/155
 [PR #1]: https://github.com/chenxiaolong/Custota/pull/1
 [PR #2]: https://github.com/chenxiaolong/Custota/pull/2
 [PR #6]: https://github.com/chenxiaolong/Custota/pull/6
@@ -378,3 +381,4 @@ Changes:
 [PR #150]: https://github.com/chenxiaolong/Custota/pull/150
 [PR #151]: https://github.com/chenxiaolong/Custota/pull/151
 [PR #152]: https://github.com/chenxiaolong/Custota/pull/152
+[PR #156]: https://github.com/chenxiaolong/Custota/pull/156
