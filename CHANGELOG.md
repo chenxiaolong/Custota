@@ -9,6 +9,8 @@
 
 ### Unreleased
 
+* Add prebuilt binaries for aarch64 GNU/Linux and Windows ([PR #158])
+
 ### Version 5.17
 
 * Fix regression from version 5.16 where OTA and CSIG files could not be found when using a local directory ([Issue #155], [PR #156])
@@ -386,3 +388,4 @@ Changes:
 [PR #152]: https://github.com/chenxiaolong/Custota/pull/152
 [PR #156]: https://github.com/chenxiaolong/Custota/pull/156
 [PR #157]: https://github.com/chenxiaolong/Custota/pull/157
+[PR #158]: https://github.com/chenxiaolong/Custota/pull/158
