@@ -7,6 +7,8 @@
     to update the actual links at the bottom of the file.
 -->
 
+### Unreleased
+
 ### Version 5.18
 
 * Add prebuilt custota-tool binaries for aarch64 GNU/Linux and Windows ([PR #158])
