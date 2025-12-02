@@ -9,6 +9,8 @@
 
 ### Unreleased
 
+* Add support for Android 16 QPR2's new SELinux binary policy format ([PR #160])
+
 ### Version 5.18
 
 * Add prebuilt custota-tool binaries for aarch64 GNU/Linux and Windows ([PR #158])
@@ -391,3 +393,4 @@ Changes:
 [PR #156]: https://github.com/chenxiaolong/Custota/pull/156
 [PR #157]: https://github.com/chenxiaolong/Custota/pull/157
 [PR #158]: https://github.com/chenxiaolong/Custota/pull/158
+[PR #160]: https://github.com/chenxiaolong/Custota/pull/160
