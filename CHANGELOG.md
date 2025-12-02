@@ -7,7 +7,7 @@
     to update the actual links at the bottom of the file.
 -->
 
-### Unreleased
+### Version 5.19
 
 * Add support for Android 16 QPR2's new SELinux binary policy format ([PR #160])
 
