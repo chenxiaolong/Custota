@@ -5,7 +5,6 @@
 
 import com.android.build.gradle.internal.UsesSdkComponentsBuildService
 import com.android.build.gradle.internal.dsl.SdkComponentsImpl
-import com.android.repository.Revision
 import com.google.protobuf.gradle.proto
 import org.eclipse.jgit.api.ArchiveCommand
 import org.eclipse.jgit.api.Git
