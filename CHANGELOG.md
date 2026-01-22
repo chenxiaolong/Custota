@@ -9,6 +9,8 @@
 
 ### Unreleased
 
+* Update AGP to 9.0.0 ([PR #163])
+
 ### Version 5.19
 
 * Add support for Android 16 QPR2's new SELinux binary policy format ([PR #160])
@@ -396,3 +398,4 @@ Changes:
 [PR #157]: https://github.com/chenxiaolong/Custota/pull/157
 [PR #158]: https://github.com/chenxiaolong/Custota/pull/158
 [PR #160]: https://github.com/chenxiaolong/Custota/pull/160
+[PR #163]: https://github.com/chenxiaolong/Custota/pull/163
