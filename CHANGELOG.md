@@ -10,6 +10,8 @@
 ### Unreleased
 
 * Update AGP to 9.0.0 ([PR #163])
+* Fix crash when `update_engine` returns certain status codes or error codes ([Issue #167], [PR #168])
+  * This was a regression introduced in version 4.9.
 
 ### Version 5.19
 
@@ -298,6 +300,7 @@ Changes:
 [Issue #129]: https://github.com/chenxiaolong/Custota/issues/129
 [Issue #136]: https://github.com/chenxiaolong/Custota/issues/136
 [Issue #155]: https://github.com/chenxiaolong/Custota/issues/155
+[Issue #167]: https://github.com/chenxiaolong/Custota/issues/167
 [PR #1]: https://github.com/chenxiaolong/Custota/pull/1
 [PR #2]: https://github.com/chenxiaolong/Custota/pull/2
 [PR #6]: https://github.com/chenxiaolong/Custota/pull/6
@@ -399,3 +402,4 @@ Changes:
 [PR #158]: https://github.com/chenxiaolong/Custota/pull/158
 [PR #160]: https://github.com/chenxiaolong/Custota/pull/160
 [PR #163]: https://github.com/chenxiaolong/Custota/pull/163
+[PR #168]: https://github.com/chenxiaolong/Custota/pull/168
