@@ -36,7 +36,7 @@ object UpdateEngineStatus {
     )
 
     init {
-        assert(STRINGS.size == DISABLED + 1)
+        assert(STRINGS.size == CLEANUP_PREVIOUS_UPDATE + 1)
     }
 
     @JvmStatic

@@ -142,7 +142,7 @@ object UpdateEngineError {
         UpdateEngineError::POST_INSTALL_MOUNT_ERROR.name,
         UpdateEngineError::OVERLAYFS_ENABLED_ERROR.name,
         UpdateEngineError::UPDATE_PROCESSING.name,
-        UpdateEngineError::UPDATE_ALREADY_INSTALLED,
+        UpdateEngineError::UPDATE_ALREADY_INSTALLED.name,
     )
 
     /**
@@ -155,7 +155,7 @@ object UpdateEngineError {
     )
 
     init {
-        assert(STRINGS.size == POST_INSTALL_MOUNT_ERROR + 1)
+        assert(STRINGS.size == UPDATE_ALREADY_INSTALLED + 1)
     }
 
     fun toString(code: Int): String {
