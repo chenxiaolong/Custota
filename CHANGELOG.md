@@ -7,7 +7,7 @@
     to update the actual links at the bottom of the file.
 -->
 
-### Unreleased
+### Version 5.20
 
 * Update AGP to 9.0.0 ([PR #163])
 * Fix crash when `update_engine` returns certain status codes or error codes ([Issue #167], [PR #168])
