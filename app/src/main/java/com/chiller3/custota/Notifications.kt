@@ -24,6 +24,7 @@ class Notifications(
         const val CHANNEL_ID_CHECK = "check"
         const val CHANNEL_ID_FAILURE = "failure"
         const val CHANNEL_ID_SUCCESS = "success"
+        const val CHANNEL_ID_CLEANUP = "cleanup"
 
         private val LEGACY_CHANNEL_IDS = arrayOf<String>()
 
@@ -65,6 +66,14 @@ class Notifications(
         description = context.getString(R.string.notification_channel_success_desc)
     }
 
+    private fun createCleanupAlertsChannel() = NotificationChannel(
+        CHANNEL_ID_CLEANUP,
+        context.getString(R.string.notification_channel_cleanup_name),
+        NotificationManager.IMPORTANCE_NONE,
+    ).apply {
+        description = context.getString(R.string.notification_channel_cleanup_desc)
+    }
+
     /**
      * Ensure notification channels are up-to-date.
      *
@@ -76,6 +85,7 @@ class Notifications(
             createCheckAlertsChannel(),
             createFailureAlertsChannel(),
             createSuccessAlertsChannel(),
+            createCleanupAlertsChannel(),
         ))
         LEGACY_CHANNEL_IDS.forEach { notificationManager.deleteNotificationChannel(it) }
     }

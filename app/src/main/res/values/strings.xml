@@ -81,14 +81,16 @@
     <string name="dialog_action_cancel">Cancel</string>
 
     <!-- Notifications -->
-    <string name="notification_channel_persistent_name">background services</string>
-    <string name="notification_channel_persistent_desc">persistent notification for update progress</string>
-    <string name="notification_channel_check_name">update check alerts</string>
-    <string name="notification_channel_check_desc">alerts about updates being available</string>
-    <string name="notification_channel_failure_name">failure alerts</string>
-    <string name="notification_channel_failure_desc">alerts for errors during update</string>
-    <string name="notification_channel_success_name">success alerts</string>
-    <string name="notification_channel_success_desc">alerts for successful update</string>
+    <string name="notification_channel_persistent_name">Background services</string>
+    <string name="notification_channel_persistent_desc">Persistent notification for update progress</string>
+    <string name="notification_channel_check_name">Update check alerts</string>
+    <string name="notification_channel_check_desc">Alerts about updates being available</string>
+    <string name="notification_channel_failure_name">Failure alerts</string>
+    <string name="notification_channel_failure_desc">Alerts for errors during update</string>
+    <string name="notification_channel_success_name">Success alerts</string>
+    <string name="notification_channel_success_desc">Alerts for successful update</string>
+    <string name="notification_channel_cleanup_name">Cleanup alerts</string>
+    <string name="notification_channel_cleanup_desc">Alerts for successful cleanup after reboot</string>
     <string name="notification_state_init">Initializing OTA updater</string>
     <string name="notification_state_check">Checking for OTA updates</string>
     <string name="notification_state_install">Installing OTA update</string>
