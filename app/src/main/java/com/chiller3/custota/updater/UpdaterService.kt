@@ -233,10 +233,19 @@ class UpdaterService : Service(), UpdaterThread.UpdaterThreadListener {
         val showReboot: Boolean
 
         when (result) {
-            is UpdaterThread.NothingToMonitor, is UpdaterThread.UpdateCleanedUp -> {
+            is UpdaterThread.NothingToMonitor -> {
                 // No need to bug the user about this since it's automatic and not directly caused
                 // in response to a user action.
                 return
+            }
+            is UpdaterThread.UpdateCleanedUp -> {
+                channel = Notifications.CHANNEL_ID_CLEANUP
+                onlyAlertOnce = false
+                titleResId = R.string.notification_update_ota_succeeded
+                message = null
+                showInstall = false
+                showRetry = false
+                showReboot = false
             }
             is UpdaterThread.UpdateAvailable -> {
                 channel = Notifications.CHANNEL_ID_CHECK
