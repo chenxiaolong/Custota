@@ -10,6 +10,8 @@
 ### Unreleased
 
 * Add optional (disabled by default) notification that is shown after the post-reboot cleanup finishes ([Issue #170], [PR #171])
+* system-ca-certs module: Fix mkdir failing after first boot ([PR #172])
+  * If you use this module for adding custom CA certificates, it will need to be regenerated and reinstalled.
 * Update dependencies ([PR #173])
 
 ### Version 5.20
@@ -410,4 +412,5 @@ Changes:
 [PR #163]: https://github.com/chenxiaolong/Custota/pull/163
 [PR #168]: https://github.com/chenxiaolong/Custota/pull/168
 [PR #171]: https://github.com/chenxiaolong/Custota/pull/171
+[PR #172]: https://github.com/chenxiaolong/Custota/pull/172
 [PR #173]: https://github.com/chenxiaolong/Custota/pull/173
