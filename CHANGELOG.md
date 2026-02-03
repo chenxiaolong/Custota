@@ -9,6 +9,8 @@
 
 ### Unreleased
 
+* Update dependencies ([PR #173])
+
 ### Version 5.20
 
 * Update AGP to 9.0.0 ([PR #163])
@@ -405,3 +407,4 @@ Changes:
 [PR #160]: https://github.com/chenxiaolong/Custota/pull/160
 [PR #163]: https://github.com/chenxiaolong/Custota/pull/163
 [PR #168]: https://github.com/chenxiaolong/Custota/pull/168
+[PR #173]: https://github.com/chenxiaolong/Custota/pull/173
