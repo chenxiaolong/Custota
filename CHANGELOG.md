@@ -9,6 +9,7 @@
 
 ### Unreleased
 
+* Add optional (disabled by default) notification that is shown after the post-reboot cleanup finishes ([Issue #170], [PR #171])
 * Update dependencies ([PR #173])
 
 ### Version 5.20
@@ -305,6 +306,7 @@ Changes:
 [Issue #136]: https://github.com/chenxiaolong/Custota/issues/136
 [Issue #155]: https://github.com/chenxiaolong/Custota/issues/155
 [Issue #167]: https://github.com/chenxiaolong/Custota/issues/167
+[Issue #170]: https://github.com/chenxiaolong/Custota/issues/170
 [PR #1]: https://github.com/chenxiaolong/Custota/pull/1
 [PR #2]: https://github.com/chenxiaolong/Custota/pull/2
 [PR #6]: https://github.com/chenxiaolong/Custota/pull/6
@@ -407,4 +409,5 @@ Changes:
 [PR #160]: https://github.com/chenxiaolong/Custota/pull/160
 [PR #163]: https://github.com/chenxiaolong/Custota/pull/163
 [PR #168]: https://github.com/chenxiaolong/Custota/pull/168
+[PR #171]: https://github.com/chenxiaolong/Custota/pull/171
 [PR #173]: https://github.com/chenxiaolong/Custota/pull/173
