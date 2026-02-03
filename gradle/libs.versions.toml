@@ -1,6 +1,6 @@
 [versions]
 android-gradle-plugin = "9.0.0"
-androidx-activity = "1.12.2"
+androidx-activity = "1.12.3"
 androidx-appcompat = "1.7.1"
 androidx-core = "1.17.0"
 androidx-documentfile = "1.1.0"
@@ -12,7 +12,7 @@ json = "20251224"
 kotlin = "2.3.0"
 kotlinx-serialization = "1.10.0"
 material = "1.13.0"
-protobuf = "4.33.4"
+protobuf = "4.33.5"
 protobuf-gradle-plugin = "0.9.6"
 
 [libraries]
