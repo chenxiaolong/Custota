@@ -33,7 +33,7 @@ for cert_dir in "${apex_dir}" "${system_dir}"; do
     mnt_dir=${mnt_base}/${mnt_index}
     let mnt_index+=1
 
-    mkdir "${mnt_dir}"
+    mkdir -p "${mnt_dir}"
     nsenter --mount=/proc/1/ns/mnt -- \
         mount -t tmpfs "${module_id}" "${mnt_dir}"
 
