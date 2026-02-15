@@ -10,6 +10,8 @@
 ### Unreleased
 
 * Update dependencies ([PR #175])
+* Reenable default proguard optimizations ([PR #174])
+  * For folks who want to decode stack traces from log files, the mapping files are now included with the official releases in `mappings.tar.zst`
 
 ### Version 5.21
 
@@ -418,4 +420,5 @@ Changes:
 [PR #171]: https://github.com/chenxiaolong/Custota/pull/171
 [PR #172]: https://github.com/chenxiaolong/Custota/pull/172
 [PR #173]: https://github.com/chenxiaolong/Custota/pull/173
+[PR #174]: https://github.com/chenxiaolong/Custota/pull/174
 [PR #175]: https://github.com/chenxiaolong/Custota/pull/175
