@@ -9,6 +9,8 @@
 
 ### Unreleased
 
+* Update dependencies ([PR #175])
+
 ### Version 5.21
 
 * Add optional (disabled by default) notification that is shown after the post-reboot cleanup finishes ([Issue #170], [PR #171])
@@ -416,3 +418,4 @@ Changes:
 [PR #171]: https://github.com/chenxiaolong/Custota/pull/171
 [PR #172]: https://github.com/chenxiaolong/Custota/pull/172
 [PR #173]: https://github.com/chenxiaolong/Custota/pull/173
+[PR #175]: https://github.com/chenxiaolong/Custota/pull/175
