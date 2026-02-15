@@ -12,6 +12,11 @@
 #   public *;
 #}
 
+# Keep log tags.
+-keepclasseswithmembers,allowoptimization,allowshrinking class com.chiller3.custota.** {
+    static final java.lang.String TAG;
+}
+
 # We construct TreeDocumentFile via reflection in DocumentFileExtensions
 # to speed up SAF performance when doing path lookups.
 -keepclassmembers class androidx.documentfile.provider.TreeDocumentFile {
@@ -36,7 +41,7 @@
 
 # Keep standalone CLI utilities
 -keep class com.chiller3.custota.standalone.* {
-    *;
+    void main(java.lang.String[]);
 }
 
 # These exception classes have no source-level differences, but are absolutely different
