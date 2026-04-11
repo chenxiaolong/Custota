@@ -39,7 +39,6 @@
 
         <receiver
             android:name=".PostUnlockInitReceiver"
-            android:enabled="true"
             android:exported="false">
             <intent-filter>
                 <action android:name="android.intent.action.BOOT_COMPLETED" />
@@ -67,7 +66,6 @@
         <receiver
             android:name=".updater.UpdaterBootReceiver"
             android:directBootAware="true"
-            android:enabled="true"
             android:exported="false">
             <intent-filter>
                 <action android:name="android.intent.action.LOCKED_BOOT_COMPLETED" />
