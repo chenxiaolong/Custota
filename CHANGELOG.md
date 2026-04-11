@@ -9,7 +9,7 @@
 
 ### Unreleased
 
-* Update dependencies ([PR #175])
+* Update dependencies ([PR #175], [PR #179])
 * Reenable default proguard optimizations ([PR #174], [PR #176])
   * For folks who want to decode stack traces from log files, the mapping files are now included with the official releases in `mappings.tar.zst`
 
@@ -423,3 +423,4 @@ Changes:
 [PR #174]: https://github.com/chenxiaolong/Custota/pull/174
 [PR #175]: https://github.com/chenxiaolong/Custota/pull/175
 [PR #176]: https://github.com/chenxiaolong/Custota/pull/176
+[PR #179]: https://github.com/chenxiaolong/Custota/pull/179
