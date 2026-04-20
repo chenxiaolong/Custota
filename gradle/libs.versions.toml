@@ -1,19 +1,19 @@
 [versions]
-android-gradle-plugin = "9.1.0"
+android-gradle-plugin = "9.1.1"
 androidx-activity = "1.13.0"
 androidx-appcompat = "1.7.1"
 androidx-core = "1.18.0"
 androidx-documentfile = "1.1.0"
 androidx-fragment = "1.8.9"
 androidx-preference = "1.2.1"
-bouncycastle = "1.83"
+bouncycastle = "1.84"
 jgit = "7.6.0.202603022253-r"
 json = "20251224"
 kotlin = "2.3.20"
 kotlinx-serialization = "1.11.0"
 material = "1.13.0"
 protobuf = "4.34.1"
-protobuf-gradle-plugin = "0.9.6"
+protobuf-gradle-plugin = "0.10.0"
 
 [libraries]
 androidx-activity = { group = "androidx.activity", name = "activity-ktx", version.ref = "androidx-activity" }
