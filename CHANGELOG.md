@@ -9,7 +9,7 @@
 
 ### Unreleased
 
-* Update dependencies ([PR #175], [PR #179])
+* Update dependencies ([PR #175], [PR #179], [PR #181])
 * Reenable default proguard optimizations ([PR #174], [PR #176])
   * For folks who want to decode stack traces from log files, the mapping files are now included with the official releases in `mappings.tar.zst`
 * custota-selinux: Log libsepol's warning messages when loading or saving the SELinux policy fails ([PR #178])
@@ -426,3 +426,4 @@ Changes:
 [PR #176]: https://github.com/chenxiaolong/Custota/pull/176
 [PR #178]: https://github.com/chenxiaolong/Custota/pull/178
 [PR #179]: https://github.com/chenxiaolong/Custota/pull/179
+[PR #181]: https://github.com/chenxiaolong/Custota/pull/181
