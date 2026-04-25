@@ -2,9 +2,6 @@
 
 <img src="app/images/icon.svg" alt="app icon" width="72" />
 
-![latest release badge](https://img.shields.io/github/v/release/chenxiaolong/Custota?sort=semver)
-![license badge](https://img.shields.io/github/license/chenxiaolong/Custota)
-
 Custota is an app for installing Android A/B OTA updates from a custom OTA server. When paired with [avbroot](https://github.com/chenxiaolong/avbroot), it can be used to seamlessly install OTAs signed by a custom key.
 
 Custota is installed via a Magisk/KernelSU module so that it can run as a system app.
@@ -442,4 +439,4 @@ If you are interested in implementing a new feature and would like to see it inc
 
 ## License
 
-Custota is licensed under GPLv3. Please see [`LICENSE`](./LICENSE) for the full license text.
+Custota is licensed under GPL-3.0-only. Please see [`LICENSE`](./LICENSE) for the full license text.
