@@ -13,6 +13,7 @@
 * Reenable default proguard optimizations ([PR #174], [PR #176])
   * For folks who want to decode stack traces from log files, the mapping files are now included with the official releases in `mappings.tar.zst`
 * custota-selinux: Log libsepol's warning messages when loading or saving the SELinux policy fails ([PR #178])
+* custota-selinux: Fix app crash in some setups due to missing userfaultfd type transition rule ([Issue #182], [PR #183])
 
 ### Version 5.21
 
@@ -316,6 +317,7 @@ Changes:
 [Issue #155]: https://github.com/chenxiaolong/Custota/issues/155
 [Issue #167]: https://github.com/chenxiaolong/Custota/issues/167
 [Issue #170]: https://github.com/chenxiaolong/Custota/issues/170
+[Issue #182]: https://github.com/chenxiaolong/Custota/issues/182
 [PR #1]: https://github.com/chenxiaolong/Custota/pull/1
 [PR #2]: https://github.com/chenxiaolong/Custota/pull/2
 [PR #6]: https://github.com/chenxiaolong/Custota/pull/6
@@ -427,3 +429,4 @@ Changes:
 [PR #178]: https://github.com/chenxiaolong/Custota/pull/178
 [PR #179]: https://github.com/chenxiaolong/Custota/pull/179
 [PR #181]: https://github.com/chenxiaolong/Custota/pull/181
+[PR #183]: https://github.com/chenxiaolong/Custota/pull/183
