@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: GPL-3.0-only
 
 use std::{
+    collections::HashMap,
     fs::{self, OpenOptions},
     io::Write,
     path::{Path, PathBuf},
@@ -109,41 +110,18 @@ pub fn main() -> Result<()> {
     let t_target = pdb.create_type(n_target_type, false)?.0;
     let t_target_uffd = pdb.create_type(n_target_uffd_type, false)?.0;
 
-    pdb.copy_roles(t_source, t_target)?;
-    pdb.copy_roles(t_source_uffd, t_target_uffd)?;
+    let mut type_map = HashMap::new();
+    type_map.insert(t_source, t_target);
+    type_map.insert(t_source_uffd, t_target_uffd);
 
-    pdb.copy_attributes(t_source, t_target)?;
-    pdb.copy_attributes(t_source_uffd, t_target_uffd)?;
+    for (from, to) in &type_map {
+        pdb.copy_roles(*from, *to)?;
+        pdb.copy_attributes(*from, *to)?;
+        pdb.copy_constraints(*from, *to);
+    }
 
-    pdb.copy_constraints(t_source, t_target);
-    pdb.copy_constraints(t_source_uffd, t_target_uffd);
-
-    pdb.copy_avtab_rules(Box::new(move |source_type, target_type, class| {
-        let mut new_source_type = None;
-        let mut new_target_type = None;
-
-        if source_type == t_source {
-            new_source_type = Some(t_target);
-        } else if source_type == t_source_uffd {
-            new_source_type = Some(t_target_uffd);
-        }
-
-        if target_type == t_source {
-            new_target_type = Some(t_target);
-        } else if target_type == t_source_uffd {
-            new_target_type = Some(t_target_uffd);
-        }
-
-        if new_source_type.is_none() && new_target_type.is_none() {
-            None
-        } else {
-            Some((
-                new_source_type.unwrap_or(source_type),
-                new_target_type.unwrap_or(target_type),
-                class,
-            ))
-        }
-    }))?;
+    pdb.copy_avtab_rules(&type_map)?;
+    pdb.copy_filename_trans_rules(&type_map);
 
     // At this point, custota_app should be identical to untrusted_app. Now, add
     // the actual additional rules we need.
