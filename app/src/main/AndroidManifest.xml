@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-    SPDX-FileCopyrightText: 2023-2025 Andrew Gunnerson
+    SPDX-FileCopyrightText: 2023-2026 Andrew Gunnerson
     SPDX-License-Identifier: GPL-3.0-only
 -->
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
@@ -10,7 +10,8 @@
         tools:ignore="ProtectedPermissions" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"
         android:minSdkVersion="34" />
-    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE"
+        tools:ignore="ForegroundServicesPolicy" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE"
         android:minSdkVersion="34" />
     <uses-permission android:name="android.permission.INTERNET" />
