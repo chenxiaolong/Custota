@@ -7,7 +7,7 @@
     to update the actual links at the bottom of the file.
 -->
 
-### Unreleased
+### Version 5.22
 
 * Update dependencies ([PR #175], [PR #179], [PR #181], [PR #184])
 * Reenable default proguard optimizations ([PR #174], [PR #176])
