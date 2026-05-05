@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: 2023 Andrew Gunnerson
+ * SPDX-FileCopyrightText: 2023-2026 Andrew Gunnerson
  * SPDX-License-Identifier: GPL-3.0-only
  */
 
@@ -12,7 +12,7 @@ import android.net.Uri
 import android.os.Bundle
 import android.text.InputType
 import androidx.appcompat.app.AlertDialog
-import androidx.core.os.bundleOf
+import androidx.core.net.toUri
 import androidx.core.view.isVisible
 import androidx.core.widget.addTextChangedListener
 import androidx.fragment.app.DialogFragment
@@ -25,7 +25,6 @@ import com.chiller3.custota.settings.OpenPersistentDocumentTree
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import java.net.MalformedURLException
 import java.net.URL
-import androidx.core.net.toUri
 
 class OtaSourceDialogFragment : DialogFragment() {
     companion object {
@@ -143,7 +142,7 @@ class OtaSourceDialogFragment : DialogFragment() {
     override fun onDismiss(dialog: DialogInterface) {
         super.onDismiss(dialog)
 
-        setFragmentResult(tag!!, bundleOf(RESULT_SUCCESS to success))
+        setFragmentResult(tag!!, Bundle().apply { putBoolean(RESULT_SUCCESS, success) })
     }
 
     override fun onSaveInstanceState(outState: Bundle) {
