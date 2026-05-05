@@ -10,6 +10,7 @@
 ### Unreleased
 
 * Update dependencies ([PR #185])
+* Remove usage of deprecated `bundleOf()` function ([PR #186])
 
 ### Version 5.22
 
@@ -436,3 +437,4 @@ Changes:
 [PR #183]: https://github.com/chenxiaolong/Custota/pull/183
 [PR #184]: https://github.com/chenxiaolong/Custota/pull/184
 [PR #185]: https://github.com/chenxiaolong/Custota/pull/185
+[PR #186]: https://github.com/chenxiaolong/Custota/pull/186
