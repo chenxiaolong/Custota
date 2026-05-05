@@ -9,6 +9,8 @@
 
 ### Unreleased
 
+* Update dependencies ([PR #185])
+
 ### Version 5.22
 
 * Update dependencies ([PR #175], [PR #179], [PR #181], [PR #184])
@@ -433,3 +435,4 @@ Changes:
 [PR #181]: https://github.com/chenxiaolong/Custota/pull/181
 [PR #183]: https://github.com/chenxiaolong/Custota/pull/183
 [PR #184]: https://github.com/chenxiaolong/Custota/pull/184
+[PR #185]: https://github.com/chenxiaolong/Custota/pull/185
