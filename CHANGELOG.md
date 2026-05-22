@@ -7,7 +7,7 @@
     to update the actual links at the bottom of the file.
 -->
 
-### Unreleased
+### Version 5.23
 
 * Update dependencies ([PR #185])
 * Remove usage of deprecated `bundleOf()` function ([PR #186])
