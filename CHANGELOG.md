@@ -12,6 +12,8 @@
 * Update dependencies ([PR #185])
 * Remove usage of deprecated `bundleOf()` function ([PR #186])
 * Fix titles of switch preferences being truncated when they don't fit ([PR #188])
+* Fix missing file errors when installing from a local directory ([Issue #189], [PR #190])
+  * This was a regression introduced in version 5.22.
 
 ### Version 5.22
 
@@ -324,6 +326,7 @@ Changes:
 [Issue #167]: https://github.com/chenxiaolong/Custota/issues/167
 [Issue #170]: https://github.com/chenxiaolong/Custota/issues/170
 [Issue #182]: https://github.com/chenxiaolong/Custota/issues/182
+[Issue #189]: https://github.com/chenxiaolong/Custota/issues/189
 [PR #1]: https://github.com/chenxiaolong/Custota/pull/1
 [PR #2]: https://github.com/chenxiaolong/Custota/pull/2
 [PR #6]: https://github.com/chenxiaolong/Custota/pull/6
@@ -440,3 +443,4 @@ Changes:
 [PR #185]: https://github.com/chenxiaolong/Custota/pull/185
 [PR #186]: https://github.com/chenxiaolong/Custota/pull/186
 [PR #188]: https://github.com/chenxiaolong/Custota/pull/188
+[PR #190]: https://github.com/chenxiaolong/Custota/pull/190
