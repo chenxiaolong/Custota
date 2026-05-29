@@ -9,6 +9,8 @@
 
 ### Unreleased
 
+* Port UI to Jetpack Compose and adopt Material 3 Expressive styling ([PR #192])
+
 ### Version 5.23
 
 * Update dependencies ([PR #185])
@@ -446,3 +448,4 @@ Changes:
 [PR #186]: https://github.com/chenxiaolong/Custota/pull/186
 [PR #188]: https://github.com/chenxiaolong/Custota/pull/188
 [PR #190]: https://github.com/chenxiaolong/Custota/pull/190
+[PR #192]: https://github.com/chenxiaolong/Custota/pull/192
