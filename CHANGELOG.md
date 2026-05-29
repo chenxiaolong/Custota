@@ -7,7 +7,7 @@
     to update the actual links at the bottom of the file.
 -->
 
-### Unreleased
+### Version 6.1
 
 * Fix OTA source dialog showing `null` in text box during initial setup ([PR #195])
 
