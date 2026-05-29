@@ -7,7 +7,7 @@
     to update the actual links at the bottom of the file.
 -->
 
-### Unreleased
+### Version 6.0
 
 * Port UI to Jetpack Compose and adopt Material 3 Expressive styling ([PR #192], [PR #194])
 * Update dependencies ([PR #193])
