@@ -50,7 +50,9 @@ fun OtaSourceDialog(
         mutableStateOf(if (isLocal) initialUri else null)
     }
 
-    var input by rememberSaveable { mutableStateOf(if (isLocal) "" else initialUri.toString()) }
+    var input by rememberSaveable {
+        mutableStateOf(if (isLocal) "" else initialUri?.toString() ?: "")
+    }
     val uriRemote = tryParseInput(input)
 
     val requestSafDirectory = rememberLauncherForActivityResult(OpenPersistentDocumentTree()) { uri ->
