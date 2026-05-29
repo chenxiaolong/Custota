@@ -9,7 +9,7 @@ package com.chiller3.custota.extension
 import android.content.ContentResolver
 import android.net.Uri
 
-private const val EXTERNAL_STORAGE_AUTHORITY = "com.android.externalstorage.documents"
+const val EXTERNAL_STORAGE_AUTHORITY = "com.android.externalstorage.documents"
 
 private val LOCAL_PROVIDERS = arrayOf(
     EXTERNAL_STORAGE_AUTHORITY,

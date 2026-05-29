@@ -65,8 +65,6 @@
     <string name="dialog_ota_source_server_url_message">Thêm đường dẫn gốc để tải về metadata cho nhật OTA(ngoại trừ tên file).</string>
     <string name="dialog_ota_source_server_url_error_bad_protocol">Chỉ đường dẫn http:// và https:// được hỗ trợ.</string>
     <string name="dialog_ota_source_server_url_error_malformed">Đương dẫn không hợp lệ.</string>
-    <string name="dialog_action_ok">OK</string>
-    <string name="dialog_action_cancel">Hủy</string>
 
     <!-- Notifications -->
     <string name="notification_channel_persistent_name">dịch vụ ngầm</string>

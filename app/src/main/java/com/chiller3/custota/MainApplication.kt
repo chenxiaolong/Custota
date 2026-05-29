@@ -1,14 +1,12 @@
 /*
- * SPDX-FileCopyrightText: 2022-2025 Andrew Gunnerson
+ * SPDX-FileCopyrightText: 2022-2026 Andrew Gunnerson
  * SPDX-License-Identifier: GPL-3.0-only
- * Based on BCR code.
  */
 
 package com.chiller3.custota
 
 import android.app.Application
 import android.util.Log
-import com.google.android.material.color.DynamicColors
 import java.io.File
 
 class MainApplication : Application() {
@@ -34,9 +32,6 @@ class MainApplication : Application() {
                 oldCrashHandler?.uncaughtException(t, e)
             }
         }
-
-        // Enable Material You colors
-        DynamicColors.applyToActivitiesIfAvailable(this)
 
         Notifications(this).updateChannels()
 

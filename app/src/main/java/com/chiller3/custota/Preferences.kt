@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: 2023-2025 Andrew Gunnerson
+ * SPDX-FileCopyrightText: 2023-2026 Andrew Gunnerson
  * SPDX-License-Identifier: GPL-3.0-only
  */
 
@@ -24,36 +24,18 @@ class Preferences(initialContext: Context) {
     companion object {
         private val TAG = Preferences::class.java.simpleName
 
-        const val CATEGORY_CERTIFICATES = "certificates"
-        const val CATEGORY_DEBUG = "debug"
-
-        const val PREF_CHECK_FOR_UPDATES = "check_for_updates"
-        const val PREF_OTA_SOURCE = "ota_source"
-        const val PREF_AUTOMATIC_CHECK = "automatic_check"
-        const val PREF_AUTOMATIC_INSTALL = "automatic_install"
-        const val PREF_UNMETERED_ONLY = "unmetered_only"
-        const val PREF_BATTERY_NOT_LOW = "battery_not_low"
-        const val PREF_SKIP_POSTINSTALL = "skip_postinstall"
-        const val PREF_ANDROID_VERSION = "android_version"
-        const val PREF_SECURITY_PATCH_LEVEL = "security_patch_level"
-        const val PREF_FINGERPRINT = "fingerprint"
-        const val PREF_VBMETA_DIGEST = "vbmeta_digest"
-        const val PREF_BOOT_SLOT = "boot_slot"
-        const val PREF_BOOTLOADER_STATUS = "bootloader_status"
-        const val PREF_NO_CERTIFICATES = "no_certificates"
-        const val PREF_VERSION = "version"
-        const val PREF_OPEN_LOG_DIR = "open_log_dir"
-        const val PREF_ALLOW_REINSTALL = "allow_reinstall"
-        const val PREF_REVERT_COMPLETED = "revert_completed"
-        const val PREF_INSTALL_CSIG_CERT = "install_csig_cert"
-        const val PREF_PIN_NETWORK_ID = "pin_network_id"
-
-        // Not associated with a UI preference
-        private const val PREF_DEBUG_MODE = "debug_mode"
-        private const val PREF_CSIG_CERTS = "csig_certs"
+        // Keep in the same order as the helper functions below.
         private const val PREF_ALREADY_MIGRATED = "already_migrated"
-
-        // Legacy preferences
+        private const val PREF_DEBUG_MODE = "debug_mode"
+        private const val PREF_OTA_SOURCE = "ota_source"
+        private const val PREF_AUTOMATIC_CHECK = "automatic_check"
+        private const val PREF_AUTOMATIC_INSTALL = "automatic_install"
+        private const val PREF_UNMETERED_ONLY = "unmetered_only"
+        private const val PREF_BATTERY_NOT_LOW = "battery_not_low"
+        private const val PREF_SKIP_POSTINSTALL = "skip_postinstall"
+        private const val PREF_ALLOW_REINSTALL = "allow_reinstall"
+        private const val PREF_CSIG_CERTS = "csig_certs"
+        private const val PREF_PIN_NETWORK_ID = "pin_network_id"
         private const val PREF_OTA_SERVER_URL = "ota_server_url"
 
         private fun migrateToDeviceProtectedStorage(context: Context) {

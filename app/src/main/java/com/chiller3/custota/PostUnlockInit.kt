@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: 2025 Andrew Gunnerson
+ * SPDX-FileCopyrightText: 2025-2026 Andrew Gunnerson
  * SPDX-License-Identifier: GPL-3.0-only
  */
 
@@ -45,7 +45,7 @@ object PostUnlockInit {
             // Action is required, but value doesn't matter.
             action = Intent.ACTION_MAIN
         }
-        val shortcut = ShortcutInfoCompat.Builder(context, Preferences.PREF_CHECK_FOR_UPDATES)
+        val shortcut = ShortcutInfoCompat.Builder(context, "check_for_updates")
             .setShortLabel(context.getString(R.string.pref_check_for_updates_name))
             .setIcon(icon)
             .setIntent(intent)

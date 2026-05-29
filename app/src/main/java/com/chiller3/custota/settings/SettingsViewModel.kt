@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: 2023-2024 Andrew Gunnerson
+ * SPDX-FileCopyrightText: 2023-2026 Andrew Gunnerson
  * SPDX-License-Identifier: GPL-3.0-only
  */
 
@@ -17,7 +17,7 @@ import com.chiller3.custota.updater.OtaPaths
 import com.chiller3.custota.wrapper.ServiceManagerProxy
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -25,17 +25,38 @@ import java.io.IOException
 import java.security.cert.CertificateFactory
 import java.security.cert.X509Certificate
 
+sealed interface Alert {
+    data class SystemCertLoadFailure(val error: String) : Alert
+
+    data class CsigCertLoadFailure(val error: String) : Alert
+
+    data object BrowserNotFound : Alert
+
+    data object DocumentsUINotFound : Alert
+}
+
 class SettingsViewModel(application: Application) : AndroidViewModel(application) {
     private val prefs = Preferences(getApplication())
 
-    private val _certs = MutableStateFlow<List<Pair<X509Certificate, Boolean>>>(emptyList())
-    val certs: StateFlow<List<Pair<X509Certificate, Boolean>>> = _certs
+    private val _alerts = MutableStateFlow<List<Alert>>(emptyList())
+    val alerts = _alerts.asStateFlow()
+
+    private val _certificates = MutableStateFlow<List<Pair<X509Certificate, Boolean>>>(emptyList())
+    val certificates = _certificates.asStateFlow()
 
     private val _bootloaderStatus = MutableStateFlow<BootloaderStatus?>(null)
-    val bootloaderStatus: StateFlow<BootloaderStatus?> = _bootloaderStatus
+    val bootloaderStatus = _bootloaderStatus.asStateFlow()
 
     init {
         loadCerts()
+    }
+
+    fun acknowledgeFirstAlert() {
+        _alerts.update { it.drop(1) }
+    }
+
+    fun addAlert(alert: Alert) {
+        _alerts.update { it + alert }
     }
 
     private fun loadCerts() {
@@ -46,6 +67,7 @@ class SettingsViewModel(application: Application) : AndroidViewModel(application
                 }
             } catch (e: Exception) {
                 Log.w(TAG, "Failed to load system certificates", e)
+                _alerts.update { it + Alert.SystemCertLoadFailure(e.toSingleLineString()) }
                 emptySet()
             }
 
@@ -54,10 +76,11 @@ class SettingsViewModel(application: Application) : AndroidViewModel(application
                 prefs.csigCerts.subtract(systemCerts)
             } catch (e: Exception) {
                 Log.w(TAG, "Failed to load user csig certificates", e)
+                _alerts.update { it + Alert.CsigCertLoadFailure(e.toSingleLineString()) }
                 emptySet()
             }
 
-            _certs.update { systemCerts.sortedWith(certCompare).map { it to true } +
+            _certificates.update { systemCerts.sortedWith(certCompare).map { it to true } +
                     csigCerts.sortedWith(certCompare).map { it to false } }
         }
     }
@@ -73,11 +96,12 @@ class SettingsViewModel(application: Application) : AndroidViewModel(application
                     } ?: throw IOException("Null input stream: $uri")
                 }
             } catch (e: Exception) {
-                Log.w(TAG, "Failed to load certificate: $uri")
+                Log.w(TAG, "Failed to load certificate: $uri", e)
+                _alerts.update { it + Alert.CsigCertLoadFailure(e.toSingleLineString()) }
                 return@launch
             }
 
-            val allCerts = _certs.value
+            val allCerts = _certificates.value
 
             if (allCerts.any { it.first == cert }) {
                 Log.w(TAG, "Certificate already exists: $cert")
@@ -95,16 +119,13 @@ class SettingsViewModel(application: Application) : AndroidViewModel(application
         }
     }
 
-    fun removeCsigCert(index: Int) {
-        val allCerts = _certs.value
-        val cert = allCerts[index].first
-        require(!allCerts[index].second) { "Tried to delete system certificate at $index: $cert" }
+    fun removeCsigCert(certificate: X509Certificate) {
+        Log.d(TAG, "Removing user csig certificate: $certificate")
 
-        Log.d(TAG, "Removing user csig certificate: $cert")
-
-        prefs.csigCerts = allCerts
+        prefs.csigCerts = _certificates
+            .value
             .asSequence()
-            .filterIndexed { i, _ -> i != index }
+            .filter { it.first != certificate }
             .map { it.first }
             .toSet()
 

@@ -77,8 +77,6 @@
     <string name="dialog_ota_source_local_path_select_directory">Select directory</string>
     <string name="dialog_ota_source_use_server_url">Use server URL</string>
     <string name="dialog_ota_source_use_local_path">Use local path</string>
-    <string name="dialog_action_ok">OK</string>
-    <string name="dialog_action_cancel">Cancel</string>
 
     <!-- Notifications -->
     <string name="notification_channel_persistent_name">Background services</string>
@@ -112,4 +110,12 @@
     <string name="notification_action_cancel">Cancel</string>
     <string name="notification_action_reboot">Reboot</string>
     <string name="notification_action_retry">Retry</string>
+
+    <!-- Alerts -->
+    <string name="action_details">Details</string>
+    <string name="dialog_error_details_title">Error details</string>
+    <string name="alert_system_cert_load_failure">Failed to load system OTA certificate.</string>
+    <string name="alert_csig_cert_load_failure">Failed to load csig certificate.</string>
+    <string name="alert_browser_not_found">No web browser is available.</string>
+    <string name="alert_documentsui_not_found">Android\'s builtin file manager (DocumentsUI) is unavailable.</string>
 </resources>
