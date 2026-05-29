@@ -9,6 +9,8 @@
 
 ### Unreleased
 
+* Fix OTA source dialog showing `null` in text box during initial setup ([PR #195])
+
 ### Version 6.0
 
 * Port UI to Jetpack Compose and adopt Material 3 Expressive styling ([PR #192], [PR #194])
@@ -454,3 +456,4 @@ Changes:
 [PR #192]: https://github.com/chenxiaolong/Custota/pull/192
 [PR #193]: https://github.com/chenxiaolong/Custota/pull/193
 [PR #194]: https://github.com/chenxiaolong/Custota/pull/194
+[PR #195]: https://github.com/chenxiaolong/Custota/pull/195
