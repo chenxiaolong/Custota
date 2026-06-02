@@ -9,6 +9,8 @@
 
 ### Unreleased
 
+* Minor fixes for new Compose UI ([PR #196])
+
 ### Version 6.1
 
 * Fix OTA source dialog showing `null` in text box during initial setup ([PR #195])
@@ -459,3 +461,4 @@ Changes:
 [PR #193]: https://github.com/chenxiaolong/Custota/pull/193
 [PR #194]: https://github.com/chenxiaolong/Custota/pull/194
 [PR #195]: https://github.com/chenxiaolong/Custota/pull/195
+[PR #196]: https://github.com/chenxiaolong/Custota/pull/196
