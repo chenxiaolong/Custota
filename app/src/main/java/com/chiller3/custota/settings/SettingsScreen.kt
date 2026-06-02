@@ -33,6 +33,7 @@ import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.core.net.toUri
+import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.chiller3.custota.BuildConfig
@@ -295,9 +296,11 @@ fun SettingsScreen(viewModel: SettingsViewModel = viewModel()) {
         )
     }
 
-    LaunchedEffect(Unit) {
+    LifecycleResumeEffect(Unit) {
         // Make sure we refresh this every time the user switches back to the app.
         viewModel.refreshBootloaderStatus()
+
+        onPauseOrDispose {}
     }
 }
 

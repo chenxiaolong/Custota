@@ -13,6 +13,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.text.input.TextFieldLineLimits
+import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.OutlinedButton
@@ -22,6 +24,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -50,10 +53,9 @@ fun OtaSourceDialog(
         mutableStateOf(if (isLocal) initialUri else null)
     }
 
-    var input by rememberSaveable {
-        mutableStateOf(if (isLocal) "" else initialUri?.toString() ?: "")
-    }
-    val uriRemote = tryParseInput(input)
+    val initialText = remember { if (isLocal) "" else initialUri?.toString() ?: "" }
+    val input = rememberTextFieldState(initialText = initialText)
+    val uriRemote = tryParseInput(input.text.toString())
 
     val requestSafDirectory = rememberLauncherForActivityResult(OpenPersistentDocumentTree()) { uri ->
         uri?.let {
@@ -78,9 +80,8 @@ fun OtaSourceDialog(
                     }
                 } else {
                     OutlinedTextField(
+                        state = input,
                         modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
-                        value = input,
-                        onValueChange = { input = it },
                         placeholder = {
                             Text(text = stringResource(R.string.dialog_ota_source_server_url_hint))
                         },
@@ -95,6 +96,7 @@ fun OtaSourceDialog(
                             keyboardType = KeyboardType.Uri,
                             autoCorrectEnabled = false,
                         ),
+                        lineLimits = TextFieldLineLimits.SingleLine,
                     )
                 }
             }
