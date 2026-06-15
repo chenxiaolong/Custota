@@ -32,17 +32,15 @@ Custota is installed via a Magisk/KernelSU module so that it can run as a system
 
     Alternatively, Custota supports installing OTAs from a local directory instead of downloading them from an OTA server. When using a local directory, the expected directory structure is exactly the same as how it would be with a server.
 
-2. If you're installing OTA updates signed with a custom key, follow the instructions in the [Custom Verification Key](#custom-verification-key) section.
+2. Download the latest version from the [releases page](https://github.com/chenxiaolong/Custota/releases). To verify the digital signature, see the [verifying digital signatures](#verifying-digital-signatures) section.
 
-3. Download the latest version from the [releases page](https://github.com/chenxiaolong/Custota/releases). To verify the digital signature, see the [verifying digital signatures](#verifying-digital-signatures) section.
+3. Install the Custota module in Magisk/KernelSU.
 
-4. Install the Custota module in Magisk/KernelSU.
+4. Reboot and open Custota.
 
-5. Reboot and open Custota.
+5. Set the OTA server URL to point to your OTA server.
 
-6. Set the OTA server URL to point to your OTA server.
-
-7. That's it!
+6. That's it!
 
 Once the OTA server URL is configured, Custota will automatically check for updates periodically. The checks can be turned off completely or extended to automatically install the updates as well. To reduce battery usage, the timing of the periodic update checks is controlled by Android. They run at most once every 6 hours.
 
@@ -155,10 +153,6 @@ To use a self-signed certificate or a custom CA certificate, it needs to be inst
 ```bash
 custota-tool gen-cert-module -o system-ca-certs.zip /path/to/cert.pem
 ```
-
-## Custom verification key
-
-Android's `update_engine` verifies OTA signatures against certificates contained within `/system/etc/security/otacerts.zip`. If your OTAs were signed by a custom key via avbroot, make sure it was done with avbroot 3.0.0 or newer, which added support for patching the system partition's copy of `otacerts.zip` (instead of just the recovery partition's copy).
 
 ## Permissions
 
