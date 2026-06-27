@@ -7,7 +7,7 @@
     to update the actual links at the bottom of the file.
 -->
 
-### Unreleased
+### Version 6.2
 
 * Update target API version to API 37 (Android 17) ([PR #202])
   * **Action required**: Android 17 now blocks local network connections by default. If the configured OTA server is on the local network, open the app to grant the new local network permission.
