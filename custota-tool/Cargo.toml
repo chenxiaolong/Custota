@@ -27,7 +27,7 @@ tempfile = "3.20.0"
 
 [dependencies.avbroot]
 git = "https://github.com/chenxiaolong/avbroot"
-tag = "v3.29.1"
+tag = "v3.31.0"
 
 [build-dependencies]
 anyhow = "1.0.75"

@@ -7,6 +7,7 @@
     <!-- Preference headers -->
     <string name="pref_header_general">General</string>
     <string name="pref_header_behavior">Behavior</string>
+    <string name="pref_header_permissions">Permissions</string>
     <string name="pref_header_os">OS</string>
     <string name="pref_header_certificates">Certificates</string>
     <string name="pref_header_about">About</string>
@@ -33,6 +34,10 @@
     <string name="pref_battery_not_low_desc">Only allow updates to be installed if the battery level is not critical.</string>
     <string name="pref_skip_postinstall_name">Skip optional post-install scripts</string>
     <string name="pref_skip_postinstall_desc">Skip running post-install operations that are marked as optional in the OTA. This usually skips the dexopt operation, which precompiles app bytecode for faster loading.</string>
+
+    <!-- Permission preferences -->
+    <string name="pref_allow_local_network_name">Allow local network access</string>
+    <string name="pref_allow_local_network_desc">Needed to connect to hosts on the local network.</string>
 
     <!-- OS information preferences -->
     <string name="pref_android_version_name">Android version</string>

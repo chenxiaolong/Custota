@@ -158,6 +158,8 @@ custota-tool gen-cert-module -o system-ca-certs.zip /path/to/cert.pem
 
 * `ACCESS_CACHE_FILESYSTEM` (**automatically granted by system app permissions**)
   * Needed to store temporary OTA files.
+* `ACCESS_LOCAL_NETWORK` (**optionally granted by the user**)
+  * Needed on Android 17+ for connecting an OTA server on the local network. This permission is not required for accessing servers over the internet.
 * `ACCESS_NETWORK_STATE` (**automatically granted at install time**)
   * Needed on Android 14+ for unmetered network background run condition.
 * `FOREGROUND_SERVICE`, `FOREGROUND_SERVICE_SPECIAL_USE` (**automatically granted at install time**)

@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: 2025 Andrew Gunnerson
+ * SPDX-FileCopyrightText: 2025-2026 Andrew Gunnerson
  * SPDX-License-Identifier: GPL-3.0-only
  */
 
@@ -15,7 +15,7 @@ class UpdaterLauncherActivity : Activity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        if (Permissions.haveRequired(this)) {
+        if (Permissions.have(this, Permissions.NOTIFICATION)) {
             UpdaterJob.scheduleImmediate(this, UpdaterThread.Action.CHECK)
         } else {
             startActivity(Intent(this, SettingsActivity::class.java))

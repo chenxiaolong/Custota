@@ -76,4 +76,23 @@ interface IUpdateEngine {
    * but needs reboot). DEVICE_CORRUPTED for permanent errors.
    */
   void cleanupSuccessfulUpdate(IUpdateEngineCallback callback);
+  /**
+   * Run postinstall scripts for the given |partition|
+   * This allows developers to run postinstall for a partition at
+   * a time they see fit. For example, they may wish to run postinstall
+   * script when device is IDLE and charging. This method would return
+   * immediately if |partition| is empty or does not correspond to any
+   * partitions on device. |partition| is expected to be unsuffixed, for
+   * example system,product,system_ext, etc.
+   * It is allowed to call this function multiple times with the same
+   * partition. Postinstall script for that partition would get run more
+   * than once. Owners of postinstall scripts should be designed to work
+   * correctly in such cases(idempotent). Note this expectation holds even
+   * without this API, and it has been so for years.
+   * @param Name of thje partition to run postinstall scripts. Should not
+   * contain slot suffix.(e.g. system,product,system_ext)
+   *
+   * @hide
+   */
+  void triggerPostinstall(in String partition);
 }

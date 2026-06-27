@@ -104,29 +104,42 @@ fun SettingsScreen(viewModel: SettingsViewModel = viewModel()) {
     val allowReinstall = remember(reloadPrefs) { prefs.allowReinstall }
     val pinNetworkId = remember(reloadPrefs) { prefs.pinNetworkId }
 
+    var reloadPerms by remember { mutableIntStateOf(0) }
+    val localNetworkGranted = remember(reloadPerms) {
+        Permissions.have(context, Permissions.LOCAL_NETWORK)
+    }
+
     val bootloaderStatus by viewModel.bootloaderStatus.collectAsStateWithLifecycle()
     val certificates by viewModel.certificates.collectAsStateWithLifecycle()
 
     var scheduledAction by rememberSaveable { mutableStateOf<UpdaterThread.Action?>(null) }
-
-    val requestPermissionRequired = rememberLauncherForActivityResult(
-        ActivityResultContracts.RequestMultiplePermissions(),
-    ) { granted ->
-        // Call recording can still be enabled if optional permissions were not granted.
-        if (granted.all { it.key !in Permissions.REQUIRED || it.value }) {
+    val performAction = {
+        if (Permissions.have(context, Permissions.NOTIFICATION)) {
             UpdaterJob.scheduleImmediate(context, scheduledAction!!)
             scheduledAction = null
+            true
+        } else {
+            false
+        }
+    }
+
+    val requestPermissionsRequired = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestMultiplePermissions(),
+    ) { granted ->
+        if (granted.all { it.value }) {
+            reloadPerms++
+
+            if (scheduledAction != null) {
+                performAction()
+            }
         } else {
             context.startActivity(Permissions.getAppInfoIntent(context))
         }
     }
 
-    val performAction = {
-        if (Permissions.haveRequired(context)) {
-            UpdaterJob.scheduleImmediate(context, scheduledAction!!)
-            scheduledAction = null
-        } else {
-            requestPermissionRequired.launch(Permissions.REQUIRED)
+    val performActionOrRequestPermissions = {
+        if (!performAction()) {
+            requestPermissionsRequired.launch(Permissions.NOTIFICATION)
         }
     }
 
@@ -191,6 +204,7 @@ fun SettingsScreen(viewModel: SettingsViewModel = viewModel()) {
             requireUnmetered = requireUnmetered,
             requireBatteryNotLow = requireBatteryNotLow,
             skipPostInstall = skipPostInstall,
+            localNetworkGranted = localNetworkGranted,
             androidVersion = Build.VERSION.RELEASE,
             securityPatchLevel = SystemPropertiesProxy.get(UpdaterThread.PROP_SECURITY_PATCH),
             fingerprint = Build.FINGERPRINT,
@@ -204,7 +218,7 @@ fun SettingsScreen(viewModel: SettingsViewModel = viewModel()) {
             pinNetworkId = pinNetworkId,
             onCheckForUpdates = {
                 scheduledAction = UpdaterThread.Action.CHECK
-                performAction()
+                performActionOrRequestPermissions()
             },
             onOtaSourceChange = { uri ->
                 prefs.otaSource = uri
@@ -239,6 +253,9 @@ fun SettingsScreen(viewModel: SettingsViewModel = viewModel()) {
             onSkipPostInstallChange = { enabled ->
                 prefs.skipPostInstall = enabled
                 reloadPrefs++
+            },
+            onLocalNetworkGrant = {
+                requestPermissionsRequired.launch(Permissions.LOCAL_NETWORK)
             },
             onCsigCertRemove = { certificate ->
                 viewModel.removeCsigCert(certificate)
@@ -277,7 +294,7 @@ fun SettingsScreen(viewModel: SettingsViewModel = viewModel()) {
             },
             onRevertCompleted = {
                 scheduledAction = UpdaterThread.Action.REVERT
-                performAction()
+                performActionOrRequestPermissions()
             },
             onCsigCertInstall = {
                 // See AOSP's frameworks/base/mime/java-res/android.mime.types
@@ -313,6 +330,7 @@ private fun SettingsContent(
     requireUnmetered: Boolean,
     requireBatteryNotLow: Boolean,
     skipPostInstall: Boolean,
+    localNetworkGranted: Boolean,
     androidVersion: String,
     securityPatchLevel: String,
     fingerprint: String,
@@ -331,6 +349,7 @@ private fun SettingsContent(
     onRequireUnmeteredChange: (Boolean) -> Unit,
     onRequireBatteryNotLowChange: (Boolean) -> Unit,
     onSkipPostInstallChange: (Boolean) -> Unit,
+    onLocalNetworkGrant: () -> Unit,
     onCsigCertRemove: (X509Certificate) -> Unit,
     onSourceRepoOpen: () -> Unit,
     onDebugModeChange: (Boolean) -> Unit,
@@ -341,6 +360,24 @@ private fun SettingsContent(
     onPinNetworkIdChange: (Boolean) -> Unit,
     contentPadding: PaddingValues = PaddingValues(),
 ) {
+    data class MissingPermission(
+        val key: String,
+        val title: String,
+        val summary: String,
+        val onGrant: () -> Unit,
+    )
+
+    val missingPermissions = mutableListOf<MissingPermission>().apply {
+        if (!localNetworkGranted) {
+            add(MissingPermission(
+                key = "allow_local_network",
+                title = stringResource(R.string.pref_allow_local_network_name),
+                summary = stringResource(R.string.pref_allow_local_network_desc),
+                onGrant = onLocalNetworkGrant,
+            ))
+        }
+    }
+
     var showOtaSourceDialog by rememberSaveable { mutableStateOf(false) }
 
     PreferenceColumn(contentPadding = contentPadding) {
@@ -436,6 +473,25 @@ private fun SettingsContent(
                 summary = { Text(text = stringResource(R.string.pref_skip_postinstall_desc)) },
                 modifier = Modifier.animateItem(),
             )
+        }
+
+        if (missingPermissions.isNotEmpty()) {
+            item(key = "permissions") {
+                PreferenceCategory(
+                    title = { Text(text = stringResource(R.string.pref_header_permissions)) },
+                    modifier = Modifier.animateItem(),
+                )
+            }
+
+            itemsIndexed(missingPermissions, key = { _, m -> m.key }) { index, missing ->
+                Preference(
+                    onClick = missing.onGrant,
+                    shapes = betterSegmentedShapes(index, missingPermissions.size),
+                    title = { Text(text = missing.title) },
+                    summary = { Text(text = missing.summary) },
+                    modifier = Modifier.animateItem(),
+                )
+            }
         }
 
         item(key = "os") {
@@ -632,11 +688,9 @@ private fun SettingsContent(
             initialUri = otaSource,
             onSelect = { uri ->
                 onOtaSourceChange(uri)
-                @Suppress("AssignedValueIsNeverRead")
                 showOtaSourceDialog = false
             },
             onDismiss = {
-                @Suppress("AssignedValueIsNeverRead")
                 showOtaSourceDialog = false
             },
         )
@@ -728,6 +782,7 @@ private fun PreviewSettingsScreen() {
                 requireUnmetered = true,
                 requireBatteryNotLow = true,
                 skipPostInstall = false,
+                localNetworkGranted = false,
                 androidVersion = "16",
                 securityPatchLevel = "2026-05-05",
                 fingerprint = Build.FINGERPRINT,
@@ -750,6 +805,7 @@ private fun PreviewSettingsScreen() {
                 onRequireUnmeteredChange = {},
                 onRequireBatteryNotLowChange = {},
                 onSkipPostInstallChange = {},
+                onLocalNetworkGrant = {},
                 onCsigCertRemove = {},
                 onSourceRepoOpen = {},
                 onDebugModeChange = {},
