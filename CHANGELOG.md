@@ -9,6 +9,8 @@
 
 ### Unreleased
 
+* Update target API version to API 37 (Android 17) ([PR #202])
+  * **Action required**: Android 17 now blocks local network connections by default. If the configured OTA server is on the local network, open the app to grant the new local network permission.
 * Minor fixes for new Compose UI ([PR #196])
 
 ### Version 6.1
@@ -462,3 +464,4 @@ Changes:
 [PR #194]: https://github.com/chenxiaolong/Custota/pull/194
 [PR #195]: https://github.com/chenxiaolong/Custota/pull/195
 [PR #196]: https://github.com/chenxiaolong/Custota/pull/196
+[PR #202]: https://github.com/chenxiaolong/Custota/pull/202
