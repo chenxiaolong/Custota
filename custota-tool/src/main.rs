@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: 2023-2025 Andrew Gunnerson
+ * SPDX-FileCopyrightText: 2023-2026 Andrew Gunnerson
  * SPDX-License-Identifier: GPL-3.0-only
  */
 
@@ -21,7 +21,7 @@ use std::{
 use anyhow::{Context, Result, anyhow, bail};
 use avbroot::{
     cli::args::LogFormat,
-    crypto::{self, PassphraseSource, RsaSigningKey, SignatureAlgorithm},
+    crypto::{self, PassphraseSource, SignatureAlgorithm, SigningContent, SigningPrivateKey},
     format::{ota, payload::PayloadHeader, zip},
     protobuf::build::tools::releasetools::ota_metadata::OtaType,
     stream::{self, HashingReader},
@@ -37,14 +37,10 @@ use const_oid::ObjectIdentifier;
 use hex::FromHexError;
 use rawzip::{CompressionMethod, ZipArchiveWriter};
 use ring::digest::Digest;
-use rsa::{
-    RsaPrivateKey,
-    pkcs1v15::{Signature, SigningKey, VerifyingKey},
-    signature::Verifier,
-};
+use rsa::pkcs1v15::SigningKey;
 use serde::{Deserialize, Serialize};
 use serde_repr::{Deserialize_repr, Serialize_repr};
-use sha2::{Sha256, Sha512};
+use sha2::Sha256;
 use tempfile::TempDir;
 use tracing::{Level, info, warn};
 use x509_cert::{
@@ -306,27 +302,25 @@ fn verify_cms_signature(
     let public_key = crypto::get_public_key(cert)?;
 
     for signer_info in signed_data.signer_infos.0.iter() {
-        let signature = Signature::try_from(signer_info.signature.as_bytes())?;
         let Some(signed_attrs) = &signer_info.signed_attrs else {
             continue;
         };
         let signed_attrs_der = signed_attrs.to_der()?;
 
-        let (sig_algo, result) = match signer_info.digest_alg.oid {
-            const_oid::db::rfc5912::ID_SHA_256 => (
-                SignatureAlgorithm::Sha256WithRsa,
-                VerifyingKey::<Sha256>::new(public_key.clone())
-                    .verify(&signed_attrs_der, &signature),
-            ),
-            const_oid::db::rfc5912::ID_SHA_512 => (
-                SignatureAlgorithm::Sha512WithRsa,
-                VerifyingKey::<Sha512>::new(public_key.clone())
-                    .verify(&signed_attrs_der, &signature),
-            ),
+        let sig_algo = match signer_info.digest_alg.oid {
+            const_oid::db::rfc5912::ID_SHA_256 => SignatureAlgorithm::Sha256WithRsa,
+            const_oid::db::rfc5912::ID_SHA_512 => SignatureAlgorithm::Sha512WithRsa,
             _ => continue,
         };
 
-        if result.is_err() {
+        if public_key
+            .verify(
+                sig_algo,
+                SigningContent::Data(&signed_attrs_der),
+                signer_info.signature.as_bytes(),
+            )
+            .is_err()
+        {
             continue;
         }
 
@@ -378,7 +372,7 @@ fn verify_cms_signature(
             .values
             .get(0)
             .unwrap()
-            .decode_as::<OctetStringRef>()?;
+            .decode_as::<&OctetStringRef>()?;
 
         let econtent_digest = sig_algo.hash(econtent_data);
 
@@ -420,7 +414,7 @@ fn get_cms_inline(ci: &ContentInfo, cert: Option<&Certificate>) -> Result<Vec<u8
     let Some(econtent) = &signed_data.encap_content_info.econtent else {
         bail!("CMS signature has no encapsulated content");
     };
-    let econtent_data = econtent.decode_as::<OctetStringRef>()?;
+    let econtent_data = econtent.decode_as::<&OctetStringRef>()?;
 
     if let Some(cert) = cert {
         verify_cms_signature(&signed_data, econtent_type, econtent_data.as_bytes(), cert)?;
@@ -432,7 +426,15 @@ fn get_cms_inline(ci: &ContentInfo, cert: Option<&Certificate>) -> Result<Vec<u8
 }
 
 /// Create a CMS signature with the specified encapsulated content.
-fn sign_cms_inline(key: &RsaPrivateKey, cert: &Certificate, data: &[u8]) -> Result<ContentInfo> {
+fn sign_cms_inline(
+    key: &SigningPrivateKey,
+    cert: &Certificate,
+    data: &[u8],
+) -> Result<ContentInfo> {
+    let SigningPrivateKey::Rsa(rsa_key) = key else {
+        bail!("Signing key is not RSA: {:?}", key.key_type());
+    };
+
     let content = EncapsulatedContentInfo {
         econtent_type: const_oid::db::rfc5911::ID_DATA,
         econtent: Some(Any::new(
@@ -441,17 +443,16 @@ fn sign_cms_inline(key: &RsaPrivateKey, cert: &Certificate, data: &[u8]) -> Resu
         )?),
     };
 
-    let signer = SigningKey::<Sha256>::new(key.clone());
+    let signer = SigningKey::<Sha256>::new(rsa_key.clone());
     let digest_algorithm = AlgorithmIdentifierOwned {
         oid: const_oid::db::rfc5912::ID_SHA_256,
         parameters: None,
     };
 
     let si_builder = SignerInfoBuilder::new(
-        &signer,
         SignerIdentifier::IssuerAndSerialNumber(IssuerAndSerialNumber {
-            issuer: cert.tbs_certificate.issuer.clone(),
-            serial_number: cert.tbs_certificate.serial_number.clone(),
+            issuer: cert.tbs_certificate().issuer().clone(),
+            serial_number: cert.tbs_certificate().serial_number().clone(),
         }),
         digest_algorithm.clone(),
         &content,
@@ -464,7 +465,7 @@ fn sign_cms_inline(key: &RsaPrivateKey, cert: &Certificate, data: &[u8]) -> Resu
         .map_err(|e| anyhow!("Failed to add digest algorithm: {e}"))?
         .add_certificate(CertificateChoices::Certificate(cert.clone()))
         .map_err(|e| anyhow!("Failed to add certificate: {e}"))?
-        .add_signer_info(si_builder)
+        .add_signer_info(si_builder, &signer)
         .map_err(|e| anyhow!("Failed to add signer info: {e}"))?
         .build()
         .map_err(|e| anyhow!("Failed to build SignedData: {e}"))?;
@@ -539,15 +540,12 @@ fn subcommand_gen_csig(args: &GenerateCsig, cancel_signal: &AtomicBool) -> Resul
         PassphraseSource::Prompt(format!("Enter passphrase for {:?}: ", args.key))
     };
 
-    let signing_private_key = crypto::read_pem_key_file(&args.key, &passphrase_source)
+    let signing_private_key = crypto::read_pem_private_key_file(&args.key, &passphrase_source)
         .with_context(|| anyhow!("Failed to load key: {:?}", args.key))?;
     let signing_cert = crypto::read_pem_cert_file(&args.cert)
         .with_context(|| anyhow!("Failed to load certificate: {:?}", args.cert))?;
 
-    if !crypto::cert_matches_key(
-        &signing_cert,
-        &RsaSigningKey::Internal(signing_private_key.clone()),
-    )? {
+    if !crypto::cert_matches_key(&signing_cert, &signing_private_key)? {
         bail!(
             "Private key {:?} does not match certificate {:?}",
             args.key,
@@ -786,8 +784,8 @@ fn subcommand_gen_cert_module(args: &GenerateCertModule) -> Result<()> {
             .with_context(|| format!("Failed to load cert: {path:?}"))?;
 
         let mut subject_der = vec![];
-        cert.tbs_certificate
-            .subject
+        cert.tbs_certificate()
+            .subject()
             .encode_to_vec(&mut subject_der)?;
 
         // Android uses openssl's X509_NAME_hash_old per:
@@ -822,7 +820,7 @@ fn subcommand_gen_cert_module(args: &GenerateCertModule) -> Result<()> {
         name: &str,
         data_fn: impl Fn(&mut dyn Write) -> Result<()>,
     ) -> Result<()> {
-        let compression_method = CompressionMethod::Deflate;
+        let compression_method = CompressionMethod::DEFLATE;
 
         let (entry_writer, data_config) = zip_writer
             .new_file(name)

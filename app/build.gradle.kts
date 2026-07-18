@@ -183,6 +183,7 @@ android {
     packaging {
         resources {
             // Included by bcpkix, bcprov, and bcutil
+            excludes.add("META-INF/LICENSE.md")
             excludes.add("META-INF/versions/9/OSGI-INF/MANIFEST.MF")
         }
     }

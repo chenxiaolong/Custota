@@ -46,4 +46,5 @@ allow-git = [
     "https://github.com/chenxiaolong/avbroot",
     "https://github.com/chenxiaolong/sepatch",
     "https://github.com/chenxiaolong/system-properties",
+    "https://github.com/RustCrypto/formats",
 ]
