@@ -10,6 +10,7 @@
 ### Unreleased
 
 * Update dynamic background color to match AOSP Settings ([PR #204])
+* Update dependencies ([PR #207])
 
 ### Version 6.2
 
@@ -470,3 +471,4 @@ Changes:
 [PR #196]: https://github.com/chenxiaolong/Custota/pull/196
 [PR #202]: https://github.com/chenxiaolong/Custota/pull/202
 [PR #204]: https://github.com/chenxiaolong/Custota/pull/204
+[PR #207]: https://github.com/chenxiaolong/Custota/pull/207
