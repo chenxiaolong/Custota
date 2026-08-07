@@ -9,6 +9,8 @@
 
 ### Unreleased
 
+* Add support for zstd-compressed payload chunks introduced in Android 17 (payload minor version 10) ([PR #208])
+
 ### Version 6.3
 
 * Update dynamic background color to match AOSP Settings ([PR #204])
@@ -474,3 +476,4 @@ Changes:
 [PR #202]: https://github.com/chenxiaolong/Custota/pull/202
 [PR #204]: https://github.com/chenxiaolong/Custota/pull/204
 [PR #207]: https://github.com/chenxiaolong/Custota/pull/207
+[PR #208]: https://github.com/chenxiaolong/Custota/pull/208
