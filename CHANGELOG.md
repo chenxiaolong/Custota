@@ -7,7 +7,7 @@
     to update the actual links at the bottom of the file.
 -->
 
-### Unreleased
+### Version 6.4
 
 * Add support for zstd-compressed payload chunks introduced in Android 17 (payload minor version 10) ([PR #208])
 
