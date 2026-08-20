@@ -1,19 +1,19 @@
 [versions]
 android-gradle-plugin = "9.3.1"
 androidx-activity = "1.13.0"
-androidx-compose-bom = "2026.06.01"
-androidx-compose-material3 = "1.5.0-alpha25"
+androidx-compose-bom = "2026.08.00"
+androidx-compose-material3 = "1.5.0-alpha26"
 androidx-core = "1.19.0"
 androidx-documentfile = "1.1.0"
 androidx-lifecycle-viewmodel-compose = "2.11.0"
 androidx-preference = "1.2.1"
-bouncycastle = "1.85"
+bouncycastle = "1.85.2"
 jgit = "7.7.1.202607240634-r"
-json = "20260719"
+json = "20260814"
 kotlin = "2.4.10"
 kotlinx-serialization = "1.11.0"
 material = "1.14.0"
-protobuf = "4.35.1"
+protobuf = "4.36.0"
 protobuf-gradle-plugin = "0.10.0"
 
 [libraries]
@@ -26,8 +26,9 @@ androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = 
 androidx-documentfile = { group = "androidx.documentfile", name = "documentfile", version.ref = "androidx-documentfile" }
 androidx-lifecycle-viewmodel-compose = { group = "androidx.lifecycle", name = "lifecycle-viewmodel-compose", version.ref = "androidx-lifecycle-viewmodel-compose" }
 androidx-preference-ktx = { group = "androidx.preference", name = "preference-ktx", version.ref = "androidx-preference" }
-bouncycastle-pkix = { group = "org.bouncycastle", name = "bcpkix-jdk18on", version.ref = "bouncycastle" }
-bouncycastle-prov = { group = "org.bouncycastle", name = "bcprov-jdk18on", version.ref = "bouncycastle" }
+bouncycastle-bom = { group = "org.bouncycastle", name = "bc-jdk18on-bom", version.ref = "bouncycastle" }
+bouncycastle-pkix = { group = "org.bouncycastle", name = "bcpkix-jdk18on" }
+bouncycastle-prov = { group = "org.bouncycastle", name = "bcprov-jdk18on" }
 kotlinx-serialization-json = { group = "org.jetbrains.kotlinx", name = "kotlinx-serialization-json", version.ref = "kotlinx-serialization" }
 material = { group = "com.google.android.material", name = "material", version.ref = "material" }
 protoc = { group = "com.google.protobuf", name = "protoc", version.ref = "protobuf" }
