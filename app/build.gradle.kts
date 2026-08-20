@@ -272,12 +272,14 @@ class LazyString(private val source: Lazy<String>) : java.io.Serializable {
     override fun toString() = source.value
 }
 
-var custotaSelinuxTasks = mutableMapOf<String, TaskProvider<Exec>>()
-
-for ((target, abi) in listOf(
+val rustTargetMap = mapOf(
     "aarch64-linux-android" to "arm64-v8a",
     "x86_64-linux-android" to "x86_64",
-)) {
+)
+
+var custotaSelinuxTasks = mutableMapOf<String, TaskProvider<Exec>>()
+
+for ((target, abi) in rustTargetMap) {
     val suffix = abi.split('-', '_').joinToString("") { it.uppercaseFirstChar() }
 
     val custotaSelinux = tasks.register<Exec>("custotaSelinux$suffix") {
@@ -311,7 +313,7 @@ for ((target, abi) in listOf(
                     androidComponents.sdkComponents.ndkDirectory.map { it.asFile.absolutePath },
         )
         outputs.files(
-            File(File(File(File(rootDir, "target"), target), "release"), "custota-selinux")
+            File(rootDir, "target/$target/release/custota-selinux")
         )
 
         executable = "cargo"
@@ -333,6 +335,14 @@ for ((target, abi) in listOf(
     }
 
     custotaSelinuxTasks[abi] = custotaSelinux
+}
+
+tasks {
+    getByName<Delete>("clean") {
+        for ((target, _) in rustTargetMap) {
+            delete.add(File(rootDir, "target/$target"))
+        }
+    }
 }
 
 androidComponents.onVariants { variant ->
@@ -626,7 +636,7 @@ fun updateChangelog(version: String?, replaceFirst: Boolean) {
 }
 
 fun updateModuleChangelog(gitRef: String) {
-    File(File(File(File(projectDir, "module"), "updates"), "release"), "changelog.txt")
+    File(projectDir, "module/updates/release/changelog.txt")
         .writeText("The changelog can be found at: [`CHANGELOG.md`]($projectUrl/blob/$gitRef/CHANGELOG.md).\n")
 }
 
