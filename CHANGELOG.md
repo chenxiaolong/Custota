@@ -9,6 +9,8 @@
 
 ### Unreleased
 
+* Add support for building the app on non-Linux systems ([PR #212])
+
 ### Version 6.4
 
 * Add support for zstd-compressed payload chunks introduced in Android 17 (payload minor version 10) ([PR #208])
@@ -479,3 +481,4 @@ Changes:
 [PR #204]: https://github.com/chenxiaolong/Custota/pull/204
 [PR #207]: https://github.com/chenxiaolong/Custota/pull/207
 [PR #208]: https://github.com/chenxiaolong/Custota/pull/208
+[PR #212]: https://github.com/chenxiaolong/Custota/pull/212
