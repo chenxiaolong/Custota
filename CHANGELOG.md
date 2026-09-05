@@ -10,7 +10,7 @@
 ### Unreleased
 
 * Add support for building the app on non-Linux systems ([PR #212])
-* Update dependencies ([PR #213])
+* Update dependencies ([PR #213], [PR #216])
 
 ### Version 6.4
 
@@ -484,3 +484,4 @@ Changes:
 [PR #208]: https://github.com/chenxiaolong/Custota/pull/208
 [PR #212]: https://github.com/chenxiaolong/Custota/pull/212
 [PR #213]: https://github.com/chenxiaolong/Custota/pull/213
+[PR #216]: https://github.com/chenxiaolong/Custota/pull/216
