@@ -572,9 +572,9 @@ fn subcommand_gen_csig(args: &GenerateCsig, cancel_signal: &AtomicBool) -> Resul
         .verify_ota(&mut reader, cancel_signal)
         .context("Failed to verify OTA against embedded certificate")?;
 
-    let (metadata, ota_cert, header, _) = ota::parse_zip_ota_info(&mut reader)
+    let ota_info = ota::parse_zip_ota_info(&mut reader)
         .with_context(|| anyhow!("Failed to parse OTA info from zip"))?;
-    if ota_cert != ota_sig.cert {
+    if ota_info.cert != ota_sig.cert {
         bail!(
             "{} does not match CMS embedded certificate",
             ota::PATH_OTACERT,
@@ -583,18 +583,19 @@ fn subcommand_gen_csig(args: &GenerateCsig, cancel_signal: &AtomicBool) -> Resul
         bail!("OTA has a valid signature, but was not signed with: {verify_cert_path:?}");
     }
 
-    ota::verify_metadata(&mut reader, &metadata, header.blob_offset)
+    ota::verify_metadata(&mut reader, &ota_info.metadata, ota_info.header.blob_offset)
         .with_context(|| anyhow!("Failed to verify OTA metadata offsets"))?;
 
-    if metadata.r#type() != OtaType::Ab {
+    if ota_info.metadata.r#type() != OtaType::Ab {
         bail!("Not an A/B OTA");
-    } else if metadata.wipe {
+    } else if ota_info.metadata.wipe {
         bail!("OTA unconditionally wipes userdata partition");
-    } else if metadata.downgrade || metadata.spl_downgrade {
+    } else if ota_info.metadata.downgrade || ota_info.metadata.spl_downgrade {
         bail!("Downgrades are not supported");
     }
 
-    let device_name = metadata
+    let device_name = ota_info
+        .metadata
         .precondition
         .as_ref()
         .map(|s| &s.device)
@@ -604,7 +605,8 @@ fn subcommand_gen_csig(args: &GenerateCsig, cancel_signal: &AtomicBool) -> Resul
         bail!("Invalid device name: {device_name:?}");
     }
 
-    let postcondition = metadata
+    let postcondition = ota_info
+        .metadata
         .postcondition
         .as_ref()
         .ok_or_else(|| anyhow!("Postconditions are missing"))?;
@@ -620,7 +622,8 @@ fn subcommand_gen_csig(args: &GenerateCsig, cancel_signal: &AtomicBool) -> Resul
     }
     info!("Security patch: {}", postcondition.security_patch_level);
 
-    let pfs_raw = metadata
+    let pfs_raw = ota_info
+        .metadata
         .property_files
         .get(ota::PF_NAME)
         .ok_or_else(|| anyhow!("Missing property files: {}", ota::PF_NAME))?;
@@ -659,12 +662,12 @@ fn subcommand_gen_csig(args: &GenerateCsig, cancel_signal: &AtomicBool) -> Resul
     let vbmeta_digest = match args.csig_version {
         CsigVersion::Version1 => None,
         CsigVersion::Version2 => {
-            if header.is_full_ota() {
+            if ota_info.header.is_full_ota() {
                 let digest = compute_vbmeta_digest(
                     raw_reader,
                     pf_payload_offset,
                     pf_payload_size,
-                    &header,
+                    &ota_info.header,
                     cancel_signal,
                 )?;
 
