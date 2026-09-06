@@ -9,6 +9,7 @@
 
 ### Unreleased
 
+* Add notification action to try installing full OTA if incremental OTA installation fails ([Issue #214], [PR #217])
 * Add support for building the app on non-Linux systems ([PR #212])
 * Enable MTE on supported devices ([PR #215])
 * Update dependencies ([PR #213], [PR #216])
@@ -357,6 +358,7 @@ Changes:
 [Issue #170]: https://github.com/chenxiaolong/Custota/issues/170
 [Issue #182]: https://github.com/chenxiaolong/Custota/issues/182
 [Issue #189]: https://github.com/chenxiaolong/Custota/issues/189
+[Issue #214]: https://github.com/chenxiaolong/Custota/issues/214
 [PR #1]: https://github.com/chenxiaolong/Custota/pull/1
 [PR #2]: https://github.com/chenxiaolong/Custota/pull/2
 [PR #6]: https://github.com/chenxiaolong/Custota/pull/6
@@ -487,3 +489,4 @@ Changes:
 [PR #213]: https://github.com/chenxiaolong/Custota/pull/213
 [PR #215]: https://github.com/chenxiaolong/Custota/pull/215
 [PR #216]: https://github.com/chenxiaolong/Custota/pull/216
+[PR #217]: https://github.com/chenxiaolong/Custota/pull/217
