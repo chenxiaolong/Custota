@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: 2023-2025 Andrew Gunnerson
+ * SPDX-FileCopyrightText: 2023-2026 Andrew Gunnerson
  * SPDX-License-Identifier: GPL-3.0-only
  */
 
@@ -10,6 +10,7 @@ import android.content.Context
 import android.content.Intent
 import android.content.pm.ServiceInfo
 import android.net.Network
+import android.net.Uri
 import android.os.Build
 import android.os.Handler
 import android.os.IBinder
@@ -75,7 +76,7 @@ class UpdaterService : Service(), UpdaterThread.UpdaterThreadListener {
             }
         } catch (e: Exception) {
             Log.w(TAG, "Failed to handle intent: $intent", e)
-            notifyAlert(UpdaterThread.UpdateFailed(e.toSingleLineString()))
+            notifyAlert(UpdaterThread.UpdateFailed(e.toSingleLineString(), false))
         }
 
         tryStop()
@@ -230,6 +231,7 @@ class UpdaterService : Service(), UpdaterThread.UpdaterThreadListener {
         val message: String?
         val showInstall: Boolean
         val showRetry: Boolean
+        val showRetryFull: Boolean
         val showReboot: Boolean
 
         when (result) {
@@ -245,6 +247,7 @@ class UpdaterService : Service(), UpdaterThread.UpdaterThreadListener {
                 message = null
                 showInstall = false
                 showRetry = false
+                showRetryFull = false
                 showReboot = false
             }
             is UpdaterThread.UpdateAvailable -> {
@@ -255,6 +258,7 @@ class UpdaterService : Service(), UpdaterThread.UpdaterThreadListener {
                 message = result.fingerprints.joinToString("\n")
                 showInstall = true
                 showRetry = false
+                showRetryFull = false
                 showReboot = false
             }
             UpdaterThread.UpdateUnnecessary -> {
@@ -270,6 +274,7 @@ class UpdaterService : Service(), UpdaterThread.UpdaterThreadListener {
                 message = null
                 showInstall = false
                 showRetry = false
+                showRetryFull = false
                 showReboot = false
             }
             UpdaterThread.UpdateSucceeded, UpdaterThread.UpdateNeedReboot -> {
@@ -280,6 +285,7 @@ class UpdaterService : Service(), UpdaterThread.UpdaterThreadListener {
                 message = null
                 showInstall = false
                 showRetry = false
+                showRetryFull = false
                 showReboot = true
             }
             UpdaterThread.UpdateReverted -> {
@@ -289,6 +295,7 @@ class UpdaterService : Service(), UpdaterThread.UpdaterThreadListener {
                 message = null
                 showInstall = false
                 showRetry = false
+                showRetryFull = false
                 showReboot = false
             }
             UpdaterThread.UpdateCancelled -> {
@@ -298,15 +305,23 @@ class UpdaterService : Service(), UpdaterThread.UpdaterThreadListener {
                 message = null
                 showInstall = false
                 showRetry = true
+                showRetryFull = false
                 showReboot = false
             }
             is UpdaterThread.UpdateFailed -> {
                 channel = Notifications.CHANNEL_ID_FAILURE
                 onlyAlertOnce = false
                 titleResId = R.string.notification_update_ota_failed
-                message = result.errorMsg
+                message = buildString {
+                    append(result.errorMsg)
+                    if (result.isIncremental) {
+                        append("\n\n")
+                        append(getString(R.string.notification_update_ota_failed_incremental))
+                    }
+                }
                 showInstall = false
                 showRetry = true
+                showRetryFull = result.isIncremental
                 showReboot = false
             }
             UpdaterThread.BrokenNetworkApi -> {
@@ -319,6 +334,7 @@ class UpdaterService : Service(), UpdaterThread.UpdaterThreadListener {
                 )
                 showInstall = false
                 showRetry = true
+                showRetryFull = false
                 showReboot = false
             }
         }
@@ -332,10 +348,14 @@ class UpdaterService : Service(), UpdaterThread.UpdaterThreadListener {
         }
         if (showRetry) {
             actionResIds.add(R.string.notification_action_retry)
-            // Go through job scheduler because we might need a new network
+            // Go through job scheduler because we might need a new network.
             updaterAction?.let { action ->
                 actionIntents.add(createScheduleIntent(this, action))
             }
+        }
+        if (showRetryFull) {
+            actionResIds.add(R.string.notification_action_retry_full)
+            actionIntents.add(createScheduleIntent(this, UpdaterThread.Action.INSTALL_FULL))
         }
         if (showReboot) {
             actionResIds.add(R.string.notification_action_reboot)
@@ -415,6 +435,9 @@ class UpdaterService : Service(), UpdaterThread.UpdaterThreadListener {
             action: UpdaterThread.Action,
         ) = Intent(context, UpdaterService::class.java).apply {
             this.action = ACTION_SCHEDULE
+
+            // Unused, but guarantees filterEquals() uniqueness for use with PendingIntents.
+            data = Uri.fromParts("unused", action.name, null)
 
             val parcelableAction: Parcelable = action
             putExtra(EXTRA_ACTION, parcelableAction)

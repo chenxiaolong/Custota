@@ -107,6 +107,7 @@
     <string name="notification_update_ota_cancelled">OTA update process was cancelled</string>
     <string name="notification_update_ota_reverted">Successfully reverted OTA update</string>
     <string name="notification_update_ota_failed">Failed to install OTA update</string>
+    <string name="notification_update_ota_failed_incremental">Retry installing this incremental OTA again or try installing the full OTA instead.</string>
     <string name="notification_broken_network_api_title">Cannot use network pinning</string>
     <string name="notification_broken_network_api_message">Custota was blocked from pinning network connections to a specific network ID. To work around this, see the \"%s\" option after enabling debug mode by long-pressing Custota\'s version number.</string>
     <string name="notification_action_install">Install</string>
@@ -115,6 +116,7 @@
     <string name="notification_action_cancel">Cancel</string>
     <string name="notification_action_reboot">Reboot</string>
     <string name="notification_action_retry">Retry</string>
+    <string name="notification_action_retry_full">Try full OTA</string>
 
     <!-- Alerts -->
     <string name="action_details">Details</string>

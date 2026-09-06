@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: 2023-2025 Andrew Gunnerson
+ * SPDX-FileCopyrightText: 2023-2026 Andrew Gunnerson
  * SPDX-License-Identifier: GPL-3.0-only
  */
 
@@ -627,7 +627,12 @@ class UpdaterThread(
         val vbmetaDigest = SystemPropertiesProxy.get(PROP_VBMETA_DIGEST)
         Log.d(TAG, "Current vbmeta digest: $vbmetaDigest")
 
-        val locationInfo = updateInfo.incremental[vbmetaDigest] ?: updateInfo.full
+        val incrementalInfo = if (action == Action.INSTALL_FULL) {
+            null
+        } else {
+            updateInfo.incremental[vbmetaDigest]
+        }
+        val locationInfo = incrementalInfo ?: updateInfo.full
         val isIncremental = locationInfo !== updateInfo.full
         Log.d(TAG, "OTA is incremental: $isIncremental")
 
@@ -669,6 +674,7 @@ class UpdaterThread(
             fingerprints,
             otaUri,
             csigInfo,
+            isIncremental,
         )
     }
 
@@ -793,6 +799,7 @@ class UpdaterThread(
 
         val pm = context.getSystemService(PowerManager::class.java)
         val wakeLock = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, TAG)
+        var isIncremental = false
 
         try {
             wakeLock.acquire()
@@ -819,7 +826,7 @@ class UpdaterThread(
                 if (newStatus == UpdateEngineStatus.IDLE) {
                     listener.onUpdateResult(this, UpdateReverted)
                 } else {
-                    listener.onUpdateResult(this, UpdateFailed(newStatusStr))
+                    listener.onUpdateResult(this, UpdateFailed(newStatusStr, isIncremental))
                 }
             } else if (status == UpdateEngineStatus.UPDATED_NEED_REBOOT) {
                 // Resend success notification to remind the user to reboot. We can't perform any
@@ -838,6 +845,7 @@ class UpdaterThread(
                     listener.onUpdateProgress(this, ProgressType.CHECK, 0, 0)
 
                     val checkUpdateResult = checkForUpdates()
+                    isIncremental = checkUpdateResult.isIncremental
 
                     if (!checkUpdateResult.updateAvailable) {
                         // Update not needed.
@@ -895,7 +903,7 @@ class UpdaterThread(
             if (e.findCause(BrokenNetworkApiException::class.java) != null) {
                 listener.onUpdateResult(this, BrokenNetworkApi)
             } else {
-                listener.onUpdateResult(this, UpdateFailed(e.toSingleLineString()))
+                listener.onUpdateResult(this, UpdateFailed(e.toSingleLineString(), isIncremental))
             }
         } finally {
             wakeLock.release()
@@ -923,6 +931,7 @@ class UpdaterThread(
         val fingerprints: List<String>,
         val otaUri: Uri,
         val csigInfo: CsigInfo,
+        val isIncremental: Boolean,
     )
 
     @Serializable
@@ -972,19 +981,22 @@ class UpdaterThread(
 
     @Parcelize
     enum class Action : Parcelable {
+        // The order cannot ever change because UpdaterJob uses ordinal in the persisted bundle for
+        // the scheduled job.
         MONITOR,
         CHECK,
         INSTALL,
-        REVERT;
+        REVERT,
+        INSTALL_FULL;
 
         val requiresNetwork: Boolean
-            get() = this == CHECK || this == INSTALL
+            get() = this == CHECK || this == INSTALL || this == INSTALL_FULL
 
         val performsLargeDownloads: Boolean
-            get() = this == INSTALL
+            get() = this == INSTALL || this == INSTALL_FULL
 
         val usesSignificantBattery: Boolean
-            get() = this == INSTALL
+            get() = this == INSTALL || this == INSTALL_FULL
     }
 
     sealed interface Result
@@ -1006,7 +1018,7 @@ class UpdaterThread(
 
     data object UpdateCancelled : Result
 
-    data class UpdateFailed(val errorMsg: String) : Result
+    data class UpdateFailed(val errorMsg: String, val isIncremental: Boolean) : Result
 
     data object BrokenNetworkApi : Result
 
