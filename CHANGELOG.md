@@ -9,6 +9,8 @@
 
 ### Unreleased
 
+* Improve compatibility with KernelSU metamodules that previously could lead to boot loops ([PR #218])
+
 ### Version 6.5
 
 * Add notification action to try installing full OTA if incremental OTA installation fails ([Issue #214], [PR #217])
@@ -492,3 +494,4 @@ Changes:
 [PR #215]: https://github.com/chenxiaolong/Custota/pull/215
 [PR #216]: https://github.com/chenxiaolong/Custota/pull/216
 [PR #217]: https://github.com/chenxiaolong/Custota/pull/217
+[PR #218]: https://github.com/chenxiaolong/Custota/pull/218
