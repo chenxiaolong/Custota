@@ -10,6 +10,7 @@
 ### Unreleased
 
 * Improve compatibility with KernelSU metamodules that previously could lead to boot loops ([PR #218])
+* Update dependencies ([PR #219])
 
 ### Version 6.5
 
@@ -495,3 +496,4 @@ Changes:
 [PR #216]: https://github.com/chenxiaolong/Custota/pull/216
 [PR #217]: https://github.com/chenxiaolong/Custota/pull/217
 [PR #218]: https://github.com/chenxiaolong/Custota/pull/218
+[PR #219]: https://github.com/chenxiaolong/Custota/pull/219
