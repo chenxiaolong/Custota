@@ -7,7 +7,7 @@
     to update the actual links at the bottom of the file.
 -->
 
-### Unreleased
+### Version 6.6
 
 * Improve compatibility with KernelSU metamodules that previously could lead to boot loops ([PR #218])
 * Update dependencies ([PR #219])
