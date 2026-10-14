@@ -111,10 +111,6 @@ class Preferences(initialContext: Context) {
         get() = prefs.getString(PREF_OTA_SOURCE, null)?.toUri()
         set(uri) {
             val oldUri = otaSource
-            if (oldUri == uri) {
-                // URI is the same as before or both are null
-                return
-            }
 
             prefs.edit {
                 if (uri != null) {
@@ -132,7 +128,7 @@ class Preferences(initialContext: Context) {
 
             // Release persisted permissions on the old directory only after the new URI is set to
             // guarantee atomicity
-            if (oldUri != null && oldUri.scheme == ContentResolver.SCHEME_CONTENT) {
+            if (oldUri != null && oldUri.scheme == ContentResolver.SCHEME_CONTENT && oldUri != uri) {
                 // It's not documented, but this can throw an exception when trying to release a
                 // previously persisted URI that's associated with an app that's no longer installed
                 try {
