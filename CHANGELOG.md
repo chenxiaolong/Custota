@@ -7,7 +7,7 @@
     to update the actual links at the bottom of the file.
 -->
 
-### Unreleased
+### Version 6.7
 
 * Request URI permissions again when selecting the same local OTA directory ([Issue #221], [PR #222])
   * If Android revokes Custota's permission to the OTA directory, reselecting it will now work. Previously, a different OTA directory had to be selected first.
