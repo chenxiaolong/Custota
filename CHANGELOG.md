@@ -9,6 +9,8 @@
 
 ### Unreleased
 
+* Request URI permissions again when selecting the same local OTA directory ([Issue #221], [PR #222])
+  * If Android revokes Custota's permission to the OTA directory, reselecting it will now work. Previously, a different OTA directory had to be selected first.
 * Update dependencies ([PR #223])
 
 ### Version 6.6
@@ -368,6 +370,7 @@ Changes:
 [Issue #182]: https://github.com/chenxiaolong/Custota/issues/182
 [Issue #189]: https://github.com/chenxiaolong/Custota/issues/189
 [Issue #214]: https://github.com/chenxiaolong/Custota/issues/214
+[Issue #221]: https://github.com/chenxiaolong/Custota/issues/221
 [PR #1]: https://github.com/chenxiaolong/Custota/pull/1
 [PR #2]: https://github.com/chenxiaolong/Custota/pull/2
 [PR #6]: https://github.com/chenxiaolong/Custota/pull/6
@@ -501,4 +504,5 @@ Changes:
 [PR #217]: https://github.com/chenxiaolong/Custota/pull/217
 [PR #218]: https://github.com/chenxiaolong/Custota/pull/218
 [PR #219]: https://github.com/chenxiaolong/Custota/pull/219
+[PR #222]: https://github.com/chenxiaolong/Custota/pull/222
 [PR #223]: https://github.com/chenxiaolong/Custota/pull/223
