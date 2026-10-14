@@ -16,7 +16,6 @@ import java.io.InputStream
 import java.lang.invoke.MethodHandles
 import java.nio.file.Path
 import java.nio.file.Paths
-import kotlin.io.path.ExperimentalPathApi
 import kotlin.io.path.deleteIfExists
 import kotlin.io.path.inputStream
 import kotlin.io.path.isRegularFile
@@ -80,7 +79,6 @@ private fun parseJobPackage(parser: XmlPullParser): Pair<String, Int>? {
     return null
 }
 
-@OptIn(ExperimentalPathApi::class)
 private fun clearBadJobSchedulerData(packageName: String, uid: Int?): Boolean {
     var ret = true
 
