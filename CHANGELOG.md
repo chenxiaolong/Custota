@@ -7,6 +7,8 @@
     to update the actual links at the bottom of the file.
 -->
 
+### Unreleased
+
 ### Version 6.8
 
 * Add option to require the device to be plugged in before installing updates ([Issue #225], [PR #226])
