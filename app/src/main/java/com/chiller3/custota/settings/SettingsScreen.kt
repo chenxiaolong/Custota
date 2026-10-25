@@ -30,6 +30,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.core.net.toUri
 import androidx.lifecycle.compose.LifecycleResumeEffect
@@ -540,21 +541,40 @@ private fun SettingsContent(
         }
 
         item(key = "fingerprint") {
+            val fingerprintLineBreaks = fingerprint.replace("([/:])".toRegex(), "$1\u200b")
+
             Preference(
                 onClick = {},
                 shapes = BetterSegmentedShapes.middle(),
                 title = { Text(text = stringResource(R.string.pref_fingerprint_name)) },
-                summary = { Text(text = fingerprint) },
+                summary = { Text(text = fingerprintLineBreaks) },
                 modifier = Modifier.animateItem(),
             )
         }
 
         item(key = "vbmeta_digest") {
+            // Always break into two lines to match what the bootloader does, but also allow
+            // splitting at quadrants if the halves don't fit.
+            val vbmetaDigestLineBreaks = buildString {
+                append(vbmetaDigest.substring(0, vbmetaDigest.length / 4))
+                append('\u200b')
+                append(vbmetaDigest.substring(vbmetaDigest.length / 4, vbmetaDigest.length / 2))
+                append('\n')
+                append(vbmetaDigest.substring(vbmetaDigest.length / 2, vbmetaDigest.length / 4 * 3))
+                append('\u200b')
+                append(vbmetaDigest.substring(vbmetaDigest.length / 4 * 3))
+            }
+
             Preference(
                 onClick = {},
                 shapes = BetterSegmentedShapes.middle(),
                 title = { Text(text = stringResource(R.string.pref_vbmeta_digest_name)) },
-                summary = { Text(text = vbmetaDigest) },
+                summary = {
+                    Text(
+                        text = vbmetaDigestLineBreaks,
+                        fontFamily = FontFamily.Monospace,
+                    )
+                },
                 modifier = Modifier.animateItem(),
             )
         }
