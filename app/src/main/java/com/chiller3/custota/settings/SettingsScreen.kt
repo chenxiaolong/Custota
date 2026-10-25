@@ -98,6 +98,7 @@ fun SettingsScreen(viewModel: SettingsViewModel = viewModel()) {
     val automaticInstall = remember(reloadPrefs) { prefs.automaticInstall }
     val requireUnmetered = remember(reloadPrefs) { prefs.requireUnmetered }
     val requireBatteryNotLow = remember(reloadPrefs) { prefs.requireBatteryNotLow }
+    val requireCharging = remember(reloadPrefs) { prefs.requireCharging }
     val isDebugMode = remember(reloadPrefs) { prefs.isDebugMode }
     val skipPostInstall = remember(reloadPrefs) { prefs.skipPostInstall }
     val allowReinstall = remember(reloadPrefs) { prefs.allowReinstall }
@@ -202,6 +203,7 @@ fun SettingsScreen(viewModel: SettingsViewModel = viewModel()) {
             automaticInstall = automaticInstall,
             requireUnmetered = requireUnmetered,
             requireBatteryNotLow = requireBatteryNotLow,
+            requireCharging = requireCharging,
             skipPostInstall = skipPostInstall,
             localNetworkGranted = localNetworkGranted,
             androidVersion = Build.VERSION.RELEASE,
@@ -246,6 +248,11 @@ fun SettingsScreen(viewModel: SettingsViewModel = viewModel()) {
             },
             onRequireBatteryNotLowChange = { enabled ->
                 prefs.requireBatteryNotLow = enabled
+                reloadPrefs++
+                UpdaterJob.schedulePeriodic(context, true)
+            },
+            onRequireChargingChange = { enabled ->
+                prefs.requireCharging = enabled
                 reloadPrefs++
                 UpdaterJob.schedulePeriodic(context, true)
             },
@@ -327,6 +334,7 @@ private fun SettingsContent(
     automaticInstall: Boolean,
     requireUnmetered: Boolean,
     requireBatteryNotLow: Boolean,
+    requireCharging: Boolean,
     skipPostInstall: Boolean,
     localNetworkGranted: Boolean,
     androidVersion: String,
@@ -346,6 +354,7 @@ private fun SettingsContent(
     onAutomaticInstallChange: (Boolean) -> Unit,
     onRequireUnmeteredChange: (Boolean) -> Unit,
     onRequireBatteryNotLowChange: (Boolean) -> Unit,
+    onRequireChargingChange: (Boolean) -> Unit,
     onSkipPostInstallChange: (Boolean) -> Unit,
     onLocalNetworkGrant: () -> Unit,
     onCsigCertRemove: (X509Certificate) -> Unit,
@@ -458,6 +467,17 @@ private fun SettingsContent(
                 shapes = BetterSegmentedShapes.middle(),
                 title = { Text(text = stringResource(R.string.pref_battery_not_low_name)) },
                 summary = { Text(text = stringResource(R.string.pref_battery_not_low_desc)) },
+                modifier = Modifier.animateItem(),
+            )
+        }
+
+        item(key = "charging") {
+            SwitchPreference(
+                checked = requireCharging,
+                onCheckedChange = onRequireChargingChange,
+                shapes = BetterSegmentedShapes.middle(),
+                title = { Text(text = stringResource(R.string.pref_charging_name)) },
+                summary = { Text(text = stringResource(R.string.pref_charging_desc)) },
                 modifier = Modifier.animateItem(),
             )
         }
@@ -779,6 +799,7 @@ private fun PreviewSettingsScreen() {
                 automaticInstall = false,
                 requireUnmetered = true,
                 requireBatteryNotLow = true,
+                requireCharging = false,
                 skipPostInstall = false,
                 localNetworkGranted = false,
                 androidVersion = "16",
@@ -802,6 +823,7 @@ private fun PreviewSettingsScreen() {
                 onAutomaticInstallChange = {},
                 onRequireUnmeteredChange = {},
                 onRequireBatteryNotLowChange = {},
+                onRequireChargingChange = {},
                 onSkipPostInstallChange = {},
                 onLocalNetworkGrant = {},
                 onCsigCertRemove = {},

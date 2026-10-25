@@ -104,6 +104,7 @@ class UpdaterJob: JobService() {
             }
 
             val requiresBatteryNotLow = action.usesSignificantBattery && prefs.requireBatteryNotLow
+            val requiresCharging = action.usesSignificantBattery && prefs.requireCharging
 
             val extras = PersistableBundle().apply {
                 putInt(EXTRA_ACTION, action.ordinal)
@@ -112,6 +113,7 @@ class UpdaterJob: JobService() {
             return JobInfo.Builder(jobId, ComponentName(context, UpdaterJob::class.java))
                 .setRequiredNetworkType(networkType)
                 .setRequiresBatteryNotLow(requiresBatteryNotLow)
+                .setRequiresCharging(requiresCharging)
                 .setExtras(extras)
         }
 
@@ -164,6 +166,7 @@ class UpdaterJob: JobService() {
             if (oldJobInfo != null &&
                 oldJobInfo.requiredNetwork == jobInfo.requiredNetwork &&
                 oldJobInfo.isRequireBatteryNotLow == jobInfo.isRequireBatteryNotLow &&
+                oldJobInfo.isRequireCharging == jobInfo.isRequireCharging &&
                 oldJobInfo.isPersisted == jobInfo.isPersisted &&
                 oldJobInfo.intervalMillis == jobInfo.intervalMillis &&
                 bundlesEqual(oldJobInfo.extras, jobInfo.extras)) {

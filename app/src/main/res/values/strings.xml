@@ -32,6 +32,8 @@
     <string name="pref_unmetered_only_desc">Only allow updates to be downloaded over unmetered network connections (eg. Wi-Fi).</string>
     <string name="pref_battery_not_low_name">Require sufficient battery level</string>
     <string name="pref_battery_not_low_desc">Only allow updates to be installed if the battery level is not critical.</string>
+    <string name="pref_charging_name">Require device to be charging</string>
+    <string name="pref_charging_desc">Only allow updates to be installed if the device is plugged in and charging.</string>
     <string name="pref_skip_postinstall_name">Skip optional post-install scripts</string>
     <string name="pref_skip_postinstall_desc">Skip running post-install operations that are marked as optional in the OTA. This usually skips the dexopt operation, which precompiles app bytecode for faster loading.</string>
 

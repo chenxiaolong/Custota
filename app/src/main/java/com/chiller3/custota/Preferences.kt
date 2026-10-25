@@ -32,6 +32,7 @@ class Preferences(initialContext: Context) {
         private const val PREF_AUTOMATIC_INSTALL = "automatic_install"
         private const val PREF_UNMETERED_ONLY = "unmetered_only"
         private const val PREF_BATTERY_NOT_LOW = "battery_not_low"
+        private const val PREF_CHARGING = "charging"
         private const val PREF_SKIP_POSTINSTALL = "skip_postinstall"
         private const val PREF_ALLOW_REINSTALL = "allow_reinstall"
         private const val PREF_CSIG_CERTS = "csig_certs"
@@ -159,6 +160,11 @@ class Preferences(initialContext: Context) {
     var requireBatteryNotLow: Boolean
         get() = prefs.getBoolean(PREF_BATTERY_NOT_LOW, true)
         set(enabled) = prefs.edit { putBoolean(PREF_BATTERY_NOT_LOW, enabled) }
+
+    /** Whether to only allow running when the device is charging. */
+    var requireCharging: Boolean
+        get() = prefs.getBoolean(PREF_CHARGING, false)
+        set(enabled) = prefs.edit { putBoolean(PREF_CHARGING, enabled) }
 
     /** Whether to skip optional post-install scripts in the OTA. */
     var skipPostInstall: Boolean
