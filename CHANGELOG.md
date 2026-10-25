@@ -9,6 +9,7 @@
 
 ### Unreleased
 
+* Add option to require the device to be plugged in before installing updates ([Issue #225], [PR #226])
 * Update dependencies ([PR #224], [PR #227])
 
 ### Version 6.7
@@ -375,6 +376,7 @@ Changes:
 [Issue #189]: https://github.com/chenxiaolong/Custota/issues/189
 [Issue #214]: https://github.com/chenxiaolong/Custota/issues/214
 [Issue #221]: https://github.com/chenxiaolong/Custota/issues/221
+[Issue #225]: https://github.com/chenxiaolong/Custota/issues/225
 [PR #1]: https://github.com/chenxiaolong/Custota/pull/1
 [PR #2]: https://github.com/chenxiaolong/Custota/pull/2
 [PR #6]: https://github.com/chenxiaolong/Custota/pull/6
@@ -511,4 +513,5 @@ Changes:
 [PR #222]: https://github.com/chenxiaolong/Custota/pull/222
 [PR #223]: https://github.com/chenxiaolong/Custota/pull/223
 [PR #224]: https://github.com/chenxiaolong/Custota/pull/224
+[PR #226]: https://github.com/chenxiaolong/Custota/pull/226
 [PR #227]: https://github.com/chenxiaolong/Custota/pull/227
