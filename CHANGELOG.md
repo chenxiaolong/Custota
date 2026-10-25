@@ -9,7 +9,7 @@
 
 ### Unreleased
 
-* Update dependencies ([PR #224])
+* Update dependencies ([PR #224], [PR #227])
 
 ### Version 6.7
 
@@ -511,3 +511,4 @@ Changes:
 [PR #222]: https://github.com/chenxiaolong/Custota/pull/222
 [PR #223]: https://github.com/chenxiaolong/Custota/pull/223
 [PR #224]: https://github.com/chenxiaolong/Custota/pull/224
+[PR #227]: https://github.com/chenxiaolong/Custota/pull/227
