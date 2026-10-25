@@ -9,6 +9,8 @@
 
 ### Unreleased
 
+* Update dependencies ([PR #224])
+
 ### Version 6.7
 
 * Request URI permissions again when selecting the same local OTA directory ([Issue #221], [PR #222])
@@ -508,3 +510,4 @@ Changes:
 [PR #219]: https://github.com/chenxiaolong/Custota/pull/219
 [PR #222]: https://github.com/chenxiaolong/Custota/pull/222
 [PR #223]: https://github.com/chenxiaolong/Custota/pull/223
+[PR #224]: https://github.com/chenxiaolong/Custota/pull/224
