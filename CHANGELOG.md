@@ -10,6 +10,7 @@
 ### Unreleased
 
 * Add option to require the device to be plugged in before installing updates ([Issue #225], [PR #226])
+* Improve line wrapping of the fingerprint and vbmeta digest fields for better readability ([PR #228])
 * Update dependencies ([PR #224], [PR #227])
 
 ### Version 6.7
@@ -515,3 +516,4 @@ Changes:
 [PR #224]: https://github.com/chenxiaolong/Custota/pull/224
 [PR #226]: https://github.com/chenxiaolong/Custota/pull/226
 [PR #227]: https://github.com/chenxiaolong/Custota/pull/227
+[PR #228]: https://github.com/chenxiaolong/Custota/pull/228
