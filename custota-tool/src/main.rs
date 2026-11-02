@@ -26,7 +26,6 @@ use avbroot::{
     protobuf::build::tools::releasetools::ota_metadata::OtaType,
     stream::{self, HashingReader},
 };
-use clap::{Parser, Subcommand, ValueEnum};
 use cms::{
     builder::{SignedDataBuilder, SignerInfoBuilder},
     cert::{CertificateChoices, IssuerAndSerialNumber},
@@ -43,6 +42,7 @@ use serde_repr::{Deserialize_repr, Serialize_repr};
 use sha2::Sha256;
 use tempfile::TempDir;
 use tracing::{Level, info, warn};
+use winnow_args::{Args, Subcommand, ValueEnum};
 use x509_cert::{
     Certificate,
     der::{Any, Decode, Encode, Tag, asn1::OctetStringRef},
@@ -131,21 +131,21 @@ impl FromStr for WebUrlOrRelativePath {
 #[derive(Clone, Copy, Debug, ValueEnum, Deserialize_repr, Serialize_repr)]
 #[repr(u8)]
 enum CsigVersion {
-    #[value(name = "1")]
+    #[arg(name = "1")]
     Version1 = 1,
-    #[value(name = "2")]
+    #[arg(name = "2")]
     Version2 = 2,
 }
 
 /// View the contents of a csig file.
-#[derive(Debug, Parser)]
+#[derive(Debug, Args)]
 struct ShowCsig {
     /// Input path for csig file.
-    #[arg(short, long, value_parser)]
+    #[arg(short, long)]
     input: PathBuf,
 
     /// Path to certificate for verifying csig.
-    #[arg(short, long, value_parser)]
+    #[arg(short, long)]
     cert: Option<PathBuf>,
 
     /// Show the raw JSON contents of csig data.
@@ -157,40 +157,42 @@ struct ShowCsig {
 
 /// Generate a csig file for an OTA zip.
 ///
-/// The csig file contains the signature for the metadata portions of the OTA zip. This allows
-/// Custota to read metadata from the OTA in a secure way without downloading the entire zip.
-#[derive(Debug, Parser)]
+/// The csig file contains the signature for the metadata portions of the OTA
+/// zip. This allows Custota to read metadata from the OTA in a secure way
+/// without downloading the entire zip.
+#[derive(Debug, Args)]
+#[arg(group("passphrase"))]
 struct GenerateCsig {
     /// Input path for OTA zip file.
-    #[arg(short, long, value_parser)]
+    #[arg(short, long)]
     input: PathBuf,
 
     /// Output path for csig file.
     ///
     /// Defaults to <OTA zip>.csig.
-    #[arg(short, long, value_parser)]
+    #[arg(short, long)]
     output: Option<PathBuf>,
 
     /// Path to private key for signing csig.
-    #[arg(short, long, value_parser)]
+    #[arg(short, long)]
     key: PathBuf,
 
     /// Environment variable containing the private key passphrase.
-    #[arg(long, value_parser, group = "passphrase")]
+    #[arg(long, group = "passphrase")]
     passphrase_env_var: Option<OsString>,
 
     /// Text file containing the private key passphrase.
-    #[arg(long, value_parser, group = "passphrase")]
+    #[arg(long, group = "passphrase")]
     passphrase_file: Option<PathBuf>,
 
     /// Path to certificate for signing csig.
-    #[arg(short, long, value_parser)]
+    #[arg(short, long)]
     cert: PathBuf,
 
     /// Path to certificate for verifying OTA.
     ///
-    /// This is used to verify the signature of the OTA zip file. If this option is omitted, it
-    /// defaults to the value of -c/--cert.
+    /// This is used to verify the signature of the OTA zip file. If this option
+    /// is omitted, it defaults to the value of -c/--cert.
     #[arg(short = 'C', long)]
     cert_verify: Option<PathBuf>,
 
@@ -200,51 +202,53 @@ struct GenerateCsig {
     /// supported since version 5.0 of Custota and adds support for storing the
     /// vbmeta digest to allow detecting updates when the OS version does not
     /// change.
-    #[arg(long, value_enum, default_value_t = CsigVersion::Version2)]
+    #[arg(long, default = "2")]
     csig_version: CsigVersion,
 }
 
 /// Generate or update an update info file.
 ///
-/// The update info file contains the relative path or full URL to the OTA zip and the csig file.
-/// This command only updates the required fields in the file and leaves other fields untouched.
-#[derive(Debug, Parser)]
+/// The update info file contains the relative path or full URL to the OTA zip
+/// and the csig file. This command only updates the required fields in the file
+/// and leaves other fields untouched.
+#[derive(Debug, Args)]
 struct GenerateUpdateInfo {
     /// Relative path or URL to the OTA zip.
     ///
-    /// Custota will take the URL of the update info file and use this field to compute the full URL
-    /// to the OTA zip. This can be set to a relative path if the OTA is stored in the same
-    /// directory tree as the update info file. Otherwise, it can be set to an actual URL, allowing
-    /// the OTA zip to be hosted on a different domain.
-    #[arg(short, long)]
+    /// Custota will take the URL of the update info file and use this field to
+    /// compute the full URL to the OTA zip. This can be set to a relative path
+    /// if the OTA is stored in the same directory tree as the update info file.
+    /// Otherwise, it can be set to an actual URL, allowing the OTA zip to be
+    /// hosted on a different domain.
+    #[arg(short, long, from_str)]
     location: WebUrlOrRelativePath,
 
     /// Relative path or URL to the csig file.
     ///
     /// Defaults to <location>.csig.
-    #[arg(short, long)]
+    #[arg(short, long, from_str)]
     csig_location: Option<WebUrlOrRelativePath>,
 
     /// Path to update info file.
-    #[arg(short, long, value_parser)]
+    #[arg(short, long)]
     file: PathBuf,
 
     /// Source vbmeta digest for an incremental OTA.
-    #[arg(short, long, value_name = "SHA256", value_parser)]
+    #[arg(short, long, value_name = "SHA256", from_str)]
     inc_vbmeta_digest: Option<VbmetaDigest>,
 }
 
 /// Generate a module for system CA certificates.
 ///
 /// The module will install a set of certificates into the system CA trust store.
-#[derive(Debug, Parser)]
+#[derive(Debug, Args)]
 struct GenerateCertModule {
     /// Output path for module zip.
-    #[arg(short, long, value_parser)]
+    #[arg(short, long)]
     output: PathBuf,
 
     /// Path to certificate.
-    #[arg(value_parser, num_args = 1)]
+    #[arg(positional)]
     cert: Vec<PathBuf>,
 }
 
@@ -257,18 +261,18 @@ enum Command {
     GenCertModule(GenerateCertModule),
 }
 
-#[derive(Debug, Parser)]
-#[command(version = env!("GIT_VERSION"))]
+#[derive(Debug, Args)]
+#[arg(version = env!("GIT_VERSION"))]
 struct Cli {
-    #[command(subcommand)]
+    #[arg(subcommand)]
     command: Command,
 
     /// Lowest log message severity to output.
-    #[arg(long, global = true, value_name = "LEVEL", default_value_t = Level::INFO)]
+    #[arg(long, global, value_name = "LEVEL", from_str, default = "info")]
     log_level: Level,
 
     /// Output format for log messages.
-    #[arg(long, global = true, value_name = "FORMAT", default_value_t)]
+    #[arg(long, global, value_name = "FORMAT", default = "short")]
     log_format: LogFormat,
 }
 

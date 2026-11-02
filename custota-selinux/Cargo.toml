@@ -6,7 +6,7 @@ publish.workspace = true
 
 [dependencies]
 anyhow = "1.0.86"
-clap = { version = "4.5.9", features = ["derive"] }
+winnow-args = { version = "0.6.0", features = ["terminal-size"] }
 
 [dependencies.sepatch]
 git = "https://github.com/chenxiaolong/sepatch"

@@ -7,7 +7,6 @@ publish.workspace = true
 [dependencies]
 anyhow = "1.0.75"
 ring = "0.17.14"
-clap = { version = "4.4.1", features = ["derive"] }
 # Waiting for stable release that's compatible with the rest of the newer
 # RustCrypto dependencies.
 cms = { git = "https://github.com/RustCrypto/formats", rev = "c478c6bb0db65677e85e2c0297962817eed90352", features = ["std", "builder"] }
@@ -24,10 +23,12 @@ sha2 = "0.11.0"
 tracing = "0.1.41"
 x509-cert = "0.3.0"
 tempfile = "3.20.0"
+winnow-args = { version = "0.6.1", features = ["terminal-size"] }
 
 [dependencies.avbroot]
 git = "https://github.com/chenxiaolong/avbroot"
-tag = "v3.37.1"
+#tag = "v3.37.1"
+rev = "c8a8e73f88d0f40ebe1123b4aa65588e5c009cc1"
 
 [build-dependencies]
 anyhow = "1.0.75"
