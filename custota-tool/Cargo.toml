@@ -9,13 +9,13 @@ anyhow = "1.0.75"
 ring = "0.17.14"
 # Waiting for stable release that's compatible with the rest of the newer
 # RustCrypto dependencies.
-cms = { git = "https://github.com/RustCrypto/formats", rev = "c478c6bb0db65677e85e2c0297962817eed90352", features = ["std", "builder"] }
+cms = { version = "0.3.0-rc.1", features = ["std", "builder"] }
 const-oid = "0.10.2"
 ctrlc = "3.4.5"
 hex = "0.4.3"
 md5 = "0.8.0"
 rawzip = "0.5.1"
-rsa = { version = "0.10.0-rc.18", features = ["sha1", "sha2"] }
+rsa = { version = "0.10.0-rc.22", features = ["pkcs1v15", "sha1"] }
 serde = { version = "1.0.188", features = ["derive"] }
 serde_json = "1.0.105"
 serde_repr = "0.1.19"
@@ -27,8 +27,7 @@ winnow-args = { version = "0.6.1", features = ["terminal-size"] }
 
 [dependencies.avbroot]
 git = "https://github.com/chenxiaolong/avbroot"
-#tag = "v3.37.1"
-rev = "c8a8e73f88d0f40ebe1123b4aa65588e5c009cc1"
+tag = "v3.38.0"
 
 [build-dependencies]
 anyhow = "1.0.75"
