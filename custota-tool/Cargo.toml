@@ -15,7 +15,7 @@ ctrlc = "3.4.5"
 hex = "0.4.3"
 md5 = "0.8.0"
 rawzip = "0.5.1"
-rsa = { version = "0.10.0-rc.22", features = ["pkcs1v15", "sha1"] }
+rsa = { version = "0.10.0", features = ["pkcs1v15", "sha1"] }
 serde = { version = "1.0.188", features = ["derive"] }
 serde_json = "1.0.105"
 serde_repr = "0.1.19"
@@ -27,7 +27,7 @@ winnow-args = { version = "0.6.1", features = ["terminal-size"] }
 
 [dependencies.avbroot]
 git = "https://github.com/chenxiaolong/avbroot"
-tag = "v3.38.0"
+tag = "v3.39.0"
 
 [build-dependencies]
 anyhow = "1.0.75"
