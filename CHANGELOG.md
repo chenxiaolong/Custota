@@ -11,6 +11,7 @@
 
 * Switch from clap to winnow-args for command line argument parsing ([PR #229])
   * Reduces executable size by 5% to 9%, depending on platform.
+* Add support for tab completion of `custota-tool` commands ([PR #231])
 * Update dependencies ([PR #230])
 
 ### Version 6.8
@@ -525,3 +526,4 @@ Changes:
 [PR #228]: https://github.com/chenxiaolong/Custota/pull/228
 [PR #229]: https://github.com/chenxiaolong/Custota/pull/229
 [PR #230]: https://github.com/chenxiaolong/Custota/pull/230
+[PR #231]: https://github.com/chenxiaolong/Custota/pull/231
