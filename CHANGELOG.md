@@ -9,6 +9,8 @@
 
 ### Unreleased
 
+* Update dependencies ([PR #232])
+
 ### Version 6.9
 
 * Switch from clap to winnow-args for command line argument parsing ([PR #229])
@@ -529,3 +531,4 @@ Changes:
 [PR #229]: https://github.com/chenxiaolong/Custota/pull/229
 [PR #230]: https://github.com/chenxiaolong/Custota/pull/230
 [PR #231]: https://github.com/chenxiaolong/Custota/pull/231
+[PR #232]: https://github.com/chenxiaolong/Custota/pull/232
