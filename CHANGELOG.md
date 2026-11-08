@@ -9,6 +9,9 @@
 
 ### Unreleased
 
+* Switch from clap to winnow-args for command line argument parsing ([PR #229])
+  * Reduces executable size by 5% to 9%, depending on platform.
+
 ### Version 6.8
 
 * Add option to require the device to be plugged in before installing updates ([Issue #225], [PR #226])
@@ -519,3 +522,4 @@ Changes:
 [PR #226]: https://github.com/chenxiaolong/Custota/pull/226
 [PR #227]: https://github.com/chenxiaolong/Custota/pull/227
 [PR #228]: https://github.com/chenxiaolong/Custota/pull/228
+[PR #229]: https://github.com/chenxiaolong/Custota/pull/229
