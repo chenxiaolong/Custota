@@ -6,6 +6,7 @@
 use std::{
     borrow::Cow,
     collections::{BTreeSet, HashMap, HashSet},
+    env,
     ffi::{OsStr, OsString},
     fmt::{self, Write as _},
     fs::{self, File, OpenOptions},
@@ -42,7 +43,7 @@ use serde_repr::{Deserialize_repr, Serialize_repr};
 use sha2::Sha256;
 use tempfile::TempDir;
 use tracing::{Level, info, warn};
-use winnow_args::{Args, Subcommand, ValueEnum};
+use winnow_args::{Args, Subcommand, ValueEnum, complete::Shell};
 use x509_cert::{
     Certificate,
     der::{Any, Decode, Encode, Tag, asn1::OctetStringRef},
@@ -137,9 +138,17 @@ enum CsigVersion {
     Version2 = 2,
 }
 
+/// Generate shell tab completion configs.
+#[derive(Debug, Args)]
+pub struct CompletionCli {
+    /// The shell to generate completions for.
+    #[arg(short, long, value_name = "SHELL")]
+    pub shell: Shell,
+}
+
 /// View the contents of a csig file.
 #[derive(Debug, Args)]
-struct ShowCsig {
+struct ShowCsigCli {
     /// Input path for csig file.
     #[arg(short, long)]
     input: PathBuf,
@@ -162,7 +171,7 @@ struct ShowCsig {
 /// without downloading the entire zip.
 #[derive(Debug, Args)]
 #[arg(group("passphrase"))]
-struct GenerateCsig {
+struct GenerateCsigCli {
     /// Input path for OTA zip file.
     #[arg(short, long)]
     input: PathBuf,
@@ -212,7 +221,7 @@ struct GenerateCsig {
 /// and the csig file. This command only updates the required fields in the file
 /// and leaves other fields untouched.
 #[derive(Debug, Args)]
-struct GenerateUpdateInfo {
+struct GenerateUpdateInfoCli {
     /// Relative path or URL to the OTA zip.
     ///
     /// Custota will take the URL of the update info file and use this field to
@@ -242,7 +251,7 @@ struct GenerateUpdateInfo {
 ///
 /// The module will install a set of certificates into the system CA trust store.
 #[derive(Debug, Args)]
-struct GenerateCertModule {
+struct GenerateCertModuleCli {
     /// Output path for module zip.
     #[arg(short, long)]
     output: PathBuf,
@@ -255,14 +264,15 @@ struct GenerateCertModule {
 #[allow(clippy::enum_variant_names)]
 #[derive(Debug, Subcommand)]
 enum Command {
-    ShowCsig(ShowCsig),
-    GenCsig(GenerateCsig),
-    GenUpdateInfo(GenerateUpdateInfo),
-    GenCertModule(GenerateCertModule),
+    Completion(CompletionCli),
+    ShowCsig(ShowCsigCli),
+    GenCsig(GenerateCsigCli),
+    GenUpdateInfo(GenerateUpdateInfoCli),
+    GenCertModule(GenerateCertModuleCli),
 }
 
 #[derive(Debug, Args)]
-#[arg(version = env!("GIT_VERSION"))]
+#[arg(name = "custota-tool", version = env!("GIT_VERSION"))]
 struct Cli {
     #[arg(subcommand)]
     command: Command,
@@ -508,8 +518,14 @@ fn compute_vbmeta_digest(
     avbroot::cli::avb::compute_digest(temp_dir.path(), "vbmeta", cancel_signal)
 }
 
-fn subcommand_show_csig(args: &ShowCsig) -> Result<()> {
-    let signing_cert = args
+fn completion_main(cli: &CompletionCli) -> Result<()> {
+    print!("{}", Cli::completion_script(cli.shell));
+
+    Ok(())
+}
+
+fn show_csig_main(cli: &ShowCsigCli) -> Result<()> {
+    let signing_cert = cli
         .cert
         .as_ref()
         .map(|p| {
@@ -519,13 +535,13 @@ fn subcommand_show_csig(args: &ShowCsig) -> Result<()> {
         .transpose()?;
 
     let csig_raw =
-        fs::read(&args.input).with_context(|| format!("Failed to read file: {:?}", args.input))?;
+        fs::read(&cli.input).with_context(|| format!("Failed to read file: {:?}", cli.input))?;
     let csig_ci = ContentInfo::from_der(&csig_raw)
-        .with_context(|| format!("Failed to parse CMS data: {:?}", args.input))?;
+        .with_context(|| format!("Failed to parse CMS data: {:?}", cli.input))?;
 
     let csig_json = get_cms_inline(&csig_ci, signing_cert.as_ref())?;
 
-    if args.raw {
+    if cli.raw {
         io::stdout().write_all(&csig_json)?;
     } else {
         let csig: CsigInfo = serde_json::from_slice(&csig_json)?;
@@ -535,40 +551,40 @@ fn subcommand_show_csig(args: &ShowCsig) -> Result<()> {
     Ok(())
 }
 
-fn subcommand_gen_csig(args: &GenerateCsig, cancel_signal: &AtomicBool) -> Result<()> {
-    let passphrase_source = if let Some(v) = &args.passphrase_env_var {
+fn gen_csig_main(cli: &GenerateCsigCli, cancel_signal: &AtomicBool) -> Result<()> {
+    let passphrase_source = if let Some(v) = &cli.passphrase_env_var {
         PassphraseSource::EnvVar(v.clone())
-    } else if let Some(p) = &args.passphrase_file {
+    } else if let Some(p) = &cli.passphrase_file {
         PassphraseSource::File(p.clone())
     } else {
-        PassphraseSource::Prompt(format!("Enter passphrase for {:?}: ", args.key))
+        PassphraseSource::Prompt(format!("Enter passphrase for {:?}: ", cli.key))
     };
 
-    let signing_private_key = crypto::read_pem_private_key_file(&args.key, &passphrase_source)
-        .with_context(|| anyhow!("Failed to load key: {:?}", args.key))?;
-    let signing_cert = crypto::read_pem_cert_file(&args.cert)
-        .with_context(|| anyhow!("Failed to load certificate: {:?}", args.cert))?;
+    let signing_private_key = crypto::read_pem_private_key_file(&cli.key, &passphrase_source)
+        .with_context(|| anyhow!("Failed to load key: {:?}", cli.key))?;
+    let signing_cert = crypto::read_pem_cert_file(&cli.cert)
+        .with_context(|| anyhow!("Failed to load certificate: {:?}", cli.cert))?;
 
     if !crypto::cert_matches_key(&signing_cert, &signing_private_key)? {
         bail!(
             "Private key {:?} does not match certificate {:?}",
-            args.key,
-            args.cert,
+            cli.key,
+            cli.cert,
         );
     }
 
-    let (verify_cert_path, verify_cert) = match &args.cert_verify {
+    let (verify_cert_path, verify_cert) = match &cli.cert_verify {
         Some(c) => {
             let cert = crypto::read_pem_cert_file(c)
                 .with_context(|| anyhow!("Failed to load certificate: {c:?}"))?;
             (c, Cow::Owned(cert))
         }
-        None => (&args.cert, Cow::Borrowed(&signing_cert)),
+        None => (&cli.cert, Cow::Borrowed(&signing_cert)),
     };
 
-    let mut reader = File::open(&args.input)
+    let mut reader = File::open(&cli.input)
         .map(BufReader::new)
-        .with_context(|| anyhow!("Failed to open for reading: {:?}", args.input))?;
+        .with_context(|| anyhow!("Failed to open for reading: {:?}", cli.input))?;
 
     info!("Verifying OTA signature...");
     let ota_sig = ota::parse_ota_sig(&mut reader).context("Failed to parse OTA signature")?;
@@ -663,7 +679,7 @@ fn subcommand_gen_csig(args: &GenerateCsig, cancel_signal: &AtomicBool) -> Resul
         .collect::<Result<_>>()?;
 
     let raw_reader = reader.into_inner();
-    let vbmeta_digest = match args.csig_version {
+    let vbmeta_digest = match cli.csig_version {
         CsigVersion::Version1 => None,
         CsigVersion::Version2 => {
             if ota_info.header.is_full_ota() {
@@ -687,7 +703,7 @@ fn subcommand_gen_csig(args: &GenerateCsig, cancel_signal: &AtomicBool) -> Resul
     };
 
     let csig_info = CsigInfo {
-        version: args.csig_version,
+        version: cli.csig_version,
         files: digested_pfs,
         vbmeta_digest,
     };
@@ -700,9 +716,9 @@ fn subcommand_gen_csig(args: &GenerateCsig, cancel_signal: &AtomicBool) -> Resul
     )?;
     let csig_signature_der = csig_signature.to_der()?;
 
-    let output = args.output.as_ref().map_or_else(
+    let output = cli.output.as_ref().map_or_else(
         || {
-            let mut s = args.input.clone().into_os_string();
+            let mut s = cli.input.clone().into_os_string();
             s.push(CSIG_EXT);
             Cow::Owned(PathBuf::from(s))
         },
@@ -717,20 +733,20 @@ fn subcommand_gen_csig(args: &GenerateCsig, cancel_signal: &AtomicBool) -> Resul
     Ok(())
 }
 
-fn subcommand_gen_update_info(args: &GenerateUpdateInfo) -> Result<()> {
-    let csig_location = args.csig_location.as_ref().map_or_else(
-        || Cow::Owned(format!("{}{CSIG_EXT}", args.location.0)),
+fn gen_update_info_main(cli: &GenerateUpdateInfoCli) -> Result<()> {
+    let csig_location = cli.csig_location.as_ref().map_or_else(
+        || Cow::Owned(format!("{}{CSIG_EXT}", cli.location.0)),
         |l| Cow::Borrowed(&l.0),
     );
 
     let mut options = OpenOptions::new();
     options.read(true).write(true);
 
-    let (mut file, mut update_info, created) = match options.open(&args.file) {
+    let (mut file, mut update_info, created) = match options.open(&cli.file) {
         Ok(f) => {
             let mut reader = BufReader::new(f);
             let update_info: UpdateInfo = serde_json::from_reader(&mut reader)
-                .with_context(|| anyhow!("Failed to parse JSON: {:?}", args.file))?;
+                .with_context(|| anyhow!("Failed to parse JSON: {:?}", cli.file))?;
 
             (reader.into_inner(), update_info, false)
         }
@@ -738,24 +754,24 @@ fn subcommand_gen_update_info(args: &GenerateUpdateInfo) -> Result<()> {
             let f = options
                 .clone()
                 .create(true)
-                .open(&args.file)
-                .with_context(|| anyhow!("Failed to create: {:?}", args.file))?;
+                .open(&cli.file)
+                .with_context(|| anyhow!("Failed to create: {:?}", cli.file))?;
 
             (f, UpdateInfo::default(), true)
         }
         Err(e) => {
-            return Err(e).with_context(|| anyhow!("Failed to open: {:?}", args.file));
+            return Err(e).with_context(|| anyhow!("Failed to open: {:?}", cli.file));
         }
     };
 
     update_info.version = 2;
 
     let location_info = LocationInfo {
-        location_ota: args.location.0.clone(),
+        location_ota: cli.location.0.clone(),
         location_csig: csig_location.into_owned(),
     };
 
-    if let Some(vbmeta_digest) = &args.inc_vbmeta_digest {
+    if let Some(vbmeta_digest) = &cli.inc_vbmeta_digest {
         update_info
             .incremental
             .insert(vbmeta_digest.to_string(), location_info);
@@ -770,23 +786,23 @@ fn subcommand_gen_update_info(args: &GenerateUpdateInfo) -> Result<()> {
     serde_json::to_writer_pretty(writer, &update_info)?;
 
     if created {
-        info!("Created: {:?}", args.file);
+        info!("Created: {:?}", cli.file);
     } else {
-        info!("Updated: {:?}", args.file);
+        info!("Updated: {:?}", cli.file);
     }
 
     Ok(())
 }
 
-fn subcommand_gen_cert_module(args: &GenerateCertModule) -> Result<()> {
-    if args.cert.is_empty() {
+fn gen_cert_module_main(cli: &GenerateCertModuleCli) -> Result<()> {
+    if cli.cert.is_empty() {
         bail!("No certificates specified");
     }
 
     let mut certs = vec![];
     let mut seen = HashSet::new();
 
-    for path in &args.cert {
+    for path in &cli.cert {
         let cert = crypto::read_pem_cert_file(path)
             .with_context(|| format!("Failed to load cert: {path:?}"))?;
 
@@ -808,10 +824,10 @@ fn subcommand_gen_cert_module(args: &GenerateCertModule) -> Result<()> {
         certs.push((subject_hash, cert));
     }
 
-    let mut archive = File::create(&args.output)
+    let mut archive = File::create(&cli.output)
         .map(BufWriter::new)
         .map(ZipArchiveWriter::new)
-        .with_context(|| format!("Failed to open for writing: {:?}", args.output))?;
+        .with_context(|| format!("Failed to open for writing: {:?}", cli.output))?;
 
     let mut description = "Certs: ".to_owned();
     for (i, (hash, _)) in certs.iter().enumerate() {
@@ -888,6 +904,13 @@ fn subcommand_gen_cert_module(args: &GenerateCertModule) -> Result<()> {
 }
 
 fn main() -> Result<()> {
+    let args = env::args_os().skip(1).collect::<Vec<_>>();
+
+    if let Some(answer) = Cli::completion_request(&args) {
+        print!("{answer}");
+        return Ok(());
+    }
+
     // Set up a cancel signal so we can properly clean up any temporary files.
     let cancel_signal = Arc::new(AtomicBool::new(false));
     {
@@ -899,14 +922,15 @@ fn main() -> Result<()> {
         .expect("Failed to set signal handler");
     }
 
-    let args = Cli::parse();
+    let cli = Cli::parse();
 
-    avbroot::cli::args::init_logging(args.log_level, args.log_format);
+    avbroot::cli::args::init_logging(cli.log_level, cli.log_format);
 
-    match args.command {
-        Command::ShowCsig(args) => subcommand_show_csig(&args),
-        Command::GenCsig(args) => subcommand_gen_csig(&args, &cancel_signal),
-        Command::GenUpdateInfo(args) => subcommand_gen_update_info(&args),
-        Command::GenCertModule(args) => subcommand_gen_cert_module(&args),
+    match cli.command {
+        Command::Completion(c) => completion_main(&c),
+        Command::ShowCsig(c) => show_csig_main(&c),
+        Command::GenCsig(c) => gen_csig_main(&c, &cancel_signal),
+        Command::GenUpdateInfo(c) => gen_update_info_main(&c),
+        Command::GenCertModule(c) => gen_cert_module_main(&c),
     }
 }

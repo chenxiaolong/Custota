@@ -205,6 +205,42 @@ For testing, Custota can allow the current OS version (i.e. matching build finge
 
 Normally, an update can be cancelled by presing the `Cancel` button in the notification while it is being downloaded or installed. However, if the opportunity to do so was missed and the update has already been installed, the update can be reverted by enabling debug mode and pressing the `Revert completed update` option. This stops the bootloader slot from being switched on reboot. Note that an update can only be reverted if the device hasn't been rebooted yet.
 
+## Tab completion
+
+Tab completion configs can be generated from custota-tool itself.
+
+#### bash
+
+Add to `~/.bashrc`:
+
+```bash
+eval "$(custota-tool completion -s bash)"
+```
+
+#### zsh
+
+Add to `~/.zshrc`:
+
+```bash
+eval "$(custota-tool completion -s zsh)"
+```
+
+#### fish
+
+Add to `~/.config/fish/config.fish`:
+
+```bash
+custota-tool completion -s fish | source
+```
+
+#### PowerShell
+
+Add to PowerShell's `profile.ps1` startup script:
+
+```powershell
+Invoke-Expression (& custota-tool completion -s powershell)
+```
+
 ## How it works
 
 The A/B update process in Android is handled by a builtin component called `update_engine`. The engine is used both for sideloading OTA updates when booted into recovery mode and for regular OTA updates while booted into Android. It is responsible for checking the signature of `payload.bin` inside the OTA zip against `/system/etc/security/otacerts.zip`, verifying existing partition checksums (for incremental updates), and then installing the payload. It also handles the download process when used in the streaming mode, which is always requested by Custota. Custota itself is responsible for the other parts, such as checking for updates, verifying compatibility, and preventing downgrades (which could cause the device to be unbootable due to Android Verified Boot's rollback index mechanism).
