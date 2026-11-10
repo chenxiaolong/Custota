@@ -7,6 +7,8 @@
     to update the actual links at the bottom of the file.
 -->
 
+### Unreleased
+
 ### Version 6.10
 
 * Fix support for older x86_64 CPUs that don't support AVX instructions in the prebuilt `custota-tool` binaries ([PR #233])
