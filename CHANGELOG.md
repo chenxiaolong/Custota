@@ -9,6 +9,8 @@
 
 ### Unreleased
 
+* Fix support for older x86_64 CPUs that don't support AVX instructions in the prebuilt `custota-tool` binaries ([PR #233])
+  * This affected versions >=6.8, which were built after Github Actions upgraded `ubuntu-latest` to Ubuntu 26.04.
 * Update dependencies ([PR #232])
 
 ### Version 6.9
@@ -532,3 +534,4 @@ Changes:
 [PR #230]: https://github.com/chenxiaolong/Custota/pull/230
 [PR #231]: https://github.com/chenxiaolong/Custota/pull/231
 [PR #232]: https://github.com/chenxiaolong/Custota/pull/232
+[PR #233]: https://github.com/chenxiaolong/Custota/pull/233
