@@ -105,9 +105,14 @@ class Notifications(
             "Must specify both current and max progress or neither"
         }
 
-        val notificationIntent = Intent(context, SettingsActivity::class.java)
+        val notificationIntent = Intent(context, SettingsActivity::class.java).apply {
+            addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP or Intent.FLAG_ACTIVITY_CLEAR_TOP)
+        }
         val pendingIntent = PendingIntent.getActivity(
-            context, 0, notificationIntent, PendingIntent.FLAG_IMMUTABLE
+            context,
+            0,
+            notificationIntent,
+            PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT,
         )
 
         return Notification.Builder(context, CHANNEL_ID_PERSISTENT).run {
