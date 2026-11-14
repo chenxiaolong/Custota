@@ -9,6 +9,8 @@
 
 ### Unreleased
 
+* When tapping on the notification, bring the existing app into the foreground if it is already open instead of starting another instance ([PR #234])
+
 ### Version 6.10
 
 * Fix support for older x86_64 CPUs that don't support AVX instructions in the prebuilt `custota-tool` binaries ([PR #233])
@@ -537,3 +539,4 @@ Changes:
 [PR #231]: https://github.com/chenxiaolong/Custota/pull/231
 [PR #232]: https://github.com/chenxiaolong/Custota/pull/232
 [PR #233]: https://github.com/chenxiaolong/Custota/pull/233
+[PR #234]: https://github.com/chenxiaolong/Custota/pull/234
